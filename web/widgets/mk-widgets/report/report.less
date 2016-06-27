@@ -1,0 +1,44 @@
+.tusur-csp-report(@widgetPath);
+
+.tusur-csp-report(@widgetPath) {
+  @path-img: "@{widgetPath}/tusur-csp.report/img";
+
+  .tusur-csp-report-popup{
+	.tusur-csp-tabs();
+
+	.tusur-csp-tabs-container {
+	  position: relative;
+
+	  ul.tusur-csp-tabs {
+		position: absolute;
+		top: -35px;
+	  }
+	}
+
+	.tusur-csp-tabs-bodies {
+	  height: 100%;
+	}
+	.tusur-csp-tab-body{
+	  height: 100%;
+	}
+
+	.tusur-csp-popup-steps-bodies {
+	  padding: 0px !important;
+	}
+
+  }
+
+  .tusur-csp-report-pdfpreview {
+	width: 100%;
+	//height: 500px;
+  }
+
+  .tusur-csp-report-export {
+
+	button {
+	  margin: 10px 20px 10px 10px;
+	  float: right;
+	}
+  }
+
+}

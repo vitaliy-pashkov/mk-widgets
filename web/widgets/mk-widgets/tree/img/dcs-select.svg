@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 14.0.0, SVG Export Plug-In  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY ns_flows "http://ns.adobe.com/Flows/1.0/">
+]>
+<svg version="1.1"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
+	 x="0px" y="0px" width="17px" height="19px" viewBox="5.729 0 17 19" enable-background="new 5.729 0 17 19" xml:space="preserve">
+<defs>
+</defs>
+<g display="none">
+	<defs>
+		<rect id="SVGID_2_" y="7.945" width="10.012" height="16"/>
+	</defs>
+	<clipPath id="SVGID_4_" display="inline">
+		<use xlink:href="#SVGID_2_"  display="none" overflow="visible"/>
+	</clipPath>
+	<path clip-path="url(#SVGID_4_)" fill-rule="evenodd" clip-rule="evenodd" fill="#F1F1F1" d="M8.257,14.858
+		c-2.706-3.746-2.091-6.913-2.091-6.913c-9.541,8.503-5.254,12.78-4.915,13.134c0.809,0.846,1.453,1.386,1.46,2.866
+		c0.603-0.634,2.594-2.041,0.734-5.155c0,0-1.661-2.439,1.344-4.73c-0.097,5.206,3.677,4.556,1.396,9.861
+		C6.186,23.92,13.177,21.667,8.257,14.858"/>
+</g>
+<g>
+	<defs>
+		<rect id="SVGID_1_" x="5.729" width="17" height="19"/>
+	</defs>
+	<clipPath id="SVGID_5_">
+		<use xlink:href="#SVGID_1_"  overflow="visible"/>
+	</clipPath>
+	<path clip-path="url(#SVGID_5_)" fill-rule="evenodd" clip-rule="evenodd" fill="#F1F1F1" d="M5.729,13.267v1.848
+		c0,2.179,3.734,3.886,8.5,3.886s8.5-1.707,8.5-3.886v-1.582c-1.816,1.24-5.285,2.013-8.5,2.013
+		C10.859,15.545,7.312,14.675,5.729,13.267 M5.729,9.381v2.278c0,1.369,3.791,3.022,8.5,3.022c3.891,0,7.331-1.089,8.5-2.227v-2.81
+		c-1.816,1.241-5.285,2.014-8.5,2.014C10.859,11.659,7.312,10.789,5.729,9.381 M5.729,5.495v2.277c0,1.369,3.791,3.022,8.5,3.022
+		c3.891,0,7.331-1.089,8.5-2.227V5.76c-1.816,1.241-5.285,2.013-8.5,2.013C10.859,7.772,7.312,6.902,5.729,5.495 M14.229,0
+		c-4.766,0-8.5,1.707-8.5,3.886c0,1.369,3.792,3.023,8.5,3.023c3.892,0,7.331-1.089,8.5-2.227V3.886C22.729,1.707,18.995,0,14.229,0
+		"/>
+</g>
+</svg>

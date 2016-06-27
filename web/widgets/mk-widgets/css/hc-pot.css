@@ -1,0 +1,8 @@
+.tusur-csp-hc-plot-element {
+  height: 100%;
+  width: calc(100% - 30px);
+  padding: 15px;
+}
+.tusur-csp-hc-plot-element .highcharts-container {
+  border-radius: 4px;
+}

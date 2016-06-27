@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 14.0.0, SVG Export Plug-In  -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd" [
+	<!ENTITY ns_flows "http://ns.adobe.com/Flows/1.0/">
+]>
+<svg version="1.1"
+	 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:a="http://ns.adobe.com/AdobeSVGViewerExtensions/3.0/"
+	 x="0px" y="0px" width="19px" height="18px" viewBox="4.103 2.077 19 18" enable-background="new 4.103 2.077 19 18"
+	 xml:space="preserve">
+<defs>
+</defs>
+<g display="none">
+	<defs>
+		<rect id="SVGID_2_" y="9.022" width="10.012" height="16"/>
+	</defs>
+	<clipPath id="SVGID_4_" display="inline">
+		<use xlink:href="#SVGID_2_"  display="none" overflow="visible"/>
+	</clipPath>
+	<path clip-path="url(#SVGID_4_)" fill-rule="evenodd" clip-rule="evenodd" fill="#F1F1F1" d="M8.257,15.935
+		c-2.706-3.746-2.091-6.913-2.091-6.913c-9.541,8.503-5.254,12.78-4.915,13.134c0.809,0.846,1.453,1.386,1.46,2.866
+		c0.603-0.634,2.594-2.041,0.734-5.155c0,0-1.661-2.439,1.344-4.73c-0.097,5.206,3.677,4.556,1.396,9.861
+		C6.186,24.998,13.177,22.745,8.257,15.935"/>
+</g>
+<g>
+	<defs>
+		<rect id="SVGID_1_" x="0.946" width="21.783" height="20.077"/>
+	</defs>
+	<clipPath id="SVGID_5_">
+		<use xlink:href="#SVGID_1_"  overflow="visible"/>
+	</clipPath>
+	<path clip-path="url(#SVGID_5_)" fill="#414141" d="M22.729,4.926l-1.255-1.263l-2.441,2.454c-1.233-0.969-2.78-1.552-4.466-1.552
+		l0.75,1.887c0.894,0.126,1.719,0.463,2.42,0.968l-1.453,1.462L17,10.685l1.991-2.002c0.641,0.898,1.023,1.997,1.023,3.188
+		c0,3.025-2.439,5.479-5.448,5.479c-1.184,0-2.276-0.385-3.17-1.029l1.13-1.135l-1.005-1.516l-1.38,1.389
+		c-0.474-0.663-0.803-1.437-0.944-2.274H9.119l-1.242,1.872c0.254,0.611,0.569,1.191,0.969,1.705l-2.441,2.455l1.255,1.262
+		l2.441-2.454c1.233,0.969,2.78,1.552,4.466,1.552c4.012,0,7.264-3.271,7.264-7.305c0-1.694-0.579-3.251-1.543-4.491L22.729,4.926z"
+		/>
+	<path clip-path="url(#SVGID_5_)" fill-rule="evenodd" clip-rule="evenodd" fill="#EF3936" d="M11.111,2.077H9.215L4.103,13.842
+		h2.09l1.2-2.819h5.493l1.175,2.819h2.156L11.111,2.077z M8.137,9.206l1.993-4.678l2.01,4.678H8.137z"/>
+</g>
+</svg>

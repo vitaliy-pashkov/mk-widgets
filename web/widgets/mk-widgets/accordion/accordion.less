@@ -1,0 +1,54 @@
+.tusur-csp-accordion(@widgetPath);
+
+.tusur-csp-accordion(@widgetPath){
+  @path-img : "@{widgetPath}/mk-widgets/accordion/img";
+
+  @color-header-background: #ededed;
+
+  .accordion {
+    height: 100%;
+
+    .section {
+      margin-bottom: 10px;
+      header {
+        background-color: @color-header-background;
+        font-weight: bold;
+        padding: 5px 0 8px 15px;
+        border-radius: 3px 3px 0 0;
+        position: relative;
+        margin-bottom: 12px;
+
+        .accordion-controller {
+          position: absolute;
+          top: 5px;
+          width: 17px;
+          height: 17px;
+          right: 7px;
+          cursor: pointer;
+
+        }
+
+        .accordion-controller-rollup {
+          background-image: url("@{path-img}/rollup.svg");
+        }
+
+        .accordion-controller-expand {
+          background-image: url("@{path-img}/expand.svg");
+        }
+      }
+      .section-body {
+        margin-right: 5px;
+        height: 100%;
+        position:relative;
+
+        .scroll-bar.vertical {
+          right: 9px;
+        }
+      }
+      .overview {
+        width: 100%;
+      }
+    }
+  }
+}
+

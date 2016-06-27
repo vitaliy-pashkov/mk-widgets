@@ -1,0 +1,60 @@
+.csp-tusur-on-off-switcher {
+  vertical-align: top;
+  margin: 0 3px 0 0;
+  width: 17px;
+  height: 17px;
+}
+.csp-tusur-on-off-switcher + label {
+  cursor: pointer;
+}
+.csp-tusur-on-off-switcher:not(checked) {
+  position: absolute;
+  opacity: 0;
+}
+.csp-tusur-on-off-switcher:not(checked) + label {
+  position: relative;
+  padding: 0 0 0 60px;
+}
+.csp-tusur-on-off-switcher:not(checked) + label:before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 8px;
+  width: 58px;
+  height: 14px;
+  border-radius: 6px;
+  background: #FFFFFF;
+}
+.csp-tusur-on-off-switcher:not(checked) + label:after {
+  content: 'Вкл';
+  position: absolute;
+  text-align: center;
+  padding-top: 2px;
+  top: 10px;
+  left: 8px;
+  width: 35px;
+  height: 12px;
+  border-radius: 6px;
+  background: #477ed4;
+  transition: all .3s;
+  color: #FFFFFF;
+  font-size: 7pt;
+}
+.csp-tusur-on-off-switcher:checked + label:before {
+  /*background: #9FD468;*/
+}
+.csp-tusur-on-off-switcher:checked + label:after {
+  left: 31px;
+  background: #656565;
+  content: 'Выкл';
+  text-align: center;
+  vertical-align: middle;
+  font-size: 7pt;
+}
+.csp-tusur-on-off-switcher-container {
+  margin: 5px 0px 0px 0px;
+  background: #ebebeb;
+  border-radius: 2px;
+  height: 35px;
+  width: 72px;
+}

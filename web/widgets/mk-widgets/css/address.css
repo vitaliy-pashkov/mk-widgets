@@ -1,0 +1,22 @@
+.tusur-csp-address-form {
+  padding: 20px 0 20px 20px;
+  width: 600px;
+  background: #FDFDFD;
+  border-radius: 3px;
+}
+.tusur-csp-address-form .tusur-csp-address-form-block {
+  padding: 10px 0 0 0;
+  margin-right: 20px;
+  display: inline-block;
+  vertical-align: top;
+  width: calc(50% - 20px);
+}
+.tusur-csp-address-form .tusur-csp-address-form-block .tusur-csp-address-form-title-block {
+  padding: 5px 10px;
+}
+.tusur-csp-address-form .tusur-csp-address-form-block .tusur-csp-address-form-input-field {
+  padding: 14px 19px 10px 23px;
+}
+.tusur-csp-address-input {
+  padding: 14px 19px 10px 23px;
+}

@@ -1,0 +1,197 @@
+.tusur-csp-crudform(@widgetPath);
+
+.tusur-csp-crudform(@widgetPath) {
+  @path-img: "@{widgetPath}/mk-widget/crud-form/img";
+
+
+  @color-body-background: #DFDFDF;
+  @color-popup-background: #FDFDFD;
+  @color-footer-input: #0280d7;
+  @color-footer-input-cancel: #939393;
+  @color-form-item-input: #EBEBEB;
+  @color-form-item-array-border: #b3b3b3;
+  @color-form-array-item-even: #d3d3d3;
+  @color-form-item-error-border: #b81900;
+
+  .tusur-csp-popup-crud-form-popup-element {
+    background: @color-popup-background;
+    border-radius: 3px;
+    .tusur-csp-popup-crud-form-header {
+      text-align: center;
+      padding: 15px 0;
+    }
+    .tusur-csp-popup-crud-form-body {
+      //padding: 10px 15px 10px 30px;
+      //height: 45%;
+      //max-height: 45%;
+      background: @color-body-background;
+      //.tusur-csp-form-field {
+      //  display: inline-block;
+      //  width: calc(~"100% - 15px");
+      //  padding: 8px 15px 8px 0;
+      //  label {
+      //	display: block;
+      //	//height: 100%;
+      //  }
+      //  .tusur-csp-form-label {
+      //	padding: 8px;
+      //  }
+      //  .custom-select-header {
+      //	margin: 0;
+      //  }
+      //}
+      //.tusur-csp-form-field-100 {
+      //  width: calc(~"100% - 15px");
+      //}
+      //.tusur-csp-form-field-50 {
+      //  width: calc(~"50% - 8px");
+      //}
+    }
+    .tusur-csp-popup-crud-form-footer {
+      height: 50px;
+      padding: 8px 0;
+      width: 100%;
+      display: block;
+
+      input {
+        width: 130px;
+        background: @color-footer-input;
+        height: 35px;
+        margin: 7px 15px;
+        color: @color-popup-background;
+      }
+
+      .tusur-csp-popup-crud-form-cancel-button {
+        background: @color-footer-input-cancel;
+        background-image: url("@{path-img}/button_cancel.svg");
+        background-repeat: no-repeat;
+        background-size: auto 12px;
+        background-position: 10px 11px;
+      }
+
+      .tusur-csp-popup-crud-form-save-button {
+        background-image: url("@{path-img}/button_next.svg");
+        background-repeat: no-repeat;
+        background-size: auto 12px;
+        background-position: 10px 11px;
+        float: right;
+      }
+    }
+  }
+
+  .tusur-csp-crud-form-body {
+    padding: 0 15px;
+
+    .tusur-csp-form-field {
+      display: inline-block;
+      vertical-align: top;
+      padding: 8px 15px 8px 0;
+
+      label {
+        display: block;
+
+        .create-button {
+          margin-left: 7px;
+          width: 11px;
+          height: 13px;
+          display: inline-block;
+          cursor: pointer;
+          background-image: url("@{path-img}/button_add_off.svg");
+          transition: all 0.3s, cubic-bezier(0.0, 0.5, 0.5, 1.0) 0s;
+          background-repeat: no-repeat;
+          background-position: 0 2px;
+          background-size: 11px 11px;
+        }
+
+        .create-button:hover {
+          background-image: url("@{path-img}/button_add.svg");
+        }
+      }
+
+      .tusur-csp-form-label {
+        padding: 8px;
+      }
+
+      .custom-select-header {
+        margin: 0;
+      }
+
+      .tusur-csp-form-input-item input {
+        padding: 14px 19px 10px 23px;
+        width: ~'calc(100% - 42px)';
+        height: 14px;
+        background-color: @color-form-item-input;
+      }
+
+      .tusur-csp-form-input-item-array {
+        border-radius: 3px;
+        border: 1px solid @color-form-item-array-border;
+
+        .tusur-csp-crud-form-array-dummy {
+          padding: 15px;
+          text-align: center;
+        }
+
+        .tusur-csp-crud-form-array-item.tusur-csp-crud-form-body:nth-child(even) {
+          background: @color-form-array-item-even;
+        }
+      }
+
+      .tusur-csp-crud-form-radio-input {
+        display: inline-block;
+        width: auto !important;
+		margin: 5px;
+
+      }
+      .tusur-csp-crud-form-radio-label {
+        display: inline-block;
+		position: relative;
+		top: -2px;
+      }
+
+      .tusur-csp-crud-form-array-item {
+        position: relative;
+        padding: 4px 0 14px 0;
+
+        .delete-button {
+          display: inline-block;
+          position: absolute;
+          width: 11px;
+          height: 11px;
+          top: 3px;
+          right: 3px;
+          cursor: pointer;
+          background-image: url("@{path-img}/button_delete_off.svg");
+          transition: all 0.3s, cubic-bezier(0.0, 0.5, 0.5, 1.0) 0s;
+          background-repeat: no-repeat;
+          background-size: 11px 11px;
+        }
+
+        .delete-button:hover {
+          background-image: url("@{path-img}/button_delete.svg");
+        }
+      }
+    }
+
+    .tusur-csp-form-field.error > .tusur-csp-form-input-item {
+      border: 1px solid @color-form-item-error-border;
+      margin: 0;
+    }
+
+    .tusur-csp-form-field > .tusur-csp-form-input-item {
+      margin: 1px;
+    }
+
+    .form-columns-100 {
+      width: ~"calc(100% - 30px)";
+      padding: 0px 15px 0px 15px;
+      margin-top: 7px;
+    }
+
+    .form-columns-50-50 {
+      width: ~'calc(50% - 22px)';
+      padding: 0px 0px 0px 15px;
+      margin-top: 7px;
+    }
+  }
+}

@@ -1,0 +1,125 @@
+.tusur-csp-menu(@widgetPath) {
+  @path-img : "@{widgetPath}/tusur-csp.menu/img";
+
+  @color-text-normal: #404040;
+  @color-text-active: #ebebeb;
+  @color-bg-hover-a: #99b6ca;
+  @color-bg-menu-a-active: #017fd8;
+  @color-bg-submenu-a-active: #59a3d7;
+
+  .tusur-csp-menu {
+    margin-top: 6px;
+
+    .tusur-csp-menu-li {
+      display: block;
+      margin: 0px 0 0 14px;
+
+      .tusur-csp-submenu {
+        display: none;
+      }
+
+      .tusur-csp-menu-a {
+        display: block;
+        .large-text();
+        color: @color-text-normal;
+        padding: 15px 0 16px 56px;
+        border-radius: 40px 0 0 40px;
+        position: relative;
+        background-position: 5px center;
+        background-repeat: no-repeat;
+
+        background-size: 40px;
+
+      }
+      .tusur-csp-menu-a:hover {
+        background-color: @color-bg-hover-a;
+      }
+    }
+    .tusur-csp-menu-li.active {
+      .tusur-csp-menu-a {
+        color: @color-text-active;
+        background-position: 6px center;
+        background-color: @color-bg-menu-a-active;
+      }
+      .tusur-csp-submenu {
+        display: block;
+      }
+      .tusur-csp-menu-a:after {
+        content: " ";
+        background: url("@{path-img}/menu-item-active-bg.svg") no-repeat;
+        position: absolute;
+        top: 0;
+        right: -12px;
+        width: 12px;
+        height: 49px;
+      }
+    }
+
+    @submenu-pt: 7px;
+    .tusur-csp-submenu {
+      position: relative;
+      margin-left: 25px;
+      padding-top: @submenu-pt;
+
+      .tusur-csp-submenu-li {
+        display: block;
+        margin: 0;
+        position: relative;
+
+        .tusur-csp-submenu-a {
+          display: block;
+          .normal-text();
+          color: @color-text-normal;
+          padding: 12px 0 13px 20px;
+
+          border-radius: 0px 20px 20px 0px;
+          width: 186px;
+        }
+        .tusur-csp-submenu-a:hover {
+          background-color: @color-bg-hover-a;
+        }
+      }
+      .tusur-csp-submenu-li:after {
+        position: absolute;
+        top: -50%;
+        left: 0px;
+        width: 9px;
+        height: 100%;
+        content: " ";
+        border-left: 1px solid @color-bg-submenu-a-active;
+        border-bottom: 1px solid @color-bg-submenu-a-active;
+      }
+      .tusur-csp-submenu-li:first-child:after {
+        height: 50%;
+        top: 0;
+      }
+
+      .tusur-csp-submenu-li.active {
+        .tusur-csp-submenu-a {
+          color: @color-text-active;
+          background-color: @color-bg-submenu-a-active;
+        }
+      }
+    }
+
+    .tusur-csp-submenu:after {
+      position: absolute;
+      top: 0;
+      left: 0px;
+      width: 9px;
+      height: @submenu-pt;
+      content: " ";
+      border-left: 1px solid @color-bg-submenu-a-active;
+    }
+  }
+
+  .tusur-csp-menu-icon(@path-img, @name) {
+    .tusur-csp-menu-ico-@{name} {
+      background-image: url("@{path-img}/@{name}.svg");
+    }
+    .active > .tusur-csp-menu-ico-@{name} {
+      background-image: url("@{path-img}/@{name}-active.svg");
+    }
+  }
+
+}
