@@ -16,6 +16,7 @@ MKWidgets.CrudMaster = Class({
 		});
 		this.setOptions(options);
 
+		this.on('form_data_ready', this.crudMasterCreateInterfaces);
 		if (this.options.action == 'read' || this.options.action == 'update')
 			{
 			this.getData();
@@ -25,7 +26,7 @@ MKWidgets.CrudMaster = Class({
 			this.generatePattern();
 			this.getDicts();
 			}
-		this.on('form_data_ready', this.crudMasterCreateInterfaces);
+
 		},
 
 	crudMasterCreateInterfaces: function ()

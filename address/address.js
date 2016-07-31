@@ -3,69 +3,101 @@ MKWidgets.AddressNS = MKWidgets.AddressNS || {};
 
 MKWidgets.Address = Class({
 	extends: MKWidget,
-	dict: {},
-	selectLevels: {
-		1: {
-			id: "state",
-			Title: "Область",
-			SelectTitle: "Выберите область",
-		},
-		2: {
-			id: "area",
-			Title: "Город/округ",
-			hideIfNull: false,
-			SelectTitle: "Выберите город/округ",
-		},
-		3: {
-			id: "city",
-			Title: "Населенный пункт",
-			hideIfNull: true,
-			SelectTitle: "Выберите населенный пункт",
-		},
-		4: {
-			id: "street",
-			Title: "Улица",
-			hideIfNull: false,
-			SelectTitle: "Выберите улицу",
-		}
-	},
-	inputLevels: {
-		1: {
-			id: "home",
-			Title: "Дом",
-			InputTitle: "Введите номер дома",
-			nullText: "дом ",
-			enable: true
-		},
-		2: {
-			id: "flat",
-			Title: "Квартира",
-			InputTitle: "Введите номер квартиры",
-			nullText: "квартира ",
-			enable: true
-		},
-		3: {
-			id: "entrance",
-			Title: "Вход",
-			InputTitle: "Введите данные входа",
-			nullText: "подъезд ",
-			enable: true
-		},
-		4: {
-			id: "floor",
-			Title: "Этаж",
-			InputTitle: "Введите этаж",
-			nullText: "этаж ",
-			enable: true
-		},
-	},
 
-	constructor: function (elementSelector, options)
+	ready: false,
+
+	initLevels: function ()
+		{
+		this.value = {
+			kladr_state: {},
+			kladr_area: {},
+			kladr_city: {},
+			kladr_street: {},
+			home: {},
+			entrance: {},
+			floor: {},
+			flat: {}
+		};
+
+		this.dict = [
+			[],
+			[],
+			[],
+			[],
+			[],
+		];
+		this.levels = [
+			{},
+			{
+				id: "kladr_state",
+				type: 'select',
+				Title: "Область",
+				SelectTitle: "Выберите область",
+			},
+			{
+				id: "kladr_area",
+				type: 'select',
+				Title: "Город/округ",
+				hideIfNull: false,
+				SelectTitle: "Выберите город/округ",
+			},
+			{
+				id: "kladr_city",
+				type: 'select',
+				Title: "Населенный пункт",
+				hideIfNull: true,
+				SelectTitle: "Выберите населенный пункт",
+			},
+			{
+				id: "kladr_street",
+				type: 'select',
+				Title: "Улица",
+				hideIfNull: false,
+				SelectTitle: "Выберите улицу",
+			},
+			{
+				id: "home",
+				type: 'input',
+				Title: "Дом",
+				InputTitle: "Введите номер дома",
+				nullText: "дом ",
+				enable: true
+			},
+			{
+				id: "entrance",
+				type: 'input',
+				Title: "Вход",
+				InputTitle: "Введите данные входа",
+				nullText: "подъезд ",
+				enable: true
+			},
+			{
+				id: "floor",
+				type: 'input',
+				Title: "Этаж",
+				InputTitle: "Введите этаж",
+				nullText: "этаж ",
+				enable: true
+			},
+			{
+				id: "flat",
+				type: 'input',
+				Title: "Квартира",
+				InputTitle: "Введите номер квартиры",
+				nullText: "кв. ",
+				enable: true
+			},
+		];
+		},
+
+	constructor: function Address(elementSelector, options)
 		{
 		this.options.inputField = true;
 		MKWidget.prototype.constructor.apply(this, [elementSelector, options]);
 		this.setOptions({
 			//data: "/kladr/getinfo",
+			value: null,
+			addressId: null,
 			dictConfig: {
 				dictUrl: '/kladr/getinfo', //?level=2&prev=7700&prev_type=uu',//?level=2&prev=7000',
 				dictIdIndex: 'kladr',
@@ -73,40 +105,135 @@ MKWidgets.Address = Class({
 				dictDisplayIndexType: 'type',
 				nullValue: false,
 			},
-			//beginLevel: 2,
-			//beginData: {kladr: 7000, type: 'обл'},
+			getAddressUrl: '/kladr/get-address',
 			beginLevel: 1,
-			beginData: {},
-			endLevel: 4,
+			depend: null,
+			parentAddressId: null,
+			endLevel: 8,
 			entrance: true,
 			floor: true,
-			title: "Выберите значение",
+			defaultValue: "Выберите значение",
+			dependNotSelect: 'Выберите значение родителя',
+
+			popup: {},
 		});
 		this.setOptions(options);
+		this.initLevels();
+		this.once('data-ready', this.initInterfaces);
+
 		this.init();
-		this.initInterfaces();
 		},
 
 	init: function ()
 		{
-		this.inputLevels[3].enable = this.options.entrance;
-		this.inputLevels[4].enable = this.options.floor;
-		if (this.options.beginLevel == 1)
+		this.levels[6].enable = this.options.entrance;
+		this.levels[7].enable = this.options.floor;
+
+		this.enabledStatus = 'initiate'; //initiate, parentNotSelect, enabled
+
+		if (this.options.addressId != null)
+			{
+			this.on('address-ready', this.initByAddress, this);
+			this.loadAddress(this.options.addressId, this.setAddress);
+			}
+		else if (this.options.parentAddressId != undefined)
+			{
+			this.on('address-ready', this.initByAddress, this);
+			this.loadAddress(this.options.parentAddressId, this.setAddress);
+			}
+		else if (this.options.depend != undefined)
+			{
+			this.on('address-ready', this.initByAddress, this);
+			this.initAddressDepend(this.options.depend);
+			}
+		else if (this.options.beginLevel == 1)
 			{
 			this.dict = JSON.parse(window.app.getDict(this.options.dictConfig));
+			this.trigger('data-ready');
 			}
 		else
 			{
-			var kladr = this.options.beginData.kladr,
-				type = this.options.beginData.type;
-			this.updateDict(this.options.beginLevel - 1, kladr, type);
+			console.log('address wrong config');
 			}
+		},
+
+	initAddressDepend: function ()
+		{
+		this.options.depend.object.on('change:' + this.options.depend.index, this.getDependAddress, true, this);
+		},
+
+	getDependAddress: function ()
+		{
+		this.options.parentAddressId = this.options.depend.object[this.options.depend.index];
+
+		if (this.options.parentAddressId == undefined)
+			{
+			this.enabledStatus = 'parentNotSelect';
+			this.trigger('data-ready');
+			}
+		else
+			{
+			this.loadAddress(this.options.parentAddressId, this.setAddress);
+			}
+
+		},
+
+	loadAddress: function (addressId, callBack)
+		{
+		$.ajax(
+			{
+				url: this.options.getAddressUrl,
+				data: {address_id: addressId},
+				type: "GET",
+				widget: this,
+				success: callBack,
+				error: this.serverError,
+			});
+
+		},
+
+	setAddress: function (data)
+		{
+		//warring! another context! this = jxhr, this.widget = widget
+		for (var i = 1; i <= this.widget.options.endLevel; i++)
+			{
+			this.widget.value [this.widget.levels[i].id] = data[i];
+			}
+		this.widget.enabledStatus = 'enabled';
+		this.widget.trigger('address-ready');
+		},
+
+	initByAddress: function ()
+		{
+		if (this.options.beginLevel < 5)
+			{
+			if (this.options.beginLevel == 1)
+				{
+				var value = this.value[this.levels[this.options.beginLevel].id].value;
+				var type = this.value[this.levels[this.options.beginLevel].id].type;
+				this.updateDict(this.options.beginLevel, value, type);
+				}
+
+			for (var i = 1; i < Math.min(5, this.options.endLevel); i++)
+				{
+				var beginLevel = i;
+				var value = this.value[this.levels[beginLevel].id].value;
+				var type = this.value[this.levels[beginLevel].id].type;
+				if (value != undefined && type != undefined)
+					{
+					this.updateDict(beginLevel + 1, value, type);
+					}
+				}
+			}
+		this.trigger('data-ready');
 		},
 
 	initInterfaces: function ()
 		{
-		this.createFieldsInterface = new MKWidgets.AddressNS.CreateFieldsInterface(this, true);
 		this.headerInterface = new MKWidgets.AddressNS.HeaderInterface(this, true);
+		this.createFieldsInterface = new MKWidgets.AddressNS.CreateFieldsInterface(this, true);
+		this.ready = true;
+		this.trigger('address-ready');
 		},
 
 	getDict: function (level)
@@ -119,11 +246,6 @@ MKWidgets.Address = Class({
 			{
 			return [];
 			}
-		},
-
-	focusMainInputSlot: function ()
-		{
-		this.popup.openPopup();
 		},
 
 	generateLink: function (level)
@@ -142,7 +264,6 @@ MKWidgets.Address = Class({
 		{
 		if (level !== undefined && kladr !== undefined && type !== undefined)
 			{
-			level++;
 			var config = $.extend({}, this.options.dictConfig);
 			config.dictUrl = config.dictUrl + '?level=' + level + '&prev=' + kladr + '&prev_type=' + type;
 			config.dictName = config.dictUrl;
@@ -165,24 +286,35 @@ MKWidgets.Address = Class({
 				{
 				this.dict[levelCounter] = [];
 				}
+
+			if (this.levels[levelCounter].widget != undefined)
+				{
+				this.levels[levelCounter].widget.object.trigger('dictionary-changed');
+				}
 			}
 		this.level = level;
 		},
 
 	selectValueChangedSlot: function ()
 		{
-		//this.popup.closePopup();
-		var level = this.options.level,
+		//warring! another context! this = select
+		var level = this.options.level + 1,
 			type = this.selectedOption[this.options.dictConfig.dictDisplayIndexType],
 			kladr = this.selectedOption[this.options.dictConfig.dictIdIndex];
 		this.options.parent.updateDict(level, kladr, type);
-		this.options.parent.trigger('dictionary-changed');
-		//console.log(level, kladr, type);
+		this.options.parent.valueChangedSignal();
 		},
 
 	inputValueChangedSlot: function ()
 		{
 		this.trigger('input-value-changed');
+		this.valueChangedSignal();
+		},
+
+	valueChangedSignal: function ()
+		{
+		this.setValue();
+		this.trigger('value-changed');
 		},
 
 	inputValueFocusSlot: function ()
@@ -191,39 +323,89 @@ MKWidgets.Address = Class({
 		if (input.val().length == 0)
 			{
 			input.val(input.attr('nullText'));
-			//this.setSelectionRange(input.val().length, input.val().length);
 			}
-		//console.log();
 		},
 
-	getValues: function ()
+	setValue: function ()
 		{
-		var addressFormValues = {};
-		this.selects.forEach(function (select)
-		{
-		if (select.object.selectedOption != null)
+		for (var i = 1; i < this.levels.length; i++)
 			{
-			addressFormValues[select.id] = {
-				//"level": select.object.selectedOption.level,
-				"value": select.object.selectedOption[this.options.dictConfig.dictIdIndex],
-				"displayValue": select.object.selectedOption[this.options.dictConfig.dictDisplayIndex],
-				//"type": select.object.selectedOption.type
-			};
+			if (this.levels[i].widget != undefined)
+				{
+				if (this.levels[i].type == 'select' || this.levels[i].type == 'dependSelect')
+					{
+					var select = this.levels[i].widget;
+					if (select.object.selectedOption != null)
+						{
+						this.value[select.id] = {
+							value: select.object.selectedOption[this.options.dictConfig.dictIdIndex],
+							displayValue: select.object.selectedOption[this.options.dictConfig.dictDisplayIndex],
+						};
+						}
+					}
+				else if (this.levels[i].type == 'input')
+					{
+					var input = this.levels[i].widget;
+					var value = input.inputField.val();
+					inputValue = {
+						value: value,
+						displayValue: value,
+					};
+					if (value != "")
+						{
+						this.value[input.id] = inputValue;
+						}
+					}
+				}
 			}
-		}, this);
-		this.inputs.forEach(function (input)
+
+		this.setTextValues();
+		},
+
+	setTextValues: function ()
 		{
-		var value = input.inputField.val();
-		inputValue = {
-			value: value,
-			displayValue: value,
-		};
-		if (value != "")
+		this.visibleTextValue = this.getTextValue();
+		this.fullTextValue = this.getTextValue(1, this.levels.length - 1);
+		},
+
+	getTextValue: function (beginLevel, endLevel, includeEntrance, includeFloor)
+		{
+		beginLevel = beginLevel || this.options.beginLevel;
+		endLevel = endLevel || this.options.endLevel;
+		if (includeEntrance == null)
 			{
-			addressFormValues[input.id] = inputValue;
+			includeEntrance = true;
 			}
-		});
-		return addressFormValues;
+		if (includeFloor == null)
+			{
+			includeFloor = true;
+			}
+
+		var textValue = "";
+		for (var i = beginLevel; i <= endLevel; i++)
+			{
+			var id = this.levels[i].id;
+			if (includeEntrance == false && id == 'entrance')
+				{
+				continue;
+				}
+			if (includeFloor == false && id == 'floor')
+				{
+				continue;
+				}
+
+			if (this.value[id].displayValue != null && this.value[id].displayValue != "")
+				{
+				textValue += this.value[id].displayValue + ', ';
+				}
+			}
+		textValue = textValue.substr(0, textValue.length - 2);
+		return textValue;
+		},
+
+	getValue: function ()
+		{
+		return this.value;
 		},
 
 	hideFormSlot: function ()
@@ -242,8 +424,8 @@ MKWidgets.Address = Class({
 			}
 		},
 
-})
-;
+
+});
 
 MKWidgets.AddressNS.HeaderInterface = Class({
 	extends: WidgetInterface,
@@ -258,23 +440,84 @@ MKWidgets.AddressNS.HeaderInterface = Class({
 
 	init: function ()
 		{
-		this.widget.on('dictionary-changed input-value-changed', this.updateInput, this);
+		this.widget.domMainInput = $("<input/>");
+		//this.widget.domMainInput.attr('placeholder', this.widget.options.title);
+		this.widget.domMainInput.addClass('tusur-csp-address-input');
+
+		this.widget.element.append(this.widget.domMainInput); //test string!
+		this.widget.domMainInput.on('focus', $.proxy(this.focusMainInputSlot, this));
+
+		//this.linkProps('displayText', 'widget.visibleTextValue');
+		//this.mediate('displayText', this.mediateDisplayValue);
+
+
+		this.bindNode('widget.visibleTextValue', this.widget.domMainInput, {
+			setValue: $.proxy(this.setDisplayValue, this)
+		});
+
+		this.widget.on('change:enabledStatus', this.toggleEnabled, true, this);
 		},
 
-	updateInput: function ()
+	setDisplayValue: function ()
 		{
-		var values = this.widget.getValues()
-		mainInputValue = '';
-		MK.each(values, function (inputData)
-		{
-		if (inputData.displayValue != null && inputData.displayValue != "")
+		var value =  this.widget.visibleTextValue;
+
+		if (this.widget.enabledStatus == 'initiate') //initiate, parentNotSelect, enabled
 			{
-			mainInputValue += inputData.displayValue + ', ';
+			this.widget.domMainInput.attr('placeholder', this.widget.options.defaultValue);
 			}
-		});
-		mainInputValue = mainInputValue.substr(0, mainInputValue.length - 2);
-		this.widget.domMainInput.val(mainInputValue);
+		else if (this.widget.enabledStatus == 'parentNotSelect') //initiate, parentNotSelect, enabled
+			{
+			this.widget.domMainInput.attr('placeholder', this.widget.options.dependNotSelect);
+			}
+		else if (this.widget.enabledStatus == 'enabled')
+			{
+			if (value == undefined)
+				{
+				this.widget.domMainInput.attr('placeholder', this.widget.options.defaultValue);
+				}
+			else if (value.length == 0)
+				{
+				this.widget.domMainInput.attr('placeholder', this.widget.options.defaultValue);
+				}
+			else
+				{
+				this.widget.domMainInput.val(value);
+				}
+			}
+
 		},
+
+	focusMainInputSlot: function ()
+		{
+		this.widget.popup.openPopup();
+		},
+
+	toggleEnabled: function ()
+		{
+		if (this.widget.enabledStatus == 'enabled')
+			{
+			this.turnOnWidget();
+			}
+		else
+			{
+			this.turnOffWidget();
+			}
+		this.setDisplayValue()
+		},
+
+	turnOnWidget: function ()
+		{
+		this.widget.domMainInput.removeClass('disable');
+		this.widget.domMainInput.prop("disabled", false);
+		},
+
+	turnOffWidget: function ()
+		{
+		this.widget.domMainInput.addClass('disable');
+		this.widget.domMainInput.prop("disabled", true);
+		},
+
 
 });
 
@@ -303,29 +546,45 @@ MKWidgets.AddressNS.CreateFieldsInterface = Class({
 
 	createDom: function ()
 		{
-		this.widget.domMainInput = $("<input/>")
-			.attr('placeholder', this.widget.options.title)
-			.addClass('tusur-csp-address-input');
-
 		this.domInputFieldsForm = $("<div/>").addClass('tusur-csp-address-form');
 		this.widget.bindNode('sandbox', this.domInputFieldsForm);
-		this.widget.element.append(this.widget.domMainInput); //test string!
 
-		this.createMainSelect(this.widget.options.beginLevel);
-		for (level = this.widget.options.beginLevel + 1; level <= this.widget.options.endLevel; level++)
+		var isFirstSelect = true;
+		for (var level = this.widget.options.beginLevel; level <= this.widget.options.endLevel; level++)
 			{
-			var dependSelect = this.createDependSelect(level);
+			var inputSettings = this.widget.levels[level];
+			if (inputSettings.type == 'select' && !isFirstSelect)
+				{
+				inputSettings.type = 'dependSelect';
+				}
+			this.createField(inputSettings, level);
+			if (inputSettings.type == 'select')
+				{
+				isFirstSelect = false;
+				}
 			}
-		$.each(this.widget.inputLevels, $.proxy(function (index, inputSettings)
-		{
-		this.createInputFields(inputSettings);
-		}, this));
-		this.widget.popup = new MKWidgets.PopupNS.Tooltip(this.widget.domMainInput, {
+
+		this.widget.popup = new MKWidgets.PopupNS.Tooltip(this.widget.domMainInput, $.extend(this.widget.options.popup, {
 			dynamicElement: this.domInputFieldsForm,
 			returnElementToDom: true,
 			indent: 10,
-		});
-		this.widget.domMainInput.on('focus', $.proxy(this.widget.focusMainInputSlot, this.widget));
+		}));
+		},
+
+	createField: function (inputSettings, level)
+		{
+		if (inputSettings.type == 'select')
+			{
+			this.widget.levels[level].widget = this.createMainSelect(level, this.widget.value[this.widget.levels[level].id]);
+			}
+		else if (inputSettings.type == 'dependSelect')
+			{
+			this.widget.levels[level].widget = this.createDependSelect(level, this.widget.value[this.widget.levels[level].id]);
+			}
+		else if (inputSettings.type == 'input')
+			{
+			this.widget.levels[level].widget = this.createInputFields(inputSettings, this.widget.value[this.widget.levels[level].id]);
+			}
 		},
 
 	createFormSkin: function (title)
@@ -339,7 +598,7 @@ MKWidgets.AddressNS.CreateFieldsInterface = Class({
 		return {mainBlock: selectForm, inputBlock: inputBlock};
 		},
 
-	createInputFields: function (inputSettings)
+	createInputFields: function (inputSettings, levelValue)
 		{
 		if (inputSettings.enable == true)
 			{
@@ -350,66 +609,78 @@ MKWidgets.AddressNS.CreateFieldsInterface = Class({
 					.attr('nullText', inputSettings.nullText)
 					.addClass('tusur-csp-address-form-input-field')
 					.on('input change', $.proxy(this.widget.inputValueChangedSlot, this.widget))
-					.on('focus', this.widget.inputValueFocusSlot);
+					.on('focus', this.widget.inputValueFocusSlot)
+					.val(levelValue.value);
 			$(this.widget.sandbox).append(select.mainBlock);
 			select.inputBlock.append(domInputField);
-			this.widget.inputs.push({
+
+			var inputWidget = {
 				"id": inputSettings.id,
-				"inputField": domInputField
-			});
+				"inputField": domInputField,
+				object: new MK
+			};
+			return inputWidget;
 			}
 		},
 
-	createDependSelect: function (level)
+	createDependSelect: function (level, levelValue)
 		{
-		var select = this.createFormSkin(this.widget.selectLevels[level].Title),
+		var select = this.createFormSkin(this.widget.levels[level].Title),
 			dict = this.widget.dict[level] || [];
 		$(this.widget.sandbox).append(select.mainBlock);
-		if (this.widget.selectLevels[level].hideIfNull == true)
+		if (this.widget.levels[level].hideIfNull == true)
 			{
 			select.mainBlock.hide();
 			}
-		var dependSelect = new MKWidgets.DependsSelectNS.parentDict(select.inputBlock, {
-			defaultDisplayValue: this.widget.selectLevels[level].SelectTitle,
+		var dependSelect = new MKWidgets.DependsSelectNS.ParentDict(select.inputBlock, {
+			defaultDisplayValue: this.widget.levels[level].SelectTitle,
 			parent: this.widget,
 			inputField: true,
 			selectForm: select,
-			hideIfNull: this.widget.selectLevels[level].hideIfNull,
-			"level": level,
-			"dictConfig": $.extend(this.widget.options.dictConfig, {depend: this.widget.selects}),
-			"dict": dict,
+			hideIfNull: this.widget.levels[level].hideIfNull,
+			level: level,
+			dictConfig: $.extend(this.widget.options.dictConfig, {depend: this.widget.selects}),
+			dict: dict,
+			value: levelValue.value,
 		});
-		dependSelect.on('hide-form', this.widget.hideFormSlot)
-			.on('show-form', this.widget.showFormSlot);
-		this.widget.selects.push({
+		dependSelect.on('hide-form', this.widget.hideFormSlot);
+		dependSelect.on('show-form', this.widget.showFormSlot);
+		dependSelect.on('option-changed', this.widget.selectValueChangedSlot);
+
+		var inputWidget = {
 			"object": dependSelect,
 			"level": level,
 			"objectIdIndex": this.widget.options.dictConfig.dictIdIndex,
-			"id": this.widget.selectLevels[level].id
-		});
-		dependSelect.on('option-changed', this.widget.selectValueChangedSlot);
+			"id": this.widget.levels[level].id
+		};
+
+		this.widget.selects.push(inputWidget);
+		return inputWidget;
 		},
 
-
-	createMainSelect: function (level)
+	createMainSelect: function (level, levelValue)
 		{
-		this.mainSelect = this.createFormSkin(this.widget.selectLevels[level].Title);
+		this.mainSelect = this.createFormSkin(this.widget.levels[level].Title);
 		$(this.widget.sandbox).append(this.mainSelect.mainBlock);
 		this.beginSelect = new MKWidgets.Select(this.mainSelect.inputBlock, {
-			defaultDisplayValue: this.widget.selectLevels[level].SelectTitle,
+			defaultDisplayValue: this.widget.levels[level].SelectTitle,
 			parent: this.widget,
 			inputField: true,
-			"level": level,
-			"dictConfig": this.widget.options.dictConfig,
-			"dict": this.widget.dict[level]
+			level: level,
+			dictConfig: this.widget.options.dictConfig,
+			dict: this.widget.dict[level],
+			value: levelValue.value,
 		});
-		this.widget.selects.push({
+		this.beginSelect.on('option-changed', this.widget.selectValueChangedSlot);
+
+		var inputWidget = {
 			"object": this.beginSelect,
 			"level": level,
 			"objectIdIndex": this.widget.options.dictConfig.dictIdIndex,
-			"id": this.widget.selectLevels[level].id
-		});
-		this.beginSelect.on('option-changed', this.widget.selectValueChangedSlot);
+			"id": this.widget.levels[level].id
+		};
+		this.widget.selects.push(inputWidget);
+		return inputWidget;
 		},
 });
 

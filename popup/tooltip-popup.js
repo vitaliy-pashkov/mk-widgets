@@ -17,6 +17,11 @@ MKWidgets.PopupNS.Tooltip = Class({
 			sizeRestrictions: false
 		});
 		this.setOptions(options);
+
+		this.positionCorrectionsBackup = {
+			top: this.options.positionCorrections.top,
+			left: this.options.positionCorrections.left
+		};
 		},
 
 	createDom: function ()
@@ -62,13 +67,14 @@ MKWidgets.PopupNS.Tooltip = Class({
 		{
 		this.bindNode('inverceVertical', this.domPopup, MK.binders.className('reverce-vertical'));
 		$(window).resize($.proxy(this.reverceSlot, this));
-		this.on('content-ready popup-positioning-finish', function ()
-		{
-		if (this.popupDisplay == true)
+		this.on('content-ready popup-positioning-finish',
+			function ()
 			{
-			this.reverceSlot();
-			}
-		}, this);
+			if (this.popupDisplay == true)
+				{
+				this.reverceSlot();
+				}
+			}, this);
 		},
 
 	parentSizes: function ()
@@ -133,8 +139,15 @@ MKWidgets.PopupNS.Tooltip = Class({
 
 	reverceSlot: function ()
 		{
+		this.reverceFlag = false;
+
 		this.reverceVerticalTooltip();
 		this.reverceHorizontalTooltip();
+
+		if (this.reverceFlag === true)
+			{
+			this.setPosition(false);
+			}
 		},
 
 	reverceVerticalTooltip: function ()
@@ -150,17 +163,28 @@ MKWidgets.PopupNS.Tooltip = Class({
 			if (bottomPoint + this.bottomIndent > $(window).height() && this.inverceVertical == false)
 				{
 				this.domInsideDynamicContainer.insertBefore(this.domInsideStaticContainer);
+
+				this.options.positionCorrections = {
+					top: this.positionCorrectionsBackup.top,
+					left: this.positionCorrectionsBackup.left
+				};
 				this.options.positionCorrections.top -= dynamicContainerHeight;
-				this.setPosition();
+				//this.setPosition();
 				this.inverceVertical = true;
+				this.reverceFlag = true;
 				}
 			else if (this.inverceVertical == true && bottomPoint + dynamicContainerHeight + this.bottomIndent < $(window)
 					.height())
 				{
+				this.options.positionCorrections = {
+					top: this.positionCorrectionsBackup.top,
+					left: this.positionCorrectionsBackup.left
+				};
 				this.domInsideDynamicContainer.insertAfter(this.domInsideStaticContainer);
-				this.options.positionCorrections.top += dynamicContainerHeight;
-				this.setPosition();
+				//this.options.positionCorrections.top += dynamicContainerHeight;
+				//this.setPosition();
 				this.inverceVertical = false;
+				this.reverceFlag = true;
 				}
 			this.domInsideContainer.css('max-width', insideContainerthisMaxHeight);
 			}

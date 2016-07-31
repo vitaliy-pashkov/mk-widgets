@@ -123,7 +123,7 @@ MKWidgets.CrudTableNS.InputItem = Class({
 		itemSave: function ()
 			{
 			this.save();
-			return this.isValueChanged();
+			return this.isValueChanged() && !this.options.support ;
 			},
 
 		isValueChanged: function ()
@@ -162,6 +162,10 @@ MKWidgets.CrudTableNS.InputItem = Class({
 			else if (options.type == 'date')
 				{
 				inputItem = new MKWidgets.CrudTableNS.InputItemNS.Date(elementSelector, options);
+				}
+			else if (options.type == 'address')
+				{
+				inputItem = new MKWidgets.CrudTableNS.InputItemNS.Address(elementSelector, options);
 				}
 			else if (options.type == 'cron')
 				{
@@ -543,6 +547,11 @@ MKWidgets.CrudTableNS.InputItemNS.Select = Class({
 				{
 				this.displayValue = displayItem[this.dictConfig.dictDisplayIndex];
 				this.options.formData.jset(this.dictConfig.formDisplayIndex, this.displayValue);
+
+				for (var i = 0; i < this.dictConfig.linkProp.length; i++)
+					{
+					this.options.formData.jset(this.dictConfig.linkProp[i].form, displayItem[this.dictConfig.linkProp[i].dict]);
+					}
 				}
 
 			var newValue = event.value;
@@ -569,6 +578,10 @@ MKWidgets.CrudTableNS.InputItemNS.Select = Class({
 			{
 			this.dictConfig.dictName = this.options.formIndex;
 			}
+		if (this.dictConfig.linkProp == undefined)
+			{
+			this.dictConfig.linkProp = [];
+			}
 
 		this.linkPropValueSelect();
 
@@ -581,7 +594,8 @@ MKWidgets.CrudTableNS.InputItemNS.Select = Class({
 				positionCorrections: {top: -13, left: -11},
 				background: true,
 				parentWidth: true
-			}
+			},
+			inputField: true
 		});
 
 		this.errors = {
@@ -700,6 +714,10 @@ MKWidgets.CrudTableNS.InputItemNS.DependsSelect = Class({
 			{
 			this.dictConfig.dictName = this.options.formIndex;
 			}
+		if (this.dictConfig.linkProp == undefined)
+			{
+			this.dictConfig.linkProp = [];
+			}
 
 		this.linkPropValueSelect();
 
@@ -718,7 +736,8 @@ MKWidgets.CrudTableNS.InputItemNS.DependsSelect = Class({
 				background: true,
 				parentWidth: true,
 				positionElement: this.element
-			}
+			},
+			inputField: true
 		});
 
 		//this.selectWidget.on('recreateArray', function(){
@@ -841,12 +860,12 @@ MKWidgets.CrudTableNS.InputItemNS.Date = Class({
 		this.errors = {};
 		},
 
-	parseDates: function()
+	parseDates: function ()
 		{
 		var separator,
 			startDate = '',
 			endDate = '';
-		if(this.options.dictConfig.separator != undefined)
+		if (this.options.dictConfig.separator != undefined)
 			{
 			separator = this.options.dictConfig.separator;
 			}
@@ -856,7 +875,7 @@ MKWidgets.CrudTableNS.InputItemNS.Date = Class({
 			}
 		var dates = this.oldValue.split(separator);
 		startDate = dates[0];
-		if(dates[1] != undefined)
+		if (dates[1] != undefined)
 			{
 			endDate = dates[1];
 			}
@@ -895,11 +914,12 @@ MKWidgets.CrudTableNS.InputItemNS.Date = Class({
 
 		this.domInput.focus();
 		this.bindNode("value", this.domInput);
-		this.datePicker.on('calendar-hide', function ()
-		{
-		this.value = this.domInput.val();
-		this.trigger('saveEvent');
-		}, this);
+		this.datePicker.on('calendar-hide',
+			function ()
+			{
+			this.value = this.domInput.val();
+			this.trigger('saveEvent');
+			}, this);
 		},
 
 	validate: function ()
@@ -918,4 +938,107 @@ MKWidgets.CrudTableNS.InputItemNS.Date = Class({
 		{
 		this.element.empty().html(this.value);
 		}
+});
+
+MKWidgets.CrudTableNS.InputItemNS.Address = Class({
+	extends: MKWidgets.CrudTableNS.InputItem,
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudTableNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			default: "",
+			addressPrefix: 'address'
+		});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+		this.errors = {};
+		},
+
+	createField: function ()
+		{
+		this.oldValue = this.value;
+		this.element.empty();
+		try
+			{
+			if (this.options.addressOptions.depend.object === './' || this.options.addressOptions.depend.object == undefined)
+				{
+				this.options.addressOptions.depend.object = this.options.formData;
+				}
+			if (!(this.options.addressOptions.depend.index in this.options.addressOptions.depend.object))
+				{
+				this.options.addressOptions.depend.object [this.options.addressOptions.depend.index] = 0;
+				}
+			}
+		catch (exeption)
+			{
+			}
+
+		this.addressWidget = new MKWidgets.Address(this.element, $.extend(this.options.addressOptions,{
+			addressId: this.options.formData [this.options.addressIdIndex],
+			popup: {
+				positionCorrections: {top: 0, left: 0},
+			}
+		}));
+		if(this.addressWidget.ready == true)
+			{
+			this.initAddressEvents();
+			}
+		else
+			{
+			this.addressWidget.on('address-ready', this.initAddressEvents, this);
+			}
+
+		},
+
+	initAddressEvents: function()
+		{
+		this.addressWidget.domMainInput.addClass('tusur-csp-crud-table-input-item');
+		this.addressWidget.popup.openPopup();
+		//this.addressWidget.on('value-changed', this.linearizeAddressValue, this);
+		this.addressWidget.popup.on('close-popup',
+			function ()
+			{
+			this.linearizeAddressValue();
+			this.trigger('saveEvent');
+			}, this);
+		},
+
+	linearizeAddressValue: function ()
+		{
+		var address = this.addressWidget.getValue();
+		for (var index in address)
+			{
+			this.options.formData.jset(this.options.addressPrefix + '.' + index, address[index].value);
+			}
+		this.options.formData.jset(this.options.addressPrefix+'.text_full', this.addressWidget.fullTextValue);
+		this.options.formData.jset(this.options.addressPrefix+'.text_point', this.addressWidget.getTextValue(4,8, false, false));
+		this.options.formData.jset(this.options.addressPrefix+'.text_home', this.addressWidget.getTextValue(6,8, false, false));
+		this.options.formData.jset(this.options.addressPrefix+'.text_home_detail', this.addressWidget.getTextValue(6,8, true, true));
+		},
+
+	validate: function (silent)
+		{
+		this.errorCode = null;
+
+		return this.itemValidate(silent);
+		},
+
+	cancel: function ()
+		{
+		this.element.empty().html(this.oldValue);
+		},
+
+	save: function ()
+		{
+		this.element.empty().html(this.value);
+		},
+
+	isValueChanged: function ()
+		{
+		return true;
+		},
 });

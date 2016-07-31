@@ -151,6 +151,10 @@ MKWidgets.CrudFormNS.InputItem = Class({
 		factory: function (elementSelector, options)
 			{
 			var inputItem = null;
+			if (options.type == "hidden")
+				{
+				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Hidden(elementSelector, options);
+				}
 			if (options.type == "varchar")
 				{
 				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Varchar(elementSelector, options);
@@ -175,6 +179,14 @@ MKWidgets.CrudFormNS.InputItem = Class({
 				{
 				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Date(elementSelector, options);
 				}
+			else if (options.type == 'dateRange')
+				{
+				inputItem = new MKWidgets.CrudFormNS.InputItemNS.DateRange(elementSelector, options);
+				}
+			else if (options.type == 'address')
+				{
+				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Address(elementSelector, options);
+				}
 			else if (options.type == 'radio')
 				{
 				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Radio(elementSelector, options);
@@ -198,6 +210,41 @@ MKWidgets.CrudFormNS.InputItem = Class({
 			return inputItem;
 			}
 	});
+
+MKWidgets.CrudFormNS.InputItemNS.Hidden = Class({
+	extends: MKWidgets.CrudFormNS.InputItem,
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudFormNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+
+		},
+
+	createField: function ()
+		{
+		this.domInputItem.parent().hide();
+		},
+
+	validate: function (silent)
+		{
+		this.errorCode = null;
+		return this.itemValidate(silent);
+		},
+
+	cancel: function ()
+		{
+		},
+
+	save: function ()
+		{
+		},
+});
 
 MKWidgets.CrudFormNS.InputItemNS.Varchar = Class({
 	extends: MKWidgets.CrudFormNS.InputItem,
@@ -448,6 +495,12 @@ MKWidgets.CrudFormNS.InputItemNS.Select = Class({
 				{
 				this.displayValue = displayItem[this.dictConfig.dictDisplayIndex];
 				this.options.formData.jset(this.dictConfig.formDisplayIndex, this.displayValue);
+
+				for (var i = 0; i < this.dictConfig.linkProp.length; i++)
+					{
+					this.options.formData.jset(this.dictConfig.linkProp[i].form, displayItem[this.dictConfig.linkProp[i].dict]);
+					}
+
 				}
 			else
 				{
@@ -477,6 +530,10 @@ MKWidgets.CrudFormNS.InputItemNS.Select = Class({
 		if (this.dictConfig.dictName == undefined)
 			{
 			this.dictConfig.dictName = this.options.formIndex;
+			}
+		if (this.dictConfig.linkProp == undefined)
+			{
+			this.dictConfig.linkProp = [];
 			}
 
 		//this.getDict();
@@ -657,6 +714,11 @@ MKWidgets.CrudFormNS.InputItemNS.DependsSelect = Class({
 			this.dictConfig.dictName = this.options.formIndex;
 			}
 
+		if (this.dictConfig.linkProp == undefined)
+			{
+			this.dictConfig.linkProp = [];
+			}
+
 		//this.getDict();
 
 		this.errors = {
@@ -786,7 +848,7 @@ MKWidgets.CrudFormNS.InputItemNS.Cron = Class({
 		this.cron.on('value-changed', this.updateTitle, true, this);
 		},
 
-	openPopup: function()
+	openPopup: function ()
 		{
 		this.popup.openPopup();
 		this.domTitle
@@ -794,7 +856,7 @@ MKWidgets.CrudFormNS.InputItemNS.Cron = Class({
 		this.updateTitle();
 		},
 
-	closePopup: function()
+	closePopup: function ()
 		{
 		//if(this.value != undefined)
 		//	{
@@ -848,11 +910,11 @@ MKWidgets.CrudFormNS.InputItemNS.Cron = Class({
 		title.find('.jqCron-blocks').children('[style*="display: none"]').remove();
 		title.find('.jqCron-cross').remove();
 		title.hide();
-			this.domTitle
-				//.prop('disabled', true)
-				.val(title.text())
-				.attr('title', title.text())
-				;
+		this.domTitle
+			//.prop('disabled', true)
+			.val(title.text())
+			.attr('title', title.text())
+		;
 		},
 
 	validate: function ()
@@ -900,6 +962,13 @@ MKWidgets.CrudFormNS.InputItemNS.Date = Class({
 		MKWidgets.CrudFormNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
 		this.setOptions({
 			default: "",
+			dictConfig: {
+				locales: {
+					ru: {
+						format: "YYYY-MM-DD"
+					}
+				}
+			}
 		});
 		this.setOptions(options);
 		},
@@ -909,48 +978,31 @@ MKWidgets.CrudFormNS.InputItemNS.Date = Class({
 		this.errors = {};
 		},
 
-	parseDates: function()
-		{
-		var separator,
-			startDate = '',
-			endDate = '';
-		if(this.options.dictConfig.separator != undefined)
-			{
-			separator = this.options.dictConfig.separator;
-			}
-		else
-			{
-			separator = ' - ';
-			}
-		var dates = this.oldValue.split(separator);
-		startDate = dates[0];
-		if(dates[1] != undefined)
-			{
-			endDate = dates[1];
-			}
-		return {
-				"startDate": startDate,
-				"endDate": endDate
-				};
-		},
-
 	createField: function ()
 		{
 		this.oldValue = this.value;
+
+		var startDate = this.oldValue;
+		var m = moment(this.oldValue);
+		if (!m.isValid())
+			{
+			startDate = moment().format(this.options.dictConfig.locales.ru.format);
+			}
+
+
 		this.domInput = $('<input />')
 			.addClass('input-item-date');
 
-		var dates = this.parseDates();
 
 		this.datePicker = new MKWidgets.DateRangePicker(this.domInput, $.extend({
 			parentElement: this.domInputItem,
-			startDate: dates.startDate,
-			endDate: dates.endDate,
-			locales: {
-				ru: {
-					format: "YYYY-MM-DD"
-				}
-			},
+			singleDatePicker: true,
+			startDate: startDate,
+			//locales: {
+			//	ru: {
+			//		format: "YYYY-MM-DD"
+			//	},
+			//},
 		}, this.options.dictConfig));
 
 		this.domInputItem.empty().append(this.domInput);
@@ -988,6 +1040,184 @@ MKWidgets.CrudFormNS.InputItemNS.Date = Class({
 		}
 });
 
+MKWidgets.CrudFormNS.InputItemNS.DateRange = Class({
+	extends: MKWidgets.CrudFormNS.InputItem,
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudFormNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			default: "",
+		});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+		this.errors = {};
+		},
+
+	parseDates: function ()
+		{
+		var separator,
+			startDate = '',
+			endDate = '';
+		if (this.options.dictConfig.separator != undefined)
+			{
+			separator = this.options.dictConfig.separator;
+			}
+		else
+			{
+			separator = ' - ';
+			}
+		var dates = this.oldValue.split(separator);
+		startDate = dates[0];
+		if (dates[1] != undefined)
+			{
+			endDate = dates[1];
+			}
+		return {
+			"startDate": startDate,
+			"endDate": endDate
+		};
+		},
+
+	createField: function ()
+		{
+		this.oldValue = this.value;
+		this.domInput = $('<input />')
+			.addClass('input-item-date');
+
+		var dates = this.parseDates();
+
+		this.datePicker = new MKWidgets.DateRangePicker(this.domInput, $.extend({
+			parentElement: this.domInputItem,
+			singleDatePicker: false,
+			startDate: dates.startDate,
+			endDate: dates.endDate,
+			locales: {
+				ru: {
+					format: "YYYY-MM-DD"
+				},
+			},
+			ranges: MKWidgets.DateRangePicker.predefineRange([
+				"Сегодня", "Вчера", "7 дней", "30 дней", "Этот месяц", "Этот год"
+			]),
+		}, this.options.dictConfig));
+
+		this.domInputItem.empty().append(this.domInput);
+		//this.domInput.focus();
+
+		this.bindNode("value", this.domInput);
+		this.datePicker.on('calendar-hide',
+			function ()
+			{
+			this.value = this.datePicker.element.val();
+			if (this.validate())
+				{
+				//this.datePicker.hide();
+				}
+			}, this);
+
+		this.afterCreateField();
+		},
+
+	validate: function (silent)
+		{
+		this.errorCode = null;
+
+		return this.itemValidate(silent);
+		},
+
+	cancel: function ()
+		{
+		this.domInputItem.empty().html(this.oldValue);
+		},
+
+	save: function ()
+		{
+		this.domInputItem.empty().html(this.value);
+		}
+});
+
+MKWidgets.CrudFormNS.InputItemNS.Address = Class({
+	extends: MKWidgets.CrudFormNS.InputItem,
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudFormNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			default: "",
+			addressPrefix: 'address'
+		});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+		this.errors = {};
+
+		},
+
+	createField: function ()
+		{
+		this.oldValue = this.value;
+
+		try
+			{
+			if (this.options.addressOptions.depend.object === '../')
+				{
+				this.options.addressOptions.depend.object = this.options.formData['#parent']; //this.options.formWidget.options.parentFormData;
+				}
+			else if (this.options.addressOptions.depend.object === './' || this.options.addressOptions.depend.object == undefined)
+				{
+				this.options.addressOptions.depend.object = this.options.formData;
+				}
+			//if( ! (this.options.addressOptions.depend.index in this.options.addressOptions.depend.object) )
+			//	{
+			//	this.options.addressOptions.depend.object [ this.options.addressOptions.depend.index ] = 0;
+			//	}
+			}
+		catch (exeption)
+			{
+			}
+
+
+		this.addressWidget = new MKWidgets.Address(this.domInputItem, this.options.addressOptions);
+		this.addressWidget.on('value-changed', this.linearizeAddressValue, this);
+		this.afterCreateField();
+		},
+
+	linearizeAddressValue: function ()
+		{
+		var address = this.addressWidget.getValue();
+		for (var index in address)
+			{
+			this.options.formData.jset(this.options.addressPrefix + '.' + index, address[index].value);
+			}
+		this.options.formData.jset(this.options.addressPrefix + '.text_full', this.addressWidget.fullTextValue);
+		this.options.formData.jset(this.options.addressPrefix + '.text_point', this.addressWidget.getTextValue(4, 8, false, false));
+		this.options.formData.jset(this.options.addressPrefix + '.text_home', this.addressWidget.getTextValue(6, 8, false, false));
+		this.options.formData.jset(this.options.addressPrefix + '.text_home_detail', this.addressWidget.getTextValue(6, 8, true, true));
+		},
+
+	validate: function (silent)
+		{
+		this.errorCode = null;
+
+		return this.itemValidate(silent);
+		},
+
+	cancel: function ()
+		{
+		this.domInputItem.empty().html(this.oldValue);
+		},
+
+	save: function ()
+		{
+		this.domInputItem.empty().html(this.value);
+		}
+});
 
 MKWidgets.CrudFormNS.InputItemNS.Radio = Class({
 	extends: MKWidgets.CrudFormNS.InputItem,
@@ -1160,7 +1390,7 @@ MKWidgets.CrudFormNS.InputItemNS.Array = Class({
 		this.representArray.forEach(
 			function (item)
 			{
-			if(item.display == true)
+			if (item.display == true)
 				{
 				arrayValid = arrayValid * item.crudForm.saveInterface.validateFields(silent);
 				}
@@ -1190,7 +1420,7 @@ MKWidgets.CrudFormNS.InputItemNS.ArrayRepresent = Class({
 	extends: MK.Object,
 
 	display: true,
-	constructor: function (arrayItem , parent)
+	constructor: function (arrayItem, parent)
 		{
 		this.jset(arrayItem);
 		this.represents = parent;
@@ -1205,9 +1435,9 @@ MKWidgets.CrudFormNS.InputItemNS.ArrayRepresent = Class({
 		},
 	render: function (event)
 		{
-		if(this.display == true)
+		if (this.display == true)
 			{
-			this.represents.displayLength ++;
+			this.represents.displayLength++;
 			}
 
 		$(this.sandbox).data('arrayItem', this);
@@ -1245,7 +1475,7 @@ MKWidgets.CrudFormNS.InputItemNS.ArrayRepresent = Class({
 
 		$(this.sandbox).remove();
 		this.display = false;
-		this.represents.displayLength -- ;
+		this.represents.displayLength--;
 
 		this.represents.inputItemArray.trigger('array-changed');
 		//var index = this.represents.indexOf(this);
@@ -1301,13 +1531,13 @@ MKWidgets.CrudFormNS.InputItemNS.ArrayRepresents = Class({
 		$(this.sandbox).append(this.domDummy);
 		},
 
-	toJSON: function()
+	toJSON: function ()
 		{
 		var jsonArray = [];
 		this.forEach(
-			function(item)
+			function (item)
 			{
-			if(item.display == true)
+			if (item.display == true)
 				{
 				jsonArray.push(item.toJSON());
 				}

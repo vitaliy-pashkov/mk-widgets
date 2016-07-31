@@ -303,6 +303,10 @@ var Application = Class(
 					}
 				if (f == 0)
 					{
+					if(data == null)
+						{
+						data = [];
+						}
 					data.push(nullValue);
 					}
 				}
@@ -476,7 +480,7 @@ var Entity = Class({
 				{
 				this.options = this.applyContext(this.options, this.options.context);
 
-				this.on('options@change:context', this.reApplyContext);
+				//this.on('options@change:context', this.reApplyContext);
 				}
 			},
 

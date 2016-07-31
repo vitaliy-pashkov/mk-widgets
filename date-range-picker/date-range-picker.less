@@ -17,80 +17,93 @@
 	width: 278px;
 	display: none;
 	z-index: 11;
-    max-width: 750px;
+	max-width: 750px;
   }
 
   .tusur-csp-range-buttons {
-    width: 130px;
-    float: right;
-    margin: 17px 17px 0 17px;
+	width: 130px;
+	float: right;
+	margin: 17px 17px 0 17px;
   }
 
-  .tusur-csp-range-buttons-title{
-    height: 25px;
-    margin-top: 15px;
+  .tusur-csp-range-buttons-title {
+	height: 25px;
+	margin-top: 15px;
   }
 
-  .tusur-csp-date-picker-button{
-    background: @color-button;
-    margin-bottom: 11px;
-    width: 100%;
-    color: @color-button-color;
-    cursor: pointer;
+  .tusur-csp-range-buttons.single {
+	width: 213px;
+	float: none;
+	margin: 8px 17px 0 17px;
   }
 
-  .tusur-csp-date-picker-button.apply{
-    background: @color-button-apply;
+  .tusur-csp-date-picker-button {
+	background: @color-button;
+	margin-bottom: 11px;
+	width: 100%;
+	color: @color-button-color;
+	cursor: pointer;
   }
 
-  .tusur-csp-date-picker-button.cancel{
-    background: @color-button-cancel;
+  .tusur-csp-date-picker-button.apply {
+	background: @color-button-apply;
+  }
+
+  .tusur-csp-date-picker-button.cancel {
+	background: @color-button-cancel;
   }
 
   .daterangepicker-input {
-    padding: 10px;
-    height: ~"calc(100% - 20px)";
-    width: ~"calc(100% - 20px)";
+	padding: 10px;
+	height: ~"calc(100% - 20px)";
+	width: ~"calc(100% - 20px)";
   }
 
-  .timeContainer .custom-select{
-    margin-top: 0px;
-    .custom-select-input-block{
-      width: 21px;
-      padding: 13px 19px 10px 10px;
-    }
-    .custom-select-option {
-      padding-left: 4px;
-      margin-right: 17px;
-    }
-    .custom-select-input-block {
-      padding-left: 10px;
-    }
-    .custom-select-close-image {
-      top: 0;
-      margin-top: 17px;
-      margin-right: 8px;
-    }
-    .custom-select-list {
-      max-height: 280px;
-    }
+  .timeContainer .custom-select {
+	line-height: 9px;
+	margin-top: 0px;
+	.custom-select-input-block {
+	  width: 21px;
+	  padding: 9px 23px 10px 10px;;
+	}
+	.custom-select-option {
+	  line-height: 9px;
+	  padding-left: 4px;
+	  margin-right: 17px;
+	}
+	.custom-select-input-block {
+	  padding-left: 10px;
+	}
+	.custom-select-close-image {
+	  top: 14px;
+	  //margin-top: 14px;
+	  margin-right: 8px;
+	}
+	.custom-select-list {
+	  max-height: 280px;
+	}
   }
 
-  .daterangepicker .hourContainer{
-    margin-left: 10px;
+  .daterangepicker .hourContainer {
+	margin-left: 7px;
   }
 
-  .daterangepicker .table-condensed th{
-    font-weight: 400;
+  .daterangepicker .table-condensed th {
+	font-weight: 400;
   }
-  .daterangepicker .tusur-csp-date-range-picker-calendar-thead-weekLabels{
-    :last-child, :nth-last-child(2){
-      color: #307CC0;
-    }
+  .daterangepicker .tusur-csp-date-range-picker-calendar-thead-weekLabels {
+	:last-child, :nth-last-child(2) {
+	  color: #307CC0;
+	}
   }
 
   .timeContainer {
 
+	label {
+	  padding-bottom: 5px;
+	  display: block;
+	  text-align: center;
+	}
   }
 
   .daterangepicker.dropup {
@@ -111,12 +124,12 @@
 	border-top: 6px solid #FFFFFF;
   }
 
-  .daterangepicker .weekend.available:not(.off){
-    color: #307CC0;
+  .daterangepicker .weekend.available:not(.off) {
+	color: #307CC0;
   }
 
   //.daterangepicker.dropdown-menu {
-	//max-width: none;
+  //max-width: none;
   //}
 
   .daterangepicker.single .ranges, .daterangepicker.single .calendar {
@@ -141,7 +154,7 @@
   .daterangepicker .calendar th, .daterangepicker .calendar td {
 	white-space: nowrap;
 	text-align: center;
-	min-width: 32px;
+	min-width: 29px;
   }
 
   .daterangepicker .calendar-table {
@@ -187,15 +200,15 @@
 	text-decoration: line-through;
   }
 
-  .daterangepicker th.control   {
+  .daterangepicker th.control {
 	background-repeat: no-repeat;
-	background-position: 9px 14px;
+	background-position: 13px 14px;
 	cursor: pointer;
   }
-  .daterangepicker th.control.right  {
+  .daterangepicker th.control.right {
 	background-image: url("@{path-img}/arrow-right.svg");
   }
-  .daterangepicker th.control.left  {
+  .daterangepicker th.control.left {
 	background-image: url("@{path-img}/arrow-left.svg");
   }
 
@@ -252,13 +265,13 @@
 	margin-bottom: 0;
   }
 
-  .daterangepicker .timeContainer{
-    display: inline-block;
-    float: left;
-    margin-right: 28px;
+  .daterangepicker .timeContainer {
+	display: inline-block;
+	float: left;
+	margin-right: 27px;
   }
-  .daterangepicker .secondContainer{
-    margin-right: 0px;
+  .daterangepicker .secondContainer {
+	margin-right: 0px;
   }
 
   .daterangepicker th.month {
@@ -269,8 +282,8 @@
 
   .daterangepicker .daterangepicker_input {
 	position: relative;
-	padding-left: 12px;
-	padding-right: 12px;
+	//padding-left: 12px;
+	//padding-right: 12px;
 
 	> label {
 	  padding-left: 6px;
@@ -314,7 +327,6 @@
 	}
 
   }
-
 
   .range_inputs {
 	.middle-text;
@@ -368,13 +380,13 @@
 	  display: none;
 	  width: 233px;
 	  margin: 10px 10px 0 10px;
-      .endLabel{
-        padding-left: 12px;
-      }
+	  .endLabel {
+		padding-left: 12px;
+	  }
 
-      .startLabel {
-        margin-left: 12px;
-      }
+	  .startLabel {
+		margin-left: 12px;
+	  }
 	}
 
 	.daterangepicker .calendar.left .calendar-table {
@@ -393,11 +405,13 @@
 	  clear: left;
 	  margin: 10px;
 	}
-    .input-item-date{
-      padding: 14px 19px 10px 23px;
-      height: 14px;
-      height: ~"calc(100% - 24px)";
-    }
+
+	.input-item-date {
+	  padding: 14px 19px 10px 23px;
+	  height: 14px;
+	  height: ~"calc(100% - 24px)";
+	}
+
 	.daterangepicker.single .calendar.left {
 	  clear: none;
 	}
@@ -407,7 +421,7 @@
 	}
 
 	.daterangepicker .calendar.left .calendar-table {
-	  padding-right: 12px;
+	  padding-right: 8px;
 	}
   }
 
@@ -424,22 +438,29 @@
 
 }
 
+.custom-select-header.datepickerSelect {
+  line-height: 9px;
+  background-color: #EBEBEB;
+}
+
 .custom-select-header.datepickerSelect .custom-select-input-block {
-    padding: 13px 23px 13px 10px;
-    width: 20px;
-    text-align: center;
-  }
+  padding: 9px 23px 10px 10px;
+  width: 20px;
+  text-align: center;
+}
+
 .datepickerSelect {
   .custom-select-list .custom-select-option {
-    margin: 0 15px 0 5px;
-    //padding: 11px 0 15px 5px;
-    padding: 8px 0 8px 0px;
-    text-align: center;
+	margin: 0 15px 0 5px;
+	line-height: 9px;
+	//padding: 11px 0 15px 5px;
+	padding: 8px 0 8px 0px;
+	text-align: center;
   }
 
   .custom-select-close-image {
-    margin-right: 7px  !important;
-    top: 17px;
+	margin-right: 8px !important;
+	top: 14px !important;
   }
   //
   //.scroll-bar.vertical {
@@ -447,7 +468,6 @@
   //}
 }
 
-
-.datepickerSelect.custom-select-list-scroll .scroll-bar.vertical{
+.datepickerSelect.custom-select-list-scroll .scroll-bar.vertical {
   margin-right: 11px !important;
 }

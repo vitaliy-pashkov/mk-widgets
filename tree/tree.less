@@ -1,11 +1,29 @@
 .tusur-csp-tree(@widgetPath);
 
 .tusur-csp-tree(@widgetPath) {
-  @path-img : "@{widgetPath}/mk-widgets/tree/img";
+  @path-img: "@{widgetPath}/mk-widgets/tree/img";
+
+  @sub-module-img-path: "@{module-img-path}/tree-img";
 
   @color-depend-line-border: #757575;
   @color-depend-line-border-active: #59a3d7;
   @color-active-node-text: #017fd8;
+
+  .tusur-csp-tree-loader-bg {
+	position: absolute;
+	width: ~'calc(100% - 338px)';
+	height: ~'calc(100% - 26px)';
+	background: rgba(100, 100, 100, 0.6);
+	z-index: 10;
+	text-align: center;
+	border-radius: 4px;
+
+	img {
+	  margin-top: 20%;
+	  width: 50px;
+	  height: 50px;
+	}
+  }
 
   .crudtree-tree-container {
 
@@ -49,7 +67,7 @@
 		.crudtree-node-text {
 		  line-height: 1;
 		  background-repeat: no-repeat;
-		  background-size: auto 16px;
+		  background-size: 15px 15px;
 		  background-position: 9px center;
 		  display: inline-block;
 
@@ -59,7 +77,15 @@
 		  text-overflow: ellipsis;
 		  overflow: hidden;
 		  max-width: 140px; //@treebar-width - 162px; //113
-
+		}
+		.crudtree-node-indicator {
+		  width: 5px;
+		  height: 5px;
+		  position: absolute;
+		  top: 8px;
+		  left: 27px;
+		  border-radius: 10px;
+		  border: 1px solid #dfdfdf;
 		}
 	  }
 	  > .crudtree-node-body:hover {
@@ -76,22 +102,28 @@
 	  }
 
 	  > .select.crudtree-node-body {
-		background: @color-depend-line-border-active;
+		background: #59a3d7;
 		.crudtree-node-text {
 		  color: #f1f1f1;
-
+		}
+		.crudtree-node-indicator {
+		  border-color: #59a3d7;
 		}
 	  }
 	  > .child-select.crudtree-node-body {
 		background: #d2d2d2;
 		.crudtree-node-text {
-
+		}
+		.crudtree-node-indicator {
+		  border-color: #d2d2d2;
 		}
 	  }
 	  > .fake-select.crudtree-node-body {
 		background: #c6c6c6;
 		.crudtree-node-text {
-
+		}
+		.crudtree-node-indicator {
+		  border-color: #c6c6c6;
 		}
 	  }
 	}
@@ -103,12 +135,17 @@
 		  font-size: 16px;
 		  padding: 16px 20px 17px 30px;
 		  background-position: 5px center;
+		  background-size: 15px 15px;
 		  white-space: nowrap;
 		  max-width: 215px;
 		}
 		.crudtree-node-manage-ico {
 		  margin-top: 18px;
 		  margin-left: 5px;
+		}
+		.crudtree-node-indicator {
+		  top: 16px;
+		  left: 34px;
 		}
 	  }
 	  > .active.crudtree-node-body {
@@ -126,6 +163,9 @@
 	  > .crudtree-node-body {
 		.crudtree-node-text {
 		  margin-left: 7px;
+		}
+		.crudtree-node-indicator {
+		  left: 26px;
 		}
 	  }
 	  > .active.crudtree-node-body {
@@ -161,16 +201,16 @@
 
 	.crudtree-icon(@name) {
 	  .crudtree-icon-@{name} {
-		background-image: url("@{path-img}/@{name}.svg");
+		background-image: url("@{sub-module-img-path}/normal/@{name}.svg");
 	  }
 	  .select > .crudtree-icon-@{name} {
-		background-image: url("@{path-img}/@{name}-select.svg");
+		background-image: url("@{sub-module-img-path}/select/@{name}.svg");
 	  }
 	  .child-select > .crudtree-icon-@{name} {
-		background-image: url("@{path-img}/@{name}-child-select.svg");
+		background-image: url("@{sub-module-img-path}/child-select/@{name}.svg");
 	  }
 	  .fake-select > .crudtree-icon-@{name} {
-		background-image: url("@{path-img}/@{name}-fake-select.svg");
+		background-image: url("@{sub-module-img-path}/fake-select/@{name}.svg");
 	  }
 	}
 
@@ -185,14 +225,15 @@
 
 	.crudtree-manage-icon(plus);
 	.crudtree-manage-icon(minus);
+
 	.crudtree-icon(super-object);
 	.crudtree-icon(entrance);
 	.crudtree-icon(floor);
 	.crudtree-icon(object);
 	.crudtree-icon(counter-energy);
 	.crudtree-icon(counter-water);
-    .crudtree-icon(counter-water-cold);
-    .crudtree-icon(counter-water-hot);
+	.crudtree-icon(counter-water-cold);
+	.crudtree-icon(counter-water-hot);
 	.crudtree-icon(counter-heat);
 	.crudtree-icon(counter-gas);
 
@@ -216,7 +257,6 @@
 	.crudtree-icon(client-person);
 	.crudtree-icon(client-org);
 	.crudtree-icon(contract);
-
   }
   /*
   .crudtree-filter-checkbox {
@@ -277,7 +317,8 @@
   }
 
   .crudtree-filter-block {
-	padding-right: 6px;
+	padding-right: 5px;
+	margin-bottom: 5px;
   }
 
   .crudtree-filter-checkbox:checked + label:before {

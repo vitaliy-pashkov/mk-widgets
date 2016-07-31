@@ -284,9 +284,14 @@ MKWidgets.TableNS.ExportInterface = Class({
 	exportTableSlot: function ()
 		{
 		//this.preventDefault();
-		var data = this.parseData(this.widget.options.columnsModel, this.widget.rows, this.widget.options.title);
+		if (this.widget.options.exportColumnsModel == undefined)
+			{
+			this.widget.options.exportColumnsModel = this.widget.options.columnsModel;
+			}
 
-		if(this.exporter === undefined)
+		var data = this.parseData(this.widget.options.exportColumnsModel, this.widget.rows, this.widget.options.title);
+
+		if (this.exporter === undefined)
 			{
 			this.exporter = new MKWidgets.XmlExporter(this.domExportLink,
 				{
@@ -313,23 +318,48 @@ MKWidgets.TableNS.ExportInterface = Class({
 			columns.push(column);
 			}
 		var readyData = [];
-		data.forEach(function (row)
-		{
-		if(row.displayTotal == 1)
+
+		for (var i = 0; i < data.length; i++)
 			{
-			var readyRow = {};
-			row.forEach(function (cell)
-			{
-			var value = cell.value;
-			if(cell.value === undefined)
+			var rowData = data[i].rowData;
+			if (data[i].displayTotal == 1)
 				{
-				value = '-';
+				var readyRow = {};
+				for (var j = 0; j < header.length; j++)
+					{
+					var value = rowData[header[j].index];
+					if (value == undefined)
+						{
+						value = '-';
+						}
+					readyRow[header[j].index] = {"value": value};
+					}
+				readyData.push(readyRow);
 				}
-			readyRow[cell.index] = {"value": value};
-			}, this);
-			readyData.push(readyRow);
+
+
 			}
-		}, this);
+
+		//data.forEach(
+		//	function (row)
+		//	{
+		//	//row =row.rowData;
+		//	if (row.displayTotal == 1)
+		//		{
+		//		var readyRow = {};
+		//		row.forEach(
+		//			function (cell)
+		//			{
+		//			var value = cell.value;
+		//			if (cell.value === undefined)
+		//				{
+		//				value = '-';
+		//				}
+		//			readyRow[cell.index] = {"value": value};
+		//			}, this);
+		//		readyData.push(readyRow);
+		//		}
+		//	}, this);
 
 		var readyObject = {};
 		readyObject[sheetTitle] = {
@@ -432,6 +462,19 @@ MKWidgets.TableNS.SortInterface = Class({
 		this.widget.rows.sort(
 			function (a, b)
 			{
+			if (sortColumnIndex in a.rowData && !(sortColumnIndex in b.rowData))
+				{
+				return -1;
+				}
+			if (!(sortColumnIndex in a.rowData) && sortColumnIndex in b.rowData)
+				{
+				return 1;
+				}
+			if (!(sortColumnIndex in a.rowData) && !(sortColumnIndex in b.rowData))
+				{
+				return 0;
+				}
+
 			if (a.rowData[sortColumnIndex].toString().toUpperCase() < b.rowData[sortColumnIndex].toString()
 					.toUpperCase())
 				{
@@ -497,7 +540,7 @@ MKWidgets.TableNS.DrawInterface = Class({
 
 	drawTable: function (event)
 		{
-		if(event!= undefined && event.type=='custom_resize')
+		if (event != undefined && event.type == 'custom_resize')
 			{
 			event.stopPropagation();
 			}

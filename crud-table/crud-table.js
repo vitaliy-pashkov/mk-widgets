@@ -141,6 +141,7 @@ MKWidgets.CrudTableNS.DeleteInterface = Class({
 				this.interface.widget.rows.splice(index, 1);
 				}, this);
 
+			this.interface.widget.selectInterface.clearAll();
 			this.interface.widget.trigger('table-display-changed');
             this.interface.widget.log("change", "Данные успешно удалены");
 			}
@@ -421,6 +422,7 @@ MKWidgets.CrudTableNS.EditInterface = Class({
         this.editCell = null;
 
 		this.widget.trigger('turnOn-view-interface');
+		this.widget.trigger('table-display-changed');
 		},
 
 	createInputItem: function (cell)

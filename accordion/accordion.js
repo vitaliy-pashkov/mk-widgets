@@ -106,6 +106,7 @@
 
 			_calcFreeHeight: function()
 				{
+
 				var freeHeight = this.element.parent().height();
 
 				for (var i in this.sections)
@@ -167,7 +168,7 @@ var Section = function (accordion, domSection)
 
 	this.controllerSlot = function controllerSlot(e)
 		{
-		this.debugStartCall(arguments, this);
+		//this.debugStartCall(arguments, this);
 
 		switch (this.state)
 		{

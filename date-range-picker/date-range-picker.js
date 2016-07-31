@@ -78,7 +78,7 @@ MKWidgets.DateRangePicker = Class({
 						applyLabel: "Выбрать",
 						cancelLabel: "Отмена",
 						startLabel: "Начало периода:",
-						startLabelSingle: "Выберите дату:",
+						startLabelSingle: "",
 						endLabel: "Конец периода:",
 						hourLabel: "Часы:",
 						minuteLabel: "Мин:",
@@ -333,19 +333,20 @@ MKWidgets.DateRangePicker = Class({
 				}
 			else
 				{
-				this.container.css('width', '270px');
+				this.container.css('width', '249px');
 				}
 
-            if(!$.isEmptyObject(this.options.ranges))
+            if(!$.isEmptyObject(this.options.ranges) && this.options.singleDatePicker == false)
                 {
                 this.container.css('width', parseInt(this.container.css('width'))+ 165);
+				//this.container.css('width', '270px');
                 }
 
 			this.popup = new MKWidgets.PopupNS.Tooltip(this.element, $.extend(this.options.popupConfigs, {
                 background: true,
                 positioning: true,
                 returnElementToDom: true,
-                parentWidth: this.options.parentWidth,
+                parentWidth: false, //this.options.parentWidth,
                 dynamicElement: this.container,
                 positionElement: this.element,
                 indent: 9,
@@ -369,14 +370,14 @@ MKWidgets.DateRangePicker = Class({
                     .prop('type', 'button')
                     .addClass('tusur-csp-date-picker-button')
                     .addClass('apply')
-                    .val('Выбрать')
+                    .val(this.options.locale.applyLabel)
                     .on('click', $.proxy(this.clickApply, this))
                     ;
                 this.domCancelBotton = $('<input>')
                     .prop('type', 'button')
                     .addClass('tusur-csp-date-picker-button')
                     .addClass('cancel')
-                    .val('Отмена')
+                    .val(this.options.locale.cancelLabel)
                     .on('click', $.proxy(this.clickCancel, this))
                     ;
 
@@ -398,6 +399,20 @@ MKWidgets.DateRangePicker = Class({
                     this.domRangeButtons.append(button);
                     }, this));
                 }
+
+			if(this.options.singleDatePicker)
+				{
+				this.domApplyBotton = $('<input>');
+				this.domApplyBotton.prop('type', 'button');
+				this.domApplyBotton.addClass('tusur-csp-date-picker-button');
+				this.domApplyBotton.addClass('apply');
+				this.domApplyBotton.val(this.options.locale.applyLabel);
+				this.domApplyBotton.on('click', $.proxy(this.clickApply, this));
+
+				this.domRangeButtons = $("<div>").addClass('tusur-csp-range-buttons').addClass('single');
+				this.domRangeButtons.append(this.domApplyBotton);
+				this.container.append(this.domRangeButtons);
+				}
             },
 
         clickRangeButtonSlot: function(event)
@@ -1288,7 +1303,7 @@ MKWidgets.DateRangePicker = Class({
 					{
 					this.domHoursSelectWidget = {};
 					}
-				this.domHoursLabel = $("<div/>").addClass("hourLabel");
+				this.domHoursLabel = $("<label/>").addClass("hourLabel");
 				this.domHoursSelect = $("<div/>").addClass("hourselect");
 				this.domHours = $("<div/>").attr('class', 'hourContainer timeContainer')
 					.append(this.domHoursLabel)
@@ -1297,12 +1312,13 @@ MKWidgets.DateRangePicker = Class({
 
 				this.domCurrentSide.append(this.domHours);
 				this.domHoursSelectWidget[side] = new MKWidgets.Select(this.domHoursSelect, {
+					inputField: true,
 					dict: hoursData,
 					//customClasses: 'datapickerSelect',
 					parentWidth: false,
                     customClass: 'datepickerSelect',
                     popupOptions: {
-                        background: false
+                        background: true
                     }
 				});
 				this.domHoursSelectWidget[side].on('change:selectedOption', this.timeChanged, this);
@@ -1313,7 +1329,7 @@ MKWidgets.DateRangePicker = Class({
 					{
 					this.domMinutesSelectWidget = {};
 					}
-				this.domMinuteLabel = $("<div/>").addClass("minuteLabel");
+				this.domMinuteLabel = $("<label/>").addClass("minuteLabel");
 				this.domMinutesSelect = $("<div/>").addClass("minutesselect");
 				this.domMinute = $("<div/>").attr('class', 'minuteContainer timeContainer')
 					.append(this.domMinuteLabel)
@@ -1321,12 +1337,13 @@ MKWidgets.DateRangePicker = Class({
 				;
 				this.domCurrentSide.append(this.domMinute);
 				this.domMinutesSelectWidget[side] = new MKWidgets.Select(this.domMinutesSelect, {
+					inputField: true,
 					dict: minutesData,
 					//customClasses: 'datapickerSelect',
 					parentWidth: false,
                     customClass: 'datepickerSelect',
                     popupOptions: {
-                        background: false
+                        background: true
                     }
 				});
 				this.domMinutesSelectWidget[side].on('change:selectedOption', $.proxy(this.timeChanged, this));
@@ -1337,7 +1354,7 @@ MKWidgets.DateRangePicker = Class({
 					{
 					this.domSecondSelectWidget = {};
 					}
-				this.domSecondLabel = $("<div/>").addClass("secondLabel");
+				this.domSecondLabel = $("<label/>").addClass("secondLabel");
 				this.domSecondSelect = $("<div/>").addClass("secondselect");
 				this.domSecond = $("<div/>").attr('class', 'secondContainer timeContainer')
 					.append(this.domSecondLabel)
@@ -1345,12 +1362,14 @@ MKWidgets.DateRangePicker = Class({
 				;
 				this.domCurrentSide.append(this.domSecond);
 				this.domSecondSelectWidget[side] = new MKWidgets.Select(this.domSecondSelect, {
+					inputField: true,
 					dict: secondData,
+					//value: secondData[0].value,
 					//customClasses: 'datapickerSelect',
 					parentWidth: false,
                     customClass: 'datepickerSelect',
                     popupOptions: {
-                        background: false
+                        background: true
                     }
 				});
 				this.domSecondSelectWidget[side].on('change:selectedOption', $.proxy(this.timeChanged, this));

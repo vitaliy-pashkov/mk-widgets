@@ -22,6 +22,7 @@ MKWidgets.Tree = Class({
 				//'all': {name: 'Все', filter_type: 'boolean'},
 				//'filter3': {name: 'Фильтр 3', filter_type: 'boolean'}
 			},	//possible filters
+			indications: {},
 			debugLevel: "profile",
 			NoFiltersTreeOpen: false,
 			loadHtml: false
@@ -125,10 +126,11 @@ MKWidgets.Tree = Class({
 		{
 		if (this.domFiltersCheckbox != undefined)
 			{
-			$.each(this.domFiltersCheckbox, $.proxy(function (index, value)
-			{
-			this.cookieBaseNodes[$(value).attr('id')] = $(value).prop('checked');
-			}, this));
+			$.each(this.domFiltersCheckbox, $.proxy(
+				function (index, value)
+				{
+				this.cookieBaseNodes[$(value).attr('id')] = $(value).prop('checked');
+				}, this));
 			}
 		this.cookieBaseNodes["input"] = this.searchInput.val();
 		this.local_Storage.set("tree", this.cookieBaseNodes);
@@ -170,30 +172,32 @@ MKWidgets.Tree = Class({
 	filtersCreate: function ()
 		{
 		this.domFiltersContainer = $('<div/>').addClass("crudtree-filters-container");
-		$.each(this.options.filters, $.proxy(function (index, value)
-		{
-		var checkBox = $('<input>')
-			.addClass('crudtree-filter-checkbox')
-			.attr('id', index)
-			.attr('type', 'checkbox')
-			.attr(value, true);
-		if (this.cookieBaseNodes != undefined)
+		$.each(this.options.filters, $.proxy(
+			function (index, value)
 			{
-			if (this.cookieBaseNodes[index] == true)
+			var checkBox = $('<input>')
+				.addClass('crudtree-filter-checkbox')
+				.attr('id', index)
+				.attr('type', 'checkbox')
+				.attr('checked', true);
+
+			if (this.cookieBaseNodes != undefined)
 				{
-				checkBox.attr("checked", true);
+				if (this.cookieBaseNodes[index] == false)
+					{
+					checkBox.attr("checked", false);
+					}
 				}
-			}
-		var name = $('<label>')
-			.addClass('crudtree-filter-p-name')
-			.attr('for', index)
-			.text(value['name']);
-		var filter = $('<div>').addClass('crudtree-filter-block')
-			.append(checkBox)
-			.append(name);
-		this.domFiltersContainer
-			.append(filter);
-		}, this));
+			var name = $('<label>')
+				.addClass('crudtree-filter-p-name')
+				.attr('for', index)
+				.text(value['name']);
+			var filter = $('<div>').addClass('crudtree-filter-block')
+				.append(checkBox)
+				.append(name);
+			this.domFiltersContainer
+				.append(filter);
+			}, this));
 		this.element.prepend(this.domFiltersContainer);
 		this.domFiltersCheckbox = this.domFiltersContainer.find('.crudtree-filter-checkbox');
 		this.domFiltersCheckbox.on("change", $.proxy(this.filtersControllerSlot, this));
@@ -226,11 +230,17 @@ MKWidgets.Tree = Class({
 			.append(this.searchController);
 		this.element.prepend(this.searchContainer);
 
-		this.searchInput.bind("propertychange change keyup input paste", $.proxy(this.searchChangeSlot, this));
+		this.searchInput.on("input", $.proxy(this.searchChangeSlot, this));
+		this.onDebounce("run-search", this.searchRun, 700, false, this);
 		this.searchController.bind("click", $.proxy(this.searchControllerSlot, this));
 		},
 
-	searchChangeSlot: function (e)
+	searchChangeSlot: function ()
+		{
+		this.trigger('run-search');
+		},
+
+	searchRun:function()
 		{
 		if (this.searchInput.val().length > 0)
 			{
@@ -266,6 +276,15 @@ MKWidgets.Tree = Class({
 				params[this.options.loadHtml.params[i]] = node.nodeData[this.options.loadHtml.params[i]];
 				}
 
+			if (this.domLoaderBG == undefined)
+				{
+				this.domLoaderBG = $('<div> <img src="/widgets/mk-widgets/tree/img/loader.gif" /> </div>')
+					.addClass('tusur-csp-tree-loader-bg');
+				$(this.options.loadHtml.target).prepend(this.domLoaderBG);
+				}
+
+			this.currentNodeData = JSON.stringify(node.nodeData);
+
 			$.ajax({
 				method: "GET",
 				url: this.options.loadHtml.url,
@@ -276,8 +295,13 @@ MKWidgets.Tree = Class({
 				nodeData: node.nodeData,
 				success: function (html, textStatus)
 					{
-					$(this.that.options.loadHtml.target).html(html);
-					this.that.options.loadHtml.onReady(this.nodeData);
+					if (this.that.currentNodeData == JSON.stringify(this.nodeData))
+						{
+						$(this.that.options.loadHtml.target).html(html);
+						this.that.options.loadHtml.onReady(this.nodeData);
+						this.that.domLoaderBG = null;
+						}
+
 					},
 				error: function (data)
 					{
@@ -330,6 +354,8 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		this.on('render', this.render, this);
 
 		this.bindNode('sandbox', sandbox);
+
+		this.calcIndications();
 		this.createDom();
 
 		if (this.level == 0)
@@ -337,7 +363,6 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 			this.states.openState = 'open';
 			this.render();
 			}
-
 
 		if (this.nodeData.selectable == undefined)
 			{
@@ -372,9 +397,16 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 
 		this.domManageIco = $("<div/>").addClass("crudtree-node-manage-ico");
 		this.domNodeBodyText = $("<div/>").html(this.nodeData.value).addClass("crudtree-node-text");
-		this.domNodeBody = $("<div/>").addClass("crudtree-node-body")
-			.append(this.domManageIco)
-			.append(this.domNodeBodyText);
+		this.domIndicator = $("<div/>").addClass("crudtree-node-indicator");
+
+		this.domNodeBody = $("<div/>").addClass("crudtree-node-body");
+		this.domNodeBody.append(this.domManageIco);
+		this.domNodeBody.append(this.domNodeBodyText);
+		if(this.tree.options.indications.dataIndex != null)
+			{
+			this.domNodeBody.append(this.domIndicator);
+			}
+
 		this.domDependLine = $("<div/>").addClass("crudtree-depend-line");
 
 		this.domManageIco.on("click", $.proxy(this.manageClickSlot, this));
@@ -390,7 +422,7 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 			{
 			if (this.nodeData.childs.length != 0)
 				{
-				if(this.level > 0)
+				if (this.level > 0)
 					{
 					this.domChilds = $("<div/>").addClass("crudtree-childs");
 					}
@@ -402,6 +434,48 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 				this.childs = new MKWidgets.TreeNS.TreeNodeArray(this.nodeData.childs, this, this.tree, this.domChilds, this.level + 1);
 				}
 			}
+		},
+
+	calcIndications: function ()
+		{
+		var indications = this.tree.options.indications;
+		var value = this.nodeData[indications.dataIndex];
+		if (value != undefined)
+			{
+			for (var i = 0; i < indications.order.length; i++)
+				{
+				if (value == indications.order[i].value)
+					{
+					this.indicator = indications.order[i];
+					}
+				}
+			}
+		if (this.indicator != undefined)
+			{
+			this.goUpIndicator(this.indicator);
+			}
+		},
+
+	goUpIndicator: function (indicator)
+		{
+		if (this.indicator == undefined)
+			{
+			this.indicator = indicator;
+			}
+		else
+			{
+			var newIndex = this.tree.options.indications.order.indexOf(indicator);
+			var thisIndex = this.tree.options.indications.order.indexOf(this.indicator);
+			if (newIndex < thisIndex)
+				{
+				this.indicator = indicator;
+				}
+			}
+		if (this.parent != null)
+			{
+			this.parent.goUpIndicator(this.indicator);
+			}
+
 		},
 
 	initLocalStorage: function ()
@@ -497,6 +571,7 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		this.refreshOpenState();
 		this.refreshSearchState();
 		this.refreshFilterState();
+		this.refreshIndication();
 
 		this.tree.cookieBaseNodes[this.states.hashId] = this.states;
 		},
@@ -508,10 +583,11 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		//	{
 		//	this.childs[i].refreshChildsDom();
 		//	}
-		this.childs.forEach(function (child)
-		{
-		child.refreshChildsDom();
-		});
+		this.childs.forEach(
+			function (child)
+			{
+			child.refreshChildsDom();
+			});
 		},
 
 	refreshParentsDom: function ()
@@ -545,6 +621,22 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 			{
 			this.domNode.hide();
 			}
+		},
+
+	refreshIndication: function ()
+		{
+		if (this.indicator != undefined)
+			{
+			this.domIndicator.css('background', this.indicator.color);
+			}
+		//select, not_select, child_select, fake_select
+		//var borderColor = {
+		//	select: '',
+		//	not_select: '',
+		//	child_select: '',
+		//	fake_select: ''
+		//};
+		//this.domIndicator.css('border-color', borderColor[this.states.selectState]);
 		},
 
 	refreshManageState: function ()
@@ -688,7 +780,7 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 			{
 			if ($.type(this.nodeData[i]) === "string")
 				{
-				if (this.nodeData[i].indexOf(searchStr) > -1)
+				if (this.nodeData[i].toLowerCase().indexOf(searchStr.toLowerCase()) > -1)
 					{
 					flag = true;
 					}
@@ -764,52 +856,44 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 
 	filter: function ()
 		{
-		var flag = false,
-			filters = [];
+		var flag = false;
 		this.states.filterState = "hide";
 		this.setOpenState("close");
-		$.each(this.tree.options.filters, function (index, val)
-		{
-		if ($("#" + index).prop('checked'))
+
+		for (var index in this.tree.options.filters)
 			{
-			filters.push(index);
-			}
-		});
-		if (filters.length == 0)
-			{
-			flag = true;
-			}
-		else
-			{
-			for (var i in this.nodeData)
+			if ($("#" + index).prop('checked') == true)
 				{
-				if (($.inArray(i, filters) != -1) && this.nodeData[i])
+				if (this.nodeData[index] === true)
 					{
 					flag = true;
 					}
 				}
 			}
+
 		if (flag == true)
 			{
-			this.goDownState("Filter", "display_by_parent");
+			//this.goDownState("Filter", "display_by_parent");
 			this.goUpState("Filter", "display_by_child");
 			this.states.filterState = "display";
-			if ((filters.length == 0) && !this.tree.options.NoFiltersTreeOpen)
-				{
-				this.goUpState("Open", "close");
-				}
-			else
-				{
-				this.goUpState("Open", "open");
-				}
+
+			this.goUpState("Open", "open");
+
+			//if ((filters.length == 0) && !this.tree.options.NoFiltersTreeOpen)
+			//	{
+			//	this.goUpState("Open", "close");
+			//	}
+			//else
+			//	{
+			//	this.goUpState("Open", "open");
+			//	}
 			this.setOpenState("close");
 			//this.refreshFilterState();
 			}
-		for (var i in this.childs)
+		for (var i = 0; i < this.childs.length; i++)
 			{
 			this.childs[i].filter();
 			}
-		//this.debugFinishCall(arguments, this);
 		},
 
 	filterReset: function ()

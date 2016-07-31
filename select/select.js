@@ -12,6 +12,7 @@ MKWidgets.Select = Class({
 	enable: true,
 	isRendered: false,
 
+
 	constructor: function (elementSelector, options)
 		{
 		MKWidget.prototype.constructor.apply(this, [elementSelector, options]);
@@ -159,7 +160,7 @@ MKWidgets.Select = Class({
 			{
 			if (this.selectedOption != null)
 				{
-				if(this.selectedOption.value != null)
+				if (this.selectedOption.value != null)
 					{
 					this.value = this.selectedOption[this.dictConfig.dictIdIndex];
 					this.displayValue = this.selectedOption[this.dictConfig.dictDisplayIndex];
@@ -171,11 +172,11 @@ MKWidgets.Select = Class({
 					this.trigger('option-changed');
 					}
 				}
-				//else
-				//{
-				//this.value = null;
-				//this.inputInterface.displayValue = this.options.defaultDisplayValue;
-				//}
+			//else
+			//{
+			//this.value = null;
+			//this.inputInterface.displayValue = this.options.defaultDisplayValue;
+			//}
 			}, this)
 
 		//
@@ -211,9 +212,9 @@ MKWidgets.Select = Class({
 			silent: true
 		});
 		this.domInputBlock.addClass('disable');
-		if(this.inputInterface != undefined)
+		if (this.inputInterface != undefined)
 			{
-			this.inputInterface.domInput.prop( "disabled", true );
+			this.inputInterface.domInput.prop("disabled", true);
 			}
 		this.domImageBlock.addClass('disable');
 		},
@@ -223,9 +224,9 @@ MKWidgets.Select = Class({
 		this.set('enable', true, {
 			silent: true
 		});
-		if(this.inputInterface != undefined)
+		if (this.inputInterface != undefined)
 			{
-			this.inputInterface.domInput.prop( "disabled", false );
+			this.inputInterface.domInput.prop("disabled", false);
 			}
 		this.domInputBlock.removeClass('disable');
 		this.domImageBlock.removeClass('disable');
@@ -286,13 +287,7 @@ MKWidgets.Select = Class({
 			}
 		else
 			{
-			//this.set('selectedOption', null, {
-			//	silent: true
-			//});
-			var selectedOption = {};
-			selectedOption[this.dictConfig.dictIdIndex] = null;
-			selectedOption[this.dictConfig.dictDisplayIndex] = "";//this.options.activeDisplayValue;
-			this.selectedOption = selectedOption;
+			this.selectedOption = null;
 			}
 
 		},
@@ -301,11 +296,11 @@ MKWidgets.Select = Class({
 		{
 		if (this.options.inputField == true)
 			{
-			this.inputInterface.displayValue = title;
+			this.inputInterface.customTitleValue = title;
 			}
 		else
 			{
-			this.headerInterface.displayValue = title;
+			this.headerInterface.customTitleValue = title;
 			}
 		},
 
@@ -345,6 +340,8 @@ MKWidgets.SelectNS.SelectHeaderInterface = Class({
 	widget: null,
 	enable: false,
 
+	customTitleValue: '',
+
 	constructor: function (widget, enable)
 		{
 		WidgetInterface.prototype.constructor.apply(this, [widget, enable]);
@@ -358,7 +355,10 @@ MKWidgets.SelectNS.SelectHeaderInterface = Class({
 	turnOn: function ()
 		{
 		this.enabled = true;
-		this.linkProps('displayValue', "widget.selectedOption", this.setDisplayValue);
+
+		this.on('change:customTitleValue', this.setDisplayValue, false, this);
+		this.on('widget@change:selectedOption', this.setDisplayValue, true, this);
+
 		this.bindNode('displayValue', this.widget.domInputBlock, MK.binders.html());
 		this.bindNode('displayValue', this.widget.domInputBlock, MK.binders.attr('title'));
 		this.widget.bindNode('showList', this.widget.domSelect, MK.binders.className('open'))
@@ -366,29 +366,39 @@ MKWidgets.SelectNS.SelectHeaderInterface = Class({
 		this.widget.domHeaderBlock.on('click', $.proxy(this.changeShowList, this));
 		},
 
-	setDisplayValue: function (selectedOption)
+	setDisplayValue: function ()
 		{
-		if (this.widget.dict == null)
+		if (this.widget.dict == undefined)
 			{
 			this.widget.turnOff();
-			return this.widget.options.defaultNoValues;
-			}
-		if (selectedOption === undefined && this.widget.optionsList.length > 0)
-			{
-			this.widget.turnOn();
-			return this.widget.options.defaultDisplayValue;
-			}
-		else if (selectedOption === null && this.widget.optionsList.length > 0)
-			{
-			this.widget.turnOn();
-			return this.widget.options.activeDisplayValue;
+			this.displayValue = this.widget.options.defaultNoValues;
 			}
 		else if (this.widget.dict.length == 0)
 			{
 			this.widget.turnOff();
-			return this.widget.options.defaultNoValues;
+			this.displayValue = this.widget.options.defaultNoValues;
 			}
-		return selectedOption[this.widget.options.dictConfig.dictDisplayIndex];
+		else
+			{
+			this.widget.turnOn();
+			}
+
+		if (this.widget.selectedOption == undefined)
+			{
+			if (this.customTitleValue.length > 0)
+				{
+				this.displayValue = this.customTitleValue;
+				}
+			else
+				{
+				this.displayValue = this.widget.options.defaultDisplayValue;
+				}
+			}
+		else
+			{
+			this.displayValue = this.widget.selectedOption[this.widget.options.dictConfig.dictDisplayIndex];
+			}
+
 		},
 
 	changeShowList: function ()
@@ -422,13 +432,19 @@ MKWidgets.SelectNS.SelectInputInterface = Class({
 
 		this.domInput.on('input', $.proxy(this.inputChangeSlot, this));
 		this.on('change:searchString', this.searchStringChangeSlot, this);
-		this.on("widget.selectedOption@change:value", this.changeSelectedOptionSlot, this, true);	//widget@change:selectedOption
+		this.on("widget@change:selectedOption", this.changeSelectedOptionSlot, this, true);	//widget.selectedOption@change:value
+		this.linkProps('displayValue', "widget.selectedOption", this.setDisplayValue);
 
-		this.widget.bindNode('showList', this.widget.domSelect, MK.binders.className('open'))
-			.bindNode('showList', this.widget.domHeaderBlock, MK.binders.className('open'));
+		this.widget.bindNode('showList', this.widget.domSelect, MK.binders.className('open'));
+		this.widget.bindNode('showList', this.widget.domHeaderBlock, MK.binders.className('open'));
 
 		this.widget.domHeaderBlock.on('click', $.proxy(this.changeShowList, this));
 		this.widget.on('change:showList', this.changeShowListSlot, this);
+
+		if (this.domInput.val() == '-')
+			{
+			this.domInput.val('');
+			}
 		},
 
 	turnOff: function ()
@@ -445,18 +461,45 @@ MKWidgets.SelectNS.SelectInputInterface = Class({
 		{
 		if (this.widget.selectedOption != null)
 			{
-			this.domInput.val(this.widget.selectedOption.displayValue);
+			this.domInput.val(this.widget.selectedOption[this.widget.options.dictConfig.dictDisplayIndex]);
+			}
+		else
+			{
+			this.domInput.val('');
 			}
 		},
 
 	searchStringChangeSlot: function ()
 		{
-		this.widget.optionsList.each(
-			function (option)
-			{
-			option.searchInput = this.searchString;
-			}, this);
+		//this.widget.optionsList.each(
+		//	function (option)
+		//	{
+		//	option.searchInput = this.searchString;
+		//	}, this);
+
+		this.widget.optionsList.searchInput = this.searchString;
+
+		this.searchOptionsUpdateSlot();
+
 		this.widget.trigger('options-view-update');
+		},
+
+	searchOptionsUpdateSlot: function()
+		{
+		var countVisible = 0;
+		var lastVisible = null;
+		for(var i=0;i<this.widget.optionsList.length; i++)
+			{
+			if(this.widget.optionsList[i].show == true)
+				{
+				countVisible ++;
+				lastVisible =this.widget.optionsList[i];
+				}
+			}
+		if(countVisible == 1)
+			{
+			this.widget.listInterface.setSelectedOption(lastVisible);
+			}
 		},
 
 	changeShowListSlot: function ()
@@ -464,13 +507,14 @@ MKWidgets.SelectNS.SelectInputInterface = Class({
 		if (this.widget.showList == true)
 			{
 			this.domInput.focus();
+			this.domInput.select();
 			this.searchString = '';
 			}
 		else
 			{
 			if (this.widget.selectedOption != undefined)
 				{
-				this.domInput.val(this.widget.selectedOption.displayValue);
+				this.domInput.val(this.widget.selectedOption[this.widget.options.dictConfig.dictDisplayIndex]);
 				}
 			else
 				{
@@ -567,7 +611,7 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 		{
 		var options = this.widget.domOptionsList.find('.custom-select-option:visible'),
 			paddings = parseInt(this.widget.domOptionsList.css('padding-top')) + parseInt(this.widget.domOptionsList.css('padding-bottom')),
-			listMaxSize = ($(window).outerHeight() - this.widget.domHeaderBlock.outerHeight() - paddings) / 2,
+			listMaxSize = ($(window).outerHeight() - this.widget.domHeaderBlock.outerHeight() - paddings) / 3,
 			optionsMaxSize = options.first().outerHeight() * options.length + paddings
 			;
 
@@ -656,43 +700,49 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 		var nextOption = null;
 		if (this.widget.hoverOption == null)
 			{
-			nextOption = this.widget.domOptionsList.find('.custom-select-option:visible:first').data('option');
+			nextOption = this.getFirstVisible(0, this.widget.optionsList.length);
 			}
 		else
 			{
-			nextOption = $(this.widget.hoverOption.sandbox).next(':visible').data('option');
+			nextOption = this.getFirstVisible(this.widget.optionsList.indexOf(this.widget.hoverOption) + 1, this.widget.optionsList.length);
 			if (nextOption == null)
 				{
-				nextOption = $(this.widget.hoverOption.sandbox)
-					.parent()
-					.find('.custom-select-option:visible:first')
-					.data('option');
+				nextOption = this.getFirstVisible(0, this.widget.optionsList.length);
 				}
 			}
 		return nextOption;
 		},
+
 
 	prevHoverOption: function ()
 		{
 		var nextOption = null;
 		if (this.widget.hoverOption == null)
 			{
-			nextOption = this.widget.domOptionsList.find('.custom-select-option:visible:last').data('option');
+			nextOption = this.getFirstVisible(this.widget.optionsList.length - 1, 0);
 			}
 		else
 			{
-			nextOption = $(this.widget.hoverOption.sandbox).prev(':visible').data('option');
+			nextOption = this.getFirstVisible(this.widget.optionsList.indexOf(this.widget.hoverOption) - 1, 0);
 			if (nextOption == null)
 				{
-				nextOption = $(this.widget.hoverOption.sandbox)
-					.parent()
-					.find('.custom-select-option:visible:last')
-					.data('option');
+				nextOption = this.getFirstVisible(this.widget.optionsList.length - 1, 0);
 				}
 			}
-
 		return nextOption;
 		},
+
+	getFirstVisible: function (begin, end)
+		{
+		for (var i = begin; begin <= end ? i < end : i >= end; begin <= end ? i++ : i--)
+			{
+			if (this.widget.optionsList[i].show == true)
+				{
+				return this.widget.optionsList[i];
+				}
+			}
+		return null;
+		}
 
 });
 
@@ -725,7 +775,7 @@ MKWidgets.SelectNS.SelectModel = Class({
 		this.bindNode('hover', ':sandbox', MK.binders.className('hover'));
 
 
-		this.on('change:searchInput', this.searchDisplay, this);
+		this.on('parent@change:searchInput', this.searchDisplay, this);
 		},
 
 	isSelected: function ()
@@ -740,10 +790,11 @@ MKWidgets.SelectNS.SelectModel = Class({
 
 	searchDisplay: function ()
 		{
-		if (this.searchInput != '')
+		if (this.parent.searchInput != '')
 			{
 			this.show = false;
-			if (this[this.dictConfig.dictDisplayIndex].toLowerCase().indexOf(this.searchInput.toLowerCase()) > -1)
+			if ((this[this.dictConfig.dictDisplayIndex] + '').toLowerCase()
+					.indexOf((this.parent.searchInput + '').toLowerCase()) > -1)
 				{
 				this.show = true;
 				}
@@ -783,8 +834,6 @@ MKWidgets.DependsSelect = Class({
 		MKWidgets.Select.prototype.constructor.apply(this, [elementSelector, options]);
 		this.setOptions({
 			dictConfig: {
-				//dictDependIdIndex: undefined,
-				//formDependIdIndex: undefined,
 				dictIdIndex: 'value',
 				dictDisplayIndex: 'text',
 				nullValue: false,
@@ -796,8 +845,6 @@ MKWidgets.DependsSelect = Class({
 			defaultDisplayValue: 'Сначала выберите значение родителя',
 			activeDisplayValue: 'Выберите значение',
 			noValuesText: 'Нет значений',
-			//parentElements: null,   //MK objects
-
 		});
 
 		this.setOptions(options);
@@ -851,7 +898,7 @@ MKWidgets.DependsSelect = Class({
 				}
 			if (!(depend[i].object instanceof MK))
 				{
-				depend[i].object = new MK;
+				depend[i].object = new MK.Object(depend[i].object);
 				}
 			this.dependEvent(depend[i]);
 			}
@@ -859,7 +906,7 @@ MKWidgets.DependsSelect = Class({
 		this.updateOptions();
 		},
 
-	dependEvent: function(depend)
+	dependEvent: function (depend)
 		{
 		depend.object.on('change:' + depend['objectIdIndex'], this.updatesOptionsSlot, this);
 		},
@@ -868,8 +915,8 @@ MKWidgets.DependsSelect = Class({
 		{
 		this.updateDependValues();
 		this.dict = window.app.getDict(this.dictConfig);
-		this.updateOptions();
 		this.setSelectedOptionById(null);
+		this.updateOptions();
 		},
 
 	updateOptions: function ()
@@ -900,10 +947,10 @@ MKWidgets.DependsSelect = Class({
 		this.recreateOptions(newOptions);
 		},
 
-		updateDependValues: function ()
-			{
-			this.allValuesFlag = true;
-			var depend = this.dictConfig.depend;
+	updateDependValues: function ()
+		{
+		this.allValuesFlag = true;
+		var depend = this.dictConfig.depend;
 
 		this.dependValues = {};
 		for (var i in depend)
@@ -941,7 +988,6 @@ MKWidgets.DependsSelect = Class({
 					}
 				else
 					{
-					//this.turnOff();
 					this.setTitle(this.options.noValuesText);
 					}
 				}
@@ -955,7 +1001,7 @@ MKWidgets.DependsSelect = Class({
 		},
 });
 
-MKWidgets.DependsSelectNS.parentDict = Class({
+MKWidgets.DependsSelectNS.ParentDict = Class({
 	extends: MKWidgets.DependsSelect,
 	dict: [],
 
@@ -967,31 +1013,11 @@ MKWidgets.DependsSelectNS.parentDict = Class({
 			level: 1,
 		});
 		this.setOptions(options);
-		//this.parent = this.options.parent;
 		},
 
-	render: function ()
+	updateDependValues: function ()
 		{
-		this.isRendered = true;
-		this.createDom();
-		this.createInterfaces();
-		this.updateOptions();
-		},
-
-	dependEvent: function(depend)
-		{
-		depend.object.options.parent.on('dictionary-changed', this.updatesOptionsSlot, true, this);
-		},
-
-	updatesOptionsSlot: function ()
-		{
-		if(this.options.parent.level <= this.options.level)
-			{
-			this.dict = this.options.parent.getDict(this.options.level);
-			//this.setTitle(this.options.defaultDisplayValue);
-			this.setSelectedOptionById(null);
-			}
-		if(this.dict.length == 0)
+		if (this.dict.length == 0)
 			{
 			this.allValuesFlag = false;
 			this.trigger('hide-form');
@@ -1001,15 +1027,31 @@ MKWidgets.DependsSelectNS.parentDict = Class({
 			this.allValuesFlag = true;
 			this.trigger('show-form');
 			}
+		},
+
+	dependEvent: function (depend)
+		{
+		this.on('dictionary-changed', this.updatesOptionsSlot, true, this);
+		},
+
+	updatesOptionsSlot: function ()
+		{
+		this.dict = this.options.parent.getDict(this.options.level);
+		this.setSelectedOptionById(null);
+		this.updateDependValues();
+		this.updateOptions();
+		},
+
+	updateOptions: function ()
+		{
 		this.recreateOptions(this.dict);
 		},
 
 	getDict: function ()
 		{
-		if(this.parent != undefined)
+		if (this.options.parent != undefined)
 			{
-			this.dict = this.parent.getDict(this.options.level);
-			//if()
+			this.dict = this.options.parent.getDict(this.options.level);
 			}
 		},
 });

@@ -18,8 +18,6 @@
 
 			_create: function _create()
 				{
-				$.custom.debug.prototype._create.call(this);
-				this.debugStartCall(arguments);
 
 				//var route = GET("r");
 				//var link = this.element.find("[href $= '"+route+"']");
@@ -32,7 +30,6 @@
 
 				//this.element.find("a").on('click', $.proxy(this.itemClickSlot, this));
 
-				this.debugFinishCall(arguments);
 				},
 
 			itemClickSlot: function itemClickSlot(e)
