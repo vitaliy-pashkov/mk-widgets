@@ -11,6 +11,7 @@ MKWidgets.HcPlot = Class({
 		this.setOptions({
 			dataSource: "remote", //local, remote
 			//data: [],       //url or $data
+			dtFormat: 'DD.MM.YYYY HH:mm:ss',
 			dataParams: null,
 			plotConfig: {
 				title: {
@@ -131,8 +132,8 @@ MKWidgets.HcPlot = Class({
 			if(this.widget.plotConfig.xAxis[xAxisIndex]['min-max'] != undefined)
 				{
 				var minMax = this.widget.plotConfig.xAxis[xAxisIndex]['min-max'].split(' - ',2);
-				var min = moment(minMax[0], 'YYYY-MM-DD HH-mm-ss').valueOf() + 25200000; //+7 h
-				var max = moment(minMax[1], 'YYYY-MM-DD HH-mm-ss').valueOf() + 25200000; //+7 h
+				var min = moment(minMax[0], this.widget.options.dtFormat).valueOf() + 25200000; //+7 h
+				var max = moment(minMax[1], this.widget.options.dtFormat).valueOf() + 25200000; //+7 h
 				this.widget.plotConfig.xAxis[xAxisIndex].min = min;
 				this.widget.plotConfig.xAxis[xAxisIndex].max = max;
 				}
@@ -142,8 +143,8 @@ MKWidgets.HcPlot = Class({
 			if(this.widget.plotConfig.xAxis['min-max'] != undefined)
 				{
 				var minMax = this.widget.plotConfig.xAxis['min-max'].split(' - ',2);
-				var min = moment(minMax[0], 'YYYY-MM-DD HH-mm-ss').valueOf() + 25200000; //+7 h
-				var max = moment(minMax[1], 'YYYY-MM-DD HH-mm-ss').valueOf() + 25200000; //+7 h
+				var min = moment(minMax[0], this.widget.options.dtFormat).valueOf() + 25200000; //+7 h
+				var max = moment(minMax[1], this.widget.options.dtFormat).valueOf() + 25200000; //+7 h
 				this.widget.plotConfig.xAxis.min = min;
 				this.widget.plotConfig.xAxis.max = max;
 				}

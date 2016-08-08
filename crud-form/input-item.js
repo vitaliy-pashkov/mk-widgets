@@ -994,7 +994,7 @@ MKWidgets.CrudFormNS.InputItemNS.Date = Class({
 			.addClass('input-item-date');
 
 
-		this.datePicker = new MKWidgets.DateRangePicker(this.domInput, $.extend({
+		this.datePicker = new MKWidgets.Date(this.domInput, $.extend({
 			parentElement: this.domInputItem,
 			singleDatePicker: true,
 			startDate: startDate,
@@ -1048,6 +1048,9 @@ MKWidgets.CrudFormNS.InputItemNS.DateRange = Class({
 		MKWidgets.CrudFormNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
 		this.setOptions({
 			default: "",
+			dictConfig: {
+				format: 'DD.MM.YYYY HH:mm:ss'
+			}
 		});
 		this.setOptions(options);
 		},
@@ -1090,29 +1093,30 @@ MKWidgets.CrudFormNS.InputItemNS.DateRange = Class({
 
 		var dates = this.parseDates();
 
-		this.datePicker = new MKWidgets.DateRangePicker(this.domInput, $.extend({
-			parentElement: this.domInputItem,
-			singleDatePicker: false,
-			startDate: dates.startDate,
-			endDate: dates.endDate,
-			locales: {
-				ru: {
-					format: "YYYY-MM-DD"
-				},
-			},
-			ranges: MKWidgets.DateRangePicker.predefineRange([
-				"Сегодня", "Вчера", "7 дней", "30 дней", "Этот месяц", "Этот год"
-			]),
-		}, this.options.dictConfig));
+		this.domRanges = $('<div/>').addClass('tusur-csp-form-date-range-ranges');
+		this.element.append(this.domRanges);
 
 		this.domInputItem.empty().append(this.domInput);
+
+		this.dateRange = new MKWidgets.DateRange(this.domInput, $.extend({
+			domRanges: this.domRanges,
+			parentElement: this.domInputItem,
+			startDate: dates.startDate,
+			endDate: dates.endDate,
+			format: this.options.dictConfig.format,
+			ranges: MKWidgets.DateRange.predefineRange([
+				"сегодня", "вчера", "неделя", "месяц", "год"
+			])
+		}, this.options.dictConfig));
+
+
 		//this.domInput.focus();
 
 		this.bindNode("value", this.domInput);
-		this.datePicker.on('calendar-hide',
+		this.dateRange.on('date-range-change',
 			function ()
 			{
-			this.value = this.datePicker.element.val();
+			this.value = this.dateRange.getRangeText();
 			if (this.validate())
 				{
 				//this.datePicker.hide();

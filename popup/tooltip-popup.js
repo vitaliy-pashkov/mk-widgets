@@ -108,8 +108,8 @@ MKWidgets.PopupNS.Tooltip = Class({
 				{
 				this.clone.show();
 				}
-			var elementWidth = this.element.width(),
-				elementHeight = this.element.height()
+			var elementWidth = this.element.width()-1,
+				elementHeight = this.element.height()-1
 				;
 
 

@@ -383,13 +383,18 @@ var Application = Class(
 
 		getCascadeLevel: function (element, isCascade)
 			{
+			this.positionElement = element;
 			if (isCascade == true)
 				{
 				this.cascadeLevel++;
+
+
+
+				this.trigger('cascade-changed');
+
 				}
+
 			this.popupZindex++;
-			this.positionElement = element;
-			this.trigger('cascade-changed');
 			return {
 				level: this.cascadeLevel,
 				Zindex: this.popupZindex,
@@ -404,9 +409,10 @@ var Application = Class(
 			if (isCascade == true)
 				{
 				this.cascadeLevel--;
+				this.trigger('cascade-changed');
 				}
 			this.popupZindex--;
-			this.trigger('cascade-changed');
+
 			},
 
 		updateCascadeInfo: function (level)
