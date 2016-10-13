@@ -1,7 +1,7 @@
 var MKWidgets = MKWidgets || {};
-MKWidgets.XmlExporterNS = MKWidgets.XmlExporterNS || {};
+MKWidgets.XlsExporterNS = MKWidgets.XlsExporterNS || {};
 
-MKWidgets.XmlExporter = Class({
+MKWidgets.XlsExporter = Class({
 	extends: MKWidget,
 
 	gridData: [],
@@ -12,8 +12,7 @@ MKWidgets.XmlExporter = Class({
 		MKWidget.prototype.constructor.apply(this, [elementSelector, options]);
 		this.setOptions({
 			sheets: null,
-			returnUri: false,
-			title: 'Таблица'
+			title: 'Файл'
 		});
 		this.setOptions(options);
 		this.init();
@@ -23,22 +22,16 @@ MKWidgets.XmlExporter = Class({
 		{
 		this.sheets = this.options.sheets;
 		this.excelData = this.export(this.convertDataStructureToTable());
-		if (this.options.returnUri)
-			{
-			this.element.attr('download', this.options.title);
-			this.element.attr('href', this.excelData);
-			return this.excelData;
-			}
-		else
-			{
-			window.open(this.excelData);
-			}
 		},
 
-	getXML: function(options)
+	getXML: function()
 		{
-		this.setOptions(options);
-		this.init();
+		return this.excelData;
+		},
+
+	download: function()
+		{
+		MKWidgets.FileLoader.load(this.options.title, this.excelData);
 		},
 
 	convertDataStructureToTable: function ()
@@ -95,10 +88,6 @@ MKWidgets.XmlExporter = Class({
 
 	base64: function (s)
 		{
-		var test = encodeURIComponent(s);
-		var test1 = unescape(test);
-		var test2 = decodeURIComponent(test);
-		console.log(test1, test2);
 		return window.btoa(unescape(encodeURIComponent(s)))
 		},
 
@@ -132,7 +121,7 @@ MKWidgets.XmlExporter = Class({
 });
 
 
-//var xmlExporter = new MKWidgets.XmlExporter($('#exportLink'), {
+//var xmlExporter = new MKWidgets.XlsExporter($('#exportLink'), {
 //	"sheets": {'sheet 1':{
 //		"columns": [
 //			{

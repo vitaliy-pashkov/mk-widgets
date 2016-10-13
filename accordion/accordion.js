@@ -52,6 +52,12 @@
 					return;
 					}
 
+				var bg = this.findBackground(this.element);
+
+				this.element.find('header span').css('background-color', bg );
+				this.element.find('.accordion-controller').css('background-color', bg );
+
+
 				var freeHeight = this._calcFreeHeight();
 				var notCalcedSectionsCount = this.element.find(".section:visible").length;;
 				var normalHeight = freeHeight / notCalcedSectionsCount;
@@ -76,7 +82,7 @@
 
 							section.domBody.css({"height": "auto"});
 
-							draw.realBodyHeight = section.domBody.outerHeight(true);
+							draw.realBodyHeight = section.domBody.height();
 
 							if (draw.realBodyHeight < normalHeight && draw.calced == false)
 								{
@@ -104,6 +110,23 @@
 					}
 				},
 
+			findBackground: function(element)
+				{
+				var bg = null;
+				element.parents().each(
+					function()
+					{
+					bg = $(this).css('background-color');
+					//alert(bg+'');
+					if(bg != 'rgba(0, 0, 0, 0)')
+						{
+						return false;
+						}
+					}
+				);
+				return bg;
+				},
+
 			_calcFreeHeight: function()
 				{
 
@@ -116,7 +139,8 @@
 						this.sections[i].draw.headerHeight = this.sections[i].domHeader.outerHeight(true);
 						freeHeight -= this.sections[i].draw.headerHeight;
 						}
-					freeHeight -= this.sections[i].domSection.outerHeight(true) - this.sections[i].domSection.height();
+					freeHeight -= (this.sections[i].domSection.outerHeight(true) - this.sections[i].domSection.height()) +
+						(this.sections[i].domBody.outerHeight(true) - this.sections[i].domBody.height());
 					}
 				return freeHeight;
 				},
@@ -212,14 +236,7 @@ var Section = function (accordion, domSection)
 
 		if (this.draw.needScroll == true && this.domSection.data('accordion-scrolable') != false)
 			{
-			this.scrollbar = this.domBody.addClass("thin-skin").customScrollbar(
-				{
-					updateOnWindowResize: true,
-					hScroll: false,
-					fixedThumbHeight: 7,
-					fixedThumbWidth: 7,
-					wheelSpeed: 10,
-				});
+			this.scrollbar = this.domBody.addClass("thin-skin").customScrollbar(CustomScrollbarSettings);
 			}
 
 		}
@@ -351,7 +368,7 @@ MKWidgets.Accordion = Class({
 
 					section.domBody.css({"height": "auto"});
 
-					draw.realBodyHeight = section.domBody.outerHeight(true);
+					draw.realBodyHeight = section.domBody.height();
 
 					if (draw.realBodyHeight < normalHeight && draw.calced == false)
 						{

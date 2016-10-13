@@ -59,30 +59,26 @@
 	width: ~"calc(100% - 20px)";
   }
 
-  .timeContainer .custom-select {
-	line-height: 9px;
-	margin-top: 0px;
-	.custom-select-input-block {
-	  width: 21px;
-	  padding: 9px 23px 10px 10px;;
-	}
-	.custom-select-option {
-	  line-height: 9px;
-	  padding-left: 4px;
-	  margin-right: 17px;
-	}
-	.custom-select-input-block {
-	  padding-left: 10px;
-	}
-	.custom-select-close-image {
-	  top: 14px;
-	  //margin-top: 14px;
-	  margin-right: 8px;
-	}
-	.custom-select-list {
-	  max-height: 280px;
-	}
-  }
+  //.timeContainer .custom-select {
+	//line-height: 9px;
+	//margin-top: 0px;
+	//.custom-select-input-block {
+	//  width: 21px;
+	//  padding: 9px 23px 10px 10px;;
+	//}
+	//.custom-select-option {
+	//  line-height: 9px;
+	//  padding-left: 4px;
+	//  margin-right: 17px;
+	//}
+	//.custom-select-close-image {
+	//  top: 14px;
+	//  margin-right: 8px;
+	//}
+	//.custom-select-list {
+	//  max-height: 280px;
+	//}
+  //}
 
   .daterangepicker .hourContainer {
 	margin-left: 7px;
@@ -268,7 +264,7 @@
   .daterangepicker .timeContainer {
 	display: inline-block;
 	float: left;
-	margin-right: 27px;
+	margin-right: 23px;
   }
   .daterangepicker .secondContainer {
 	margin-right: 0px;
@@ -407,9 +403,9 @@
 	}
 
 	.input-item-date {
-	  padding: 14px 19px 10px 23px;
-	  height: 14px;
-	  height: ~"calc(100% - 24px)";
+	  //padding: 14px 19px 10px 23px;
+	  //height: 14px;
+	  //height: ~"calc(100% - 24px)";
 	}
 
 	.daterangepicker.single .calendar.left {
@@ -439,51 +435,57 @@
 }
 
 .custom-select-header.datepickerSelect {
-  line-height: 9px;
-  background-color: #EBEBEB;
-}
+  max-width: 55px;
 
-.custom-select-header.datepickerSelect .custom-select-input-block {
-  padding: 9px 23px 10px 10px;
-  width: 20px;
-  text-align: center;
-}
-
-.datepickerSelect {
-  .custom-select-list .custom-select-option {
-	margin: 0 15px 0 5px;
-	line-height: 9px;
-	//padding: 11px 0 15px 5px;
-	padding: 8px 0 8px 0px;
-	text-align: center;
+  .custom-select-input-field {
+	padding: 8px 20px 9px 10px;
+	width: ~'calc(100% - 30px)';
   }
-
-  .custom-select-close-image {
-	margin-right: 8px !important;
-	top: 14px !important;
-  }
-  //
-  //.scroll-bar.vertical {
-  //  margin-right: 11px !important;
-  //}
 }
 
-.datepickerSelect.custom-select-list-scroll .scroll-bar.vertical {
-  margin-right: 11px !important;
-}
+//.custom-select-header.datepickerSelect {
+//  line-height: 9px;
+//  background-color: #EBEBEB;
+//}
+//
+//.custom-select-header.datepickerSelect .custom-select-input-block {
+//  padding: 9px 23px 10px 10px;
+//  width: 20px;
+//  text-align: center;
+//}
+//
+//.datepickerSelect {
+//  .custom-select-list .custom-select-option {
+//	margin: 0 15px 0 5px;
+//	line-height: 9px;
+//	//padding: 11px 0 15px 5px;
+//	padding: 8px 0 8px 0px;
+//	text-align: center;
+//  }
+//
+//  .custom-select-close-image {
+//	margin-right: 8px !important;
+//	top: 14px !important;
+//  }
+//  //
+//  //.scroll-bar.vertical {
+//  //  margin-right: 11px !important;
+//  //}
+//}
+//
+//.datepickerSelect.custom-select-list-scroll .scroll-bar.vertical {
+//  margin-right: 11px !important;
+//}
 
 .mk-widgets-date-range {
 
 }
 
 .mk-widgets-date-range-container {
-
   position: relative;
-  .mk-widgets-date-range-input {
-	min-height: 20px;
-	width: ~'calc( 50% - 40px)';
-	border: none;
 
+  .mk-widgets-date-range-input {
+	width: ~'calc(50% - 42px)';
   }
 }
 
@@ -498,7 +500,7 @@
 .mk-widgets-date-range-container:after {
   content: ' ';
   width: 1px;
-  height: 30px;
+  height: 27px;
   position: absolute;
   left: 50%;
   top: 4px;

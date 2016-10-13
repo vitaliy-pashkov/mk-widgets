@@ -34,7 +34,7 @@ MKWidgets.CrudFormNS.InputItem = Class({
 
 			this.createDom();
 
-			this.bindNode('errorText', this.domInputItem, this.errorBinder);
+
 			},
 
 		createDom: function ()
@@ -51,6 +51,8 @@ MKWidgets.CrudFormNS.InputItem = Class({
 				widthClass = this.options.widthClass;
 				}
 			this.element.addClass(widthClass);
+
+			this.bindNode('errorText', this.domInputItem, this.errorBinder);
 			},
 
 		errorBinder: {
@@ -85,6 +87,16 @@ MKWidgets.CrudFormNS.InputItem = Class({
 					}
 				});
 			this.value = this.options.formData[this.options.formIndex];
+			},
+
+		reInit: function ()
+			{
+			this.options.formData = this.options.formWidget.formData;
+			this.reInitItem();
+			},
+
+		reInitItem: function ()
+			{
 			},
 
 		cancel: function ()
@@ -145,7 +157,6 @@ MKWidgets.CrudFormNS.InputItem = Class({
 				}
 			return false;
 			},
-
 	},
 	{
 		factory: function (elementSelector, options)
@@ -158,6 +169,10 @@ MKWidgets.CrudFormNS.InputItem = Class({
 			if (options.type == "varchar")
 				{
 				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Varchar(elementSelector, options);
+				}
+			if (options.type == "password")
+				{
+				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Password(elementSelector, options);
 				}
 			else if (options.type == 'integer')
 				{
@@ -175,6 +190,18 @@ MKWidgets.CrudFormNS.InputItem = Class({
 				{
 				inputItem = new MKWidgets.CrudFormNS.InputItemNS.DependsSelect(elementSelector, options);
 				}
+			else if (options.type == 'multiSelect')
+				{
+				inputItem = new MKWidgets.CrudFormNS.InputItemNS.MultiSelect(elementSelector, options);
+				}
+			else if (options.type == 'treeSelect')
+				{
+				inputItem = new MKWidgets.CrudFormNS.InputItemNS.TreeSelect(elementSelector, options);
+				}
+			else if (options.type == 'dependTreeSelect')
+				{
+				inputItem = new MKWidgets.CrudFormNS.InputItemNS.DependTreeSelect(elementSelector, options);
+				}
 			else if (options.type == 'date')
 				{
 				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Date(elementSelector, options);
@@ -191,6 +218,10 @@ MKWidgets.CrudFormNS.InputItem = Class({
 				{
 				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Radio(elementSelector, options);
 				}
+			else if (options.type == 'checkbox')
+				{
+				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Checkbox(elementSelector, options);
+				}
 			else if (options.type == 'array')
 				{
 				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Array(elementSelector, options);
@@ -199,10 +230,27 @@ MKWidgets.CrudFormNS.InputItem = Class({
 				{
 				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Cron(elementSelector, options);
 				}
+			else if (options.type == 'dependForm')
+				{
+				inputItem = new MKWidgets.CrudFormNS.InputItemNS.DependForm(elementSelector, options);
+				}
+			else if (options.type == 'subForm')
+				{
+				inputItem = new MKWidgets.CrudFormNS.InputItemNS.SubForm(elementSelector, options);
+				}
+			else if (options.type == 'checkboxGroup')
+				{
+				inputItem = new MKWidgets.CrudFormNS.InputItemNS.CheckboxGroup(elementSelector, options);
+				}
+			else if (options.type == 'table')
+				{
+				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Table(elementSelector, options);
+				}
 			else if (inputItem == null)
 				{
 				inputItem = new MKWidgets.CrudFormNS.InputItem(elementSelector, options);
 				}
+
 
 			inputItem.init();
 			inputItem.linkPropValue();
@@ -307,6 +355,76 @@ MKWidgets.CrudFormNS.InputItemNS.Varchar = Class({
 		},
 });
 
+MKWidgets.CrudFormNS.InputItemNS.Password = Class({
+	extends: MKWidgets.CrudFormNS.InputItem,
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudFormNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			default: "",
+			validation: {
+				minLen: 0,			//varchar, text
+				maxLen: Infinity,	//varchar, text
+				equlalIndex: null,
+			},
+		});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+		this.errors = {
+			minLen: "Длина значения должна быть больше или равна " + this.options.validation.minLen + " символов",
+			maxLen: "Длина значения должна быть меньше или равна " + this.options.validation.maxLen + " символов",
+			notEqual: "Пароли не совпадают",
+		};
+		},
+
+	createField: function ()
+		{
+		this.value = '';
+		this.domInput = $('<input type="password"/>')
+			.addClass('input-item-varchar');
+		this.bindNode("value", this.domInput);
+		this.domInputItem.empty().append(this.domInput);
+		//this.domInput.focus();
+
+		this.afterCreateField();
+		},
+
+	validate: function (silent)
+		{
+		this.errorCode = null;
+		if (this.value.length < this.options.validation.minLen)
+			{
+			this.errorCode = 'minLen';
+			}
+		if (this.value.length > this.options.validation.maxLen)
+			{
+			this.errorCode = 'maxLen';
+			}
+		if(this.options.validation.equalIndex != undefined)
+			{
+			if(this.value != this.options.formData[this.options.validation.equalIndex])
+				{
+				this.errorCode = 'notEqual';
+				}
+			}
+		return this.itemValidate(silent);
+		},
+
+	cancel: function ()
+		{
+		this.domInputItem.empty().html(this.oldValue);
+		},
+
+	save: function ()
+		{
+		this.domInputItem.empty().html(this.value);
+		},
+});
+
 MKWidgets.CrudFormNS.InputItemNS.Integer = Class({
 	extends: MKWidgets.CrudFormNS.InputItem,
 
@@ -338,6 +456,7 @@ MKWidgets.CrudFormNS.InputItemNS.Integer = Class({
 		this.domInput = $('<input />')
 			.addClass('input-item-integer');
 		this.bindNode("value", this.domInput);
+
 		this.domInputItem.empty().append(this.domInput);
 		//this.domInput.focus();
 
@@ -582,29 +701,22 @@ MKWidgets.CrudFormNS.InputItemNS.Select = Class({
 
 	findItemById: function (id)
 		{
-		this.dict = this.selectWidget.dict;
-		for (var i in this.dict)
+		if (this.selectWidget.selectedOption != undefined)
 			{
-			var dictItem = this.dict[i];
-			if (dictItem[this.dictConfig.dictIdIndex] == id)
-				{
-				return dictItem;
-				}
+			return this.selectWidget.selectedOption.data;
 			}
 		return null;
+		//this.dict = this.selectWidget.dict;
+		//for (var i in this.dict)
+		//	{
+		//	var dictItem = this.dict[i];
+		//	if (dictItem[this.dictConfig.dictIdIndex] == id)
+		//		{
+		//		return dictItem;
+		//		}
+		//	}
+		//return null;
 		},
-
-	//getDict: function ()
-	//	{
-	//	if (Array.isArray(this.options.dict))
-	//		{
-	//		this.dict = this.options.dict;
-	//		}
-	//	else
-	//		{
-	//		this.dict = window.app.getDict(this.dictConfig);
-	//		}
-	//	},
 
 	createField: function ()
 		{
@@ -621,10 +733,11 @@ MKWidgets.CrudFormNS.InputItemNS.Select = Class({
 		this.domInputItem.empty();
 		this.selectWidget = new MKWidgets.Select(this.domInputItem, {
 			dictConfig: this.dictConfig,
+			dict: this.options.dict,
 			value: this.options.formData[this.dictConfig.formIdIndex],
 			popupOptions: {
 				background: true,
-				parentWidth: false,
+				//parentWidth: false,
 			}
 		});
 
@@ -669,7 +782,6 @@ MKWidgets.CrudFormNS.InputItemNS.Select = Class({
 		this.domInputItem.empty().html(this.displayValue);
 		this.selectWidget.deleteSelect();
 		},
-
 });
 
 MKWidgets.CrudFormNS.InputItemNS.DependsSelect = Class({
@@ -816,6 +928,263 @@ MKWidgets.CrudFormNS.InputItemNS.DependsSelect = Class({
 		this.domInputItem.empty().html(this.displayValue);
 		this.selectWidget.deleteSelect();
 		}
+});
+
+MKWidgets.CrudFormNS.InputItemNS.MultiSelect = Class({
+	extends: MKWidgets.CrudFormNS.InputItemNS.Select,
+	noItem: {},
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudFormNS.InputItemNS.Select.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({});
+		this.setOptions(options);
+
+		},
+
+	linkPropValue: function ()
+		{
+
+		},
+
+	reInitItem: function ()
+		{
+
+		var formMap = {};
+		for (var i = 0; i < this.options.formData[this.dictConfig.formIdIndex].length; i++)
+			{
+			formMap[this.options.formData[this.dictConfig.formIdIndex][i][this.dictConfig.dictIdIndex]] = this.options.formData[this.dictConfig.formIdIndex][i];
+			}
+
+		var dictMap = {};
+		for (var i = 0; i <  this.selectWidget.dict.length; i++)
+			{
+			dictMap[ this.selectWidget.dict[i][this.dictConfig.dictIdIndex] ] = this.selectWidget.dict[i];
+			}
+
+		for(var id in formMap)
+			{
+			var targetObj = dictMap [id];
+			for(var key in formMap[id])
+				{
+				targetObj[key] = formMap[id][key];
+				}
+			}
+		},
+
+	linkPropValueSelect: function ()
+		{
+		if (this.options.formData[this.dictConfig.formIdIndex] == undefined)
+			{
+			this.options.formData.jset(this.dictConfig.formIdIndex, null);
+			}
+		this.values = this.options.formData[this.dictConfig.formIdIndex];
+		},
+
+	createField: function ()
+		{
+		this.domInputItem.empty();
+		this.selectWidget = new MKWidgets.MultiSelect(this.domInputItem, {
+			dictConfig: this.dictConfig,
+			dict: this.options.dict,
+			values: this.options.formData[this.dictConfig.formIdIndex],
+			popupOptions: {
+				background: true,
+			}
+		});
+
+		this.selectWidget.on('options-changed', this.valuesChanged, this);
+		//this.linkProps('value', 'selectWidget.value');
+
+
+		//this.linkPropValueSelect();
+		this.afterCreateField();
+		},
+
+	valuesChanged: function ()
+		{
+		this.values = this.selectWidget.getValues();
+		this.displayValue = this.selectWidget.getDisplayValue();
+
+		this.options.formData.jset(this.dictConfig.formIdIndex, this.values);
+		//this.options.formData.jset(this.dictConfig.formDisplayIndex, this.displayValue);
+		this.trigger('value-changed');
+		if (this.allowValidate)
+			{
+			this.validate();
+			}
+		},
+
+	validate: function (silent)
+		{
+		this.errorCode = null;
+
+		return this.itemValidate(silent);
+		},
+
+});
+
+MKWidgets.CrudFormNS.InputItemNS.TreeSelect = Class({
+	extends: MKWidgets.CrudFormNS.InputItemNS.Select,
+
+	noItem: {},
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudFormNS.InputItemNS.Select.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			treeConfig: {
+				saveSelectStates: false
+			}
+		});
+		this.setOptions(options);
+		},
+
+	linkPropValueSelect: function ()
+		{
+		if (this.options.formData[this.dictConfig.formIdIndex] == undefined)
+			{
+			this.options.formData.jset(this.dictConfig.formIdIndex, null);
+			}
+		this.value = this.options.formData[this.dictConfig.formIdIndex];
+		this.displayValue = this.options.formData[this.dictConfig.formDisplayIndex];
+
+		//this.dictItem = this.findItemById(this.value);
+		//this.displayValue = this.dictItem[this.dictConfig.dictDisplayIndex];
+
+		this.on('change:value',
+			function (event)
+			{
+			this.options.formData.jset(this.dictConfig.formIdIndex, this.value);
+			var displayItem = this.findItemById(this.value);
+			if (displayItem != null)
+				{
+				this.displayValue = displayItem[this.dictConfig.dictDisplayIndex];
+				this.options.formData.jset(this.dictConfig.formDisplayIndex, this.displayValue);
+
+				for (var i = 0; i < this.dictConfig.linkProp.length; i++)
+					{
+					this.options.formData.jset(this.dictConfig.linkProp[i].form, displayItem[this.dictConfig.linkProp[i].dict]);
+					}
+
+				}
+			else
+				{
+				console.log('input item select - dict item not found');
+				}
+
+			var newValue = event.value;
+
+			if (event.value != event.previousValue && this.allowValidate)
+				{
+				this.validate();
+				}
+			}, this);
+		},
+
+
+	findItemById: function ()
+		{
+		return this.selectWidget.selectedOption.data;
+		},
+
+
+	createField: function ()
+		{
+		if (this.displayValue != null)
+			{
+			this.oldDisplayValue = this.displayValue;
+			}
+		else
+			{
+			this.oldDisplayValue = '-';
+			}
+
+		this.domInputItem.empty();
+		this.selectWidget = new MKWidgets.TreeSelect(this.domInputItem, {
+			dictConfig: this.dictConfig,
+			treeConfig: this.options.treeConfig,
+			value: this.options.formData[this.dictConfig.formIdIndex]
+		});
+
+		this.linkProps('value', 'selectWidget.value');
+		this.linkPropValueSelect();
+		this.afterCreateField();
+		},
+
+	validate: function (silent)
+		{
+		this.errorCode = null;
+
+		if (this.value == null)
+			{
+			this.errorCode = 'noValue';
+			}
+
+		return this.itemValidate(silent);
+		},
+
+	cancel: function ()
+		{
+		this.selectWidget.deleteSelect();
+		this.domInputItem.empty().html(this.oldDisplayValue);
+		},
+
+	save: function ()
+		{
+		this.domInputItem.empty().html(this.displayValue);
+		this.selectWidget.deleteSelect();
+		}
+});
+
+MKWidgets.CrudFormNS.InputItemNS.DependTreeSelect = Class({
+	extends: MKWidgets.CrudFormNS.InputItemNS.TreeSelect,
+
+	noItem: {},
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudFormNS.InputItemNS.TreeSelect.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({});
+		this.setOptions(options);
+		},
+
+	createField: function ()
+		{
+		if (this.displayValue != null)
+			{
+			this.oldDisplayValue = this.displayValue;
+			}
+		else
+			{
+			this.oldDisplayValue = '-';
+			}
+
+		for (var i in this.dictConfig.depend)
+			{
+			//todo: recursive getting path
+			if (this.dictConfig.depend[i].object === '../')
+				{
+				this.dictConfig.depend[i].object = this.options.formData['#parent']; //this.options.formWidget.options.parentFormData;
+				}
+			else if (this.dictConfig.depend[i].object === './' || this.dictConfig.depend[i].object == undefined)
+				{
+				this.dictConfig.depend[i].object = this.options.formData;
+				}
+			}
+
+		this.domInputItem.empty();
+		this.selectWidget = new MKWidgets.DependTreeSelect(this.domInputItem, {
+			dictConfig: this.dictConfig,
+			treeConfig: this.options.treeConfig,
+			value: this.options.formData[this.dictConfig.formIdIndex],
+			context: this.options.formData
+		});
+
+		this.linkProps('value', 'selectWidget.value');
+		this.linkPropValueSelect();
+		this.afterCreateField();
+		},
 });
 
 MKWidgets.CrudFormNS.InputItemNS.Cron = Class({
@@ -1013,11 +1382,7 @@ MKWidgets.CrudFormNS.InputItemNS.Date = Class({
 			function ()
 			{
 			this.value = this.datePicker.element.val();
-			if (this.validate())
-				{
-				//this.datePicker.hide();
-				}
-			}, this);
+			}, true, this);
 
 		this.afterCreateField();
 		},
@@ -1048,6 +1413,7 @@ MKWidgets.CrudFormNS.InputItemNS.DateRange = Class({
 		MKWidgets.CrudFormNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
 		this.setOptions({
 			default: "",
+			separator: ' - ',
 			dictConfig: {
 				format: 'DD.MM.YYYY HH:mm:ss'
 			}
@@ -1062,23 +1428,16 @@ MKWidgets.CrudFormNS.InputItemNS.DateRange = Class({
 
 	parseDates: function ()
 		{
-		var separator,
-			startDate = '',
-			endDate = '';
-		if (this.options.dictConfig.separator != undefined)
+		var startDate = '-';
+		var endDate = '-';
+
+		if (this.oldValue != undefined)
 			{
-			separator = this.options.dictConfig.separator;
-			}
-		else
-			{
-			separator = ' - ';
-			}
-		var dates = this.oldValue.split(separator);
-		startDate = dates[0];
-		if (dates[1] != undefined)
-			{
+			var dates = this.oldValue.split(this.options.separator);
+			startDate = dates[0];
 			endDate = dates[1];
 			}
+
 		return {
 			"startDate": startDate,
 			"endDate": endDate
@@ -1121,7 +1480,7 @@ MKWidgets.CrudFormNS.InputItemNS.DateRange = Class({
 				{
 				//this.datePicker.hide();
 				}
-			}, this);
+			}, true, this);
 
 		this.afterCreateField();
 		},
@@ -1310,6 +1669,82 @@ MKWidgets.CrudFormNS.InputItemNS.Radio = Class({
 		},
 });
 
+MKWidgets.CrudFormNS.InputItemNS.Checkbox = Class({
+	extends: MKWidgets.CrudFormNS.InputItem,
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudFormNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			default: "",
+		});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+		this.errors = {
+			noValue: "Не выбрано значение",
+		};
+		},
+
+	createDom: function ()
+		{
+		var widthClass = 'form-columns-33';
+		if (this.options.widthClass != undefined)
+			{
+			widthClass = this.options.widthClass;
+			}
+		this.element.addClass(widthClass);
+		},
+
+	createField: function ()
+		{
+		this.oldValue = this.value;
+
+		this.domContainer = $('<div/>').addClass('checkbox-container');
+		this.domCheckbox = $('<input id="mkw-checkbox-' + this.options.index + '-' + this.options.formData[this.options.formWidget.options.idIndex] + '" type="checkbox"/>');
+		this.domCheckbox.addClass('mkw-checkbox-input');
+
+		this.domLabel = $('<label for="mkw-checkbox-' + this.options.index + '-' + this.options.formData[this.options.formWidget.options.idIndex] + '" />');
+		this.domLabel.text(this.options.title);
+		this.domLabel.addClass('mkw-checkbox-label');
+
+		this.domContainer.append(this.domCheckbox);
+		this.domContainer.append(this.domLabel);
+
+		this.element.append(this.domContainer);
+
+		this.bindNode('value', this.domCheckbox);
+		this.on('change:value', this.changeSlot);
+
+		this.afterCreateField();
+		},
+
+	changeSlot: function (event)
+		{
+		this.value = this.domCheckbox.is(':checked');
+		},
+
+	validate: function (silent)
+		{
+		this.errorCode = null;
+
+		return this.itemValidate(silent);
+		},
+
+	cancel: function ()
+		{
+		this.domInputItem.empty().html(this.oldValue);
+		},
+
+	save: function ()
+		{
+		this.domInputItem.empty().html(this.value);
+		},
+});
+
+
 MKWidgets.CrudFormNS.InputItemNS.Array = Class({
 	extends: MKWidgets.CrudFormNS.InputItem,
 
@@ -1318,8 +1753,11 @@ MKWidgets.CrudFormNS.InputItemNS.Array = Class({
 		MKWidgets.CrudFormNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
 		this.setOptions({
 			default: "",
-			radioConfig: {
-				buttons: [],
+			arrayConfig: {
+				addable: true,
+				deletable: true,
+				idIndex: 'id',
+				fieldsModel: [],
 			},
 			validation: {},
 		});
@@ -1333,16 +1771,18 @@ MKWidgets.CrudFormNS.InputItemNS.Array = Class({
 		};
 
 
-		this.domCreateButton = $('<div/>').addClass('create-button');
-		this.domLabel.append(this.domCreateButton);
-
-		this.domCreateButton.on('click', $.proxy(this.createButtonClickSlot, this));
+		if (this.options.arrayConfig.addable)
+			{
+			this.domCreateButton = $('<div/>').addClass('create-button');
+			this.domLabel.append(this.domCreateButton);
+			this.domCreateButton.on('click', $.proxy(this.createButtonClickSlot, this));
+			}
 		},
 
 	createButtonClickSlot: function ()
 		{
 		this.representArray.push({});
-		this.trigger('value-changed');
+		this.trigger('array-changed');
 		},
 
 	createField: function ()
@@ -1357,30 +1797,38 @@ MKWidgets.CrudFormNS.InputItemNS.Array = Class({
 
 	linkPropValueArray: function ()
 		{
-		this.value = this.options.formData[this.options.formIndex];
+		this.value = this.findValue();
 		this.on('array-changed',
 			function ()
 			{
-			this.options.formData.jset(this.options.formIndex, this.representArray.toJSON());
+			this.jsetValue(this.representArray.toJSON());
 			//this.validate(true);
 			this.trigger('value-changed');
 			});
-
-
-		//this.value = this.options.formData[this.options.formIndex];
-		//
-		//this.on('change:value',
-		//	function (event)
-		//	{
-		//	this.options.formData.jset(this.options.formIndex, this.value);
-		//	var newValue = event.value;
-		//	if (event.value != event.previousValue && this.allowValidate)
-		//		{
-		//		this.validate()
-		//		}
-		//	});
-		//this.value = this.options.formData[this.options.formIndex];
 		},
+
+	findValue: function ()
+		{
+		if (this.options.formIndex == './')
+			{
+			return this.options.formData;
+			}
+		return this.options.formData[this.options.formIndex];
+		},
+
+	jsetValue: function (value)
+		{
+		if (this.options.formIndex == './')
+			{
+			this.options.formData = value;
+			}
+		else
+			{
+			this.options.formData.jset(this.options.formIndex, value);
+			}
+
+		},
+
 	linkPropValue: function ()
 		{
 
@@ -1408,16 +1856,6 @@ MKWidgets.CrudFormNS.InputItemNS.Array = Class({
 
 		return this.itemValidate(silent);
 		},
-
-	cancel: function ()
-		{
-		this.domInputItem.empty().html(this.oldValue);
-		},
-
-	save: function ()
-		{
-		this.domInputItem.empty().html(this.value);
-		},
 });
 
 MKWidgets.CrudFormNS.InputItemNS.ArrayRepresent = Class({
@@ -1426,7 +1864,7 @@ MKWidgets.CrudFormNS.InputItemNS.ArrayRepresent = Class({
 	display: true,
 	constructor: function (arrayItem, parent)
 		{
-		this.jset(arrayItem);
+		//this.jset(arrayItem);
 		this.represents = parent;
 
 		this.arrayItem = arrayItem;
@@ -1461,9 +1899,12 @@ MKWidgets.CrudFormNS.InputItemNS.ArrayRepresent = Class({
 			this.represents.inputItemArray.trigger('array-changed');
 			}, this);
 
-		this.domDeleteButton = $('<div/>').addClass('delete-button');
-		$(this.sandbox).append(this.domDeleteButton);
-		this.domDeleteButton.on('click', $.proxy(this.deleteButtonClickSlot, this));
+		if (this.represents.inputItemArray.options.arrayConfig.deletable)
+			{
+			this.domDeleteButton = $('<div/>').addClass('delete-button');
+			$(this.sandbox).append(this.domDeleteButton);
+			this.domDeleteButton.on('click', $.proxy(this.deleteButtonClickSlot, this));
+			}
 
 		this.crudForm.on('form-data-change', this.arrayChangeSlot, this);
 		},
@@ -1482,9 +1923,6 @@ MKWidgets.CrudFormNS.InputItemNS.ArrayRepresent = Class({
 		this.represents.displayLength--;
 
 		this.represents.inputItemArray.trigger('array-changed');
-		//var index = this.represents.indexOf(this);
-		//this.represents.splice(index, 1);
-		//this.represents.inputItemArray.trigger('value-changed');
 		},
 
 	toJSON: function ()
@@ -1508,9 +1946,22 @@ MKWidgets.CrudFormNS.InputItemNS.ArrayRepresents = Class({
 
 		this.displayLength = 0;
 
+		if (valueArray == undefined)
+			{
+			valueArray = [];
+			}
 		this.recreate(valueArray);
 
 		this.on('change:displayLength', this.changeLengthSlot, this, true);
+		},
+
+	recreate: function (array)
+		{
+		for (var i = 0; i < array.length; i++)
+			{
+			var model = new this.Model(array[i], this, i);
+			this.push(model);
+			}
 		},
 
 	changeLengthSlot: function ()
@@ -1541,12 +1992,452 @@ MKWidgets.CrudFormNS.InputItemNS.ArrayRepresents = Class({
 		this.forEach(
 			function (item)
 			{
-			if (item.display == true)
-				{
-				jsonArray.push(item.toJSON());
-				}
+			//if (item.display == true)
+			//	{
+			jsonArray.push(item.toJSON());
+			//}
 
 			});
 		return jsonArray;
+		},
+});
+
+MKWidgets.CrudFormNS.InputItemNS.SubForm = Class({
+	extends: MKWidgets.CrudFormNS.InputItem,
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudFormNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			default: "",
+		});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+		this.errors = {
+			itemsNotValid: 'Элементы формы не валидны'
+		};
+		this.createForm();
+		},
+
+	createForm: function ()
+		{
+		this.representConfig = $.extend(true, {}, this.options.formWidget.options);
+
+		this.representConfig.action = 'changeFormData';
+		this.representConfig.dataSource = 'local';
+		this.representConfig.data = this.options.formData;
+		this.representConfig.subForm = true;
+		this.representConfig.context = this.dependObject;
+		this.representConfig.fieldsModel = this.options.fieldsModel;
+
+		this.crudForm = new MKWidgets.CrudForm(this.element, this.representConfig);
+
+		this.crudForm.on('form-data-change',
+			function ()
+			{
+			this.trigger('value-changed');
+			}, this);
+		},
+
+	destroyForm: function ()
+		{
+		this.element.empty();
+
+		this.trigger('value-changed');
+		},
+
+	createField: function ()
+		{
+		this.afterCreateField();
+		},
+
+	linkPropValue: function ()
+		{
+
+		},
+
+	validate: function (silent)
+		{
+		this.errorCode = null;
+
+
+		if (this.crudForm != undefined)
+			{
+			var arrayValid = this.crudForm.saveInterface.validateFields(silent);
+			if (!arrayValid)
+				{
+				this.errorCode = 'itemsNotValid';
+				}
+			}
+
+		return this.itemValidate(silent);
+		},
+
+	cancel: function ()
+		{
+		this.domInputItem.empty().html(this.oldValue);
+		},
+
+	save: function ()
+		{
+		this.domInputItem.empty().html(this.value);
+		},
+
+	createDom: function ()
+		{
+		this.element.removeClass('tusur-csp-form-field');
+		},
+});
+
+MKWidgets.CrudFormNS.InputItemNS.DependForm = Class({
+	extends: MKWidgets.CrudFormNS.InputItem,
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudFormNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			default: "",
+			dependObject: './',
+			dependIndex: 'id',
+			dependType: null,
+			additionIndexes: [],
+		});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+		this.errors = {
+			itemsNotValid: 'Элементы формы не валидны'
+		};
+
+		this.dependObject = this.options.dependObject;
+		this.dependIndex = this.options.dependIndex;
+
+		if (this.dependObject === '../')
+			{
+			this.dependObject = this.options.formData['#parent']; //this.options.formWidget.options.parentFormData;
+			}
+		else if (this.dependObject === './' || this.dependObject == undefined)
+			{
+			this.dependObject = this.options.formData;
+			}
+
+		this.dependObject.on('change:' + this.dependIndex, this.dependChangeSlot, this);
+		for (var i = 0; i < this.options.additionIndexes.length; i++)
+			{
+			this.dependObject.on('change:' + this.options.additionIndexes[i], this.dependChangeSlot, this);
+			}
+
+		if (this.dependObject[this.dependIndex] != '-')
+			{
+			this.dependChangeSlot();
+			}
+		},
+
+	calcFormData: function (context)
+		{
+		this.formData = this.options.formData;
+
+		this.dependOptions = Entity.assignObject(this.options, this.options, context);
+
+		if (this.dependOptions.formDataRoute != undefined)
+			{
+			var routeParts = this.dependOptions.formDataRoute.split('/');
+			var target = this.formData;
+			for (var i = 0; i < routeParts.length; i++)
+				{
+				var routePart = routeParts[i];
+				if (routePart == '.')
+					{
+					continue;
+					}
+				else if ($.isNumeric(routePart) && target instanceof Array)
+					{
+					target = target[routePart];
+					}
+				else if (typeof routePart == 'string' && target instanceof Object)
+					{
+					target = target[routePart];
+					}
+				}
+			this.formData = target;
+			}
+		},
+
+	dependChangeSlot: function ()
+		{
+		if (this.options.dependType == 'bool')
+			{
+			if (this.dependObject[this.dependIndex] == true)
+				{
+				this.createForm();
+				}
+			else
+				{
+				this.destroyForm();
+				}
+			}
+
+		if (this.options.dependType == 'index')
+			{
+			if (this.dependObject[this.dependIndex] == null)
+				{
+				this.destroyForm();
+				}
+			else
+				{
+				this.destroyForm();
+				this.createForm();
+				}
+			}
+
+		if (this.options.dependType == 'keyWord')
+			{
+			if (this.dependObject[this.dependIndex] == null)
+				{
+				this.destroyForm();
+				}
+			else
+				{
+				this.destroyForm();
+				this.createForm(this.options.fieldsModels[this.dependObject[this.dependIndex]]);
+				}
+			}
+		},
+
+	createForm: function (fieldsModel)
+		{
+		if (fieldsModel == undefined)
+			{
+			fieldsModel = this.options.fieldsModel;
+			}
+
+
+		this.representConfig = $.extend(true, {}, this.options.formWidget.options);
+
+		this.calcFormData(this.dependObject);
+
+		this.representConfig.action = 'changeFormData';
+		this.representConfig.dataSource = 'local';
+		this.representConfig.data = this.formData;
+		this.representConfig.dependForm = true;
+		this.representConfig.context = this.dependObject;
+		this.representConfig.fieldsModel = fieldsModel;
+		this.representConfig.idIndex = this.options.idIndex;
+
+		this.crudForm = new MKWidgets.CrudForm(this.element, this.representConfig);
+
+		this.crudForm.on('form-data-change',
+			function ()
+			{
+			this.trigger('value-changed');
+			}, this);
+		},
+
+	destroyForm: function ()
+		{
+		this.element.empty();
+
+		this.trigger('value-changed');
+		},
+
+	createField: function ()
+		{
+
+		this.afterCreateField();
+		},
+
+	linkPropValue: function ()
+		{
+
+		},
+
+	validate: function (silent)
+		{
+		this.errorCode = null;
+
+
+		if (this.crudForm != undefined)
+			{
+			var arrayValid = this.crudForm.saveInterface.validateFields(silent);
+			if (!arrayValid)
+				{
+				this.errorCode = 'itemsNotValid';
+				}
+			}
+
+		return this.itemValidate(silent);
+		},
+
+	cancel: function ()
+		{
+		this.domInputItem.empty().html(this.oldValue);
+		},
+
+	save: function ()
+		{
+		this.domInputItem.empty().html(this.value);
+		},
+
+	createDom: function ()
+		{
+		this.element.removeClass('tusur-csp-form-field');
+		},
+});
+
+
+MKWidgets.CrudFormNS.InputItemNS.CheckboxGroup = Class({
+	extends: MKWidgets.CrudFormNS.InputItem,
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudFormNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			configs: {}
+		});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+		this.errors = {};
+
+		this.configs = this.options.config;
+
+		this.setTarget();
+		},
+
+	setTarget: function ()
+		{
+		if (!(this.options.formData[this.options.index] instanceof Array))
+			{
+			this.options.formData.jset(this.options.index, new MK.Array());
+			this.configs.target = this.options.formData[this.options.index];
+			}
+
+		this.configs.target = this.options.formData[this.options.index];
+		},
+
+	reInitItem: function ()
+		{
+		this.setTarget();
+		this.cbg.options.target = this.configs.target;
+		},
+
+	createField: function ()
+		{
+		this.element.addClass('form-columns-100');
+		//this.cbg = new MK;
+
+		this.cbg = new MKWidgets.CheckboxGroup(this.domInputItem, this.configs);
+		this.cbg.on('target-changed', this.targetChangedSlot, this);
+		this.initDoneSlot();
+
+		this.afterCreateField();
+		},
+
+	initDoneSlot: function()
+		{
+		if(this.cbg.dict.length == 0)
+			{
+			this.element.hide();
+			}
+		},
+
+	targetChangedSlot: function ()
+		{
+		this.options.formData.jset(this.options.index, this.cbg.options.target);
+		this.trigger('value-changed');
+		},
+
+	validate: function (silent)
+		{
+		this.errorCode = null;
+
+		return this.itemValidate(silent);
+		},
+
+	cancel: function ()
+		{
+		this.domInputItem.empty().html(this.oldValue);
+		},
+
+	save: function ()
+		{
+		this.domInputItem.empty().html(this.value);
+		},
+});
+
+MKWidgets.CrudFormNS.InputItemNS.Table = Class({
+	extends: MKWidgets.CrudFormNS.InputItem,
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudFormNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			tableConfig: {
+				dataSource: 'local',
+				title: this.options.title,
+				deleteByFlag: true,
+			}
+		});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+		this.errors = {};
+
+		this.configs = this.options.config;
+		},
+
+	createDom: function ()
+		{
+		var widthClass = 'form-columns-100';
+		if (this.options.widthClass != undefined)
+			{
+			widthClass = this.options.widthClass;
+			}
+		this.element.addClass(widthClass);
+
+		//this.bindNode('errorText', this.domInputItem, this.errorBinder);
+		},
+
+	createField: function ()
+		{
+		this.element.addClass('form-columns-100');
+		this.element.css('max-height', ($(window).height() - 300)+'px');
+		this.table = new MKWidgets.CrudTable(this.element, $.extend( {
+			data: this.options.formData[this.options.index],
+		}, this.options.tableConfig));
+
+		this.table.on('table-changed', this.saveSlot, this);
+		},
+
+	saveSlot: function()
+		{
+		this.options.formData.jset(this.options.index, this.table.rows.toJSON());
+		this.trigger('value-changed');
+		},
+
+	validate: function (silent)
+		{
+		this.errorCode = null;
+
+		return this.itemValidate(silent);
+		},
+
+	cancel: function ()
+		{
+		this.domInputItem.empty().html(this.oldValue);
+		},
+
+	save: function ()
+		{
+		this.domInputItem.empty().html(this.value);
 		},
 });

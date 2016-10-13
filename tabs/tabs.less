@@ -5,85 +5,179 @@
   @color-hover: #FDFDFD;
 
   .tabbar {
-    height: 100%;
+	height: 100%;
 
-    .tabs {
-      height: @tabs-height;
+	.tabs {
+	  height: @tabs-height;
+	  overflow-y: auto;
 
-      li {
-        .large-text;
-        height: @tabs-height - 16px;
-        display: block;
-        float: left;
-        width: 132px;
-        text-align: center;
-        padding: 11px 0 5px 0;
-        margin-right: 14px;
-        background-color: @color-li;
-        cursor: pointer;
-        border-radius: 3px 3px 0 0;
-      }
-
-      li:hover {
-        background-color: @color-hover;
-      }
-
-      li.active {
-        background-color: @color-hover;
-      }
-    }
-
-    .tabs:after {
-      content: "";
-      display: block;
-      clear: both;
-    }
-
-    .tabs-content {
-      background-color: @color-hover;
-      height: calc(~"100% - @{tabs-height}");
-      border-radius: 0 3px 3px 3px;
-      overflow: hidden;
-
-      .tab-content {
-        height: ~"calc(100% - 20px)";
-        display: none;
-        padding: 10px;
-        position: relative;
-      }
-    }
-
-    .scroll-bar.vertical {
-      right: 9px;
-    }
-  }
-
-  .treebar-input {
-    padding: 14px 19px 10px 23px;
-    height: 14px;
-  }
-
-
-  .tusur-csp-tabs-container {
-	ul.tusur-csp-tabs {
-
-	  width: ~'calc(100% - 130px)';
-	  padding: 0 30px 0 100px !important;;
-	  height: 35px;
-
-	  li.tusur-csp-tab {
-		display: inline-block;
-		padding: 10px 20px 0px 20px;
-		height: ~'calc(100% - 10px)';
-		/* text-align: center; */
-	  }
-	  li.tusur-csp-tab:hover {
+	  li {
+		.middle-text();
+		height: @tabs-height - 16px;
+		display: block;
+		float: left;
+		width: 132px;
+		text-align: center;
+		padding: 10px 0 6px 0;
+		margin-right: 14px;
+		background-color: @color-li;
 		cursor: pointer;
+		border-radius: 3px 3px 0 0;
 	  }
-	  li.tusur-csp-tab.tusur-csp-tab-active {
-		background: #DFDFDF;
-		border-radius: 4px 4px 0 0;
+
+	  li:hover {
+		background-color: @color-hover;
+	  }
+
+	  li.active {
+		background-color: @color-hover;
+	  }
+	}
+
+	.tabs:after {
+	  content: "";
+	  display: block;
+	  clear: both;
+	}
+
+	.tab-bodies {
+	  background-color: @color-hover;
+	  height: calc(~"100% - @{tabs-height}");
+	  border-radius: 0 3px 3px 3px;
+	  overflow: hidden;
+
+	  .tab-body {
+		background-color: #FDFDFD;
+		height: ~"calc(100% - 30px)";
+		display: none;
+		padding: 15px;
+		position: relative;
 	  }
 	}
   }
+
+  .tusur-csp-tabs-container {
+	height: 100%;
+
+	.tusur-csp-tabs {
+	  height: @tabs-height;
+	  overflow-y: auto;
+
+
+	  li:hover {
+		background-color: @color-hover;
+	  }
+
+	  li.active {
+		background-color: @color-hover;
+	  }
+	}
+
+	.tabs:after {
+	  content: "";
+	  display: block;
+	  clear: both;
+	}
+
+	.tab-bodies {
+	  background-color: #FDFDFD;
+	  height: calc(~"100% - @{tabs-height}");
+	  border-radius: 0 3px 3px 3px;
+	  overflow: hidden;
+
+	  .tab-body {
+		background-color: #FDFDFD;
+
+		height: ~"calc(100% - 30px)";
+		display: none;
+		padding: 15px;
+		position: relative;
+	  }
+	}
+  }
+
+  .tusur-csp-tabs-container.default-skin {
+
+	  ul.tusur-csp-tabs {
+
+		width: ~'calc(100% - 130px)';
+		padding: 0 30px 0 100px !important;;
+		height: 35px;
+
+		li.tusur-csp-tab {
+		  height: @tabs-height - 16px;
+		  display: block;
+		  float: left;
+		  width: 132px;
+		  text-align: center;
+		  padding: 10px 0 6px 0;
+		  margin-right: 14px;
+		  background-color: @color-li;
+		  cursor: pointer;
+		  border-radius: 3px 3px 0 0;
+		}
+
+		li.tusur-csp-tab:hover {
+		  cursor: pointer;
+		}
+		li.tusur-csp-tab.tusur-csp-tab-active {
+		  background: #DFDFDF;
+		  border-radius: 4px 4px 0 0;
+		}
+	  }
+	}
+
+
+
+  .url-skin {
+	ul.tusur-csp-tabs {
+	  float: right;
+
+	  li.tusur-csp-tab {
+		display: inline-block;
+		margin-right: 15px;
+		color: #017FD7;
+		text-decoration: underline;
+		cursor: pointer;
+	  }
+	  li.tusur-csp-tab.active {
+		color: inherit;;
+		text-decoration: none;
+		cursor: default;
+	  }
+	}
+  }
+
+  .tusur-csp-tabs-container.report-skin {
+
+	position: relative;
+
+	  ul.tusur-csp-tabs {
+		position: absolute;
+		top: -25px;
+		left: 120px;
+
+		li.tusur-csp-tab {
+		  display: inline-block;
+		  margin-right: 15px;
+		  color: #017FD7;
+		  text-decoration: underline;
+		  cursor: pointer;
+		}
+		li.tusur-csp-tab.active {
+		  color: inherit;;
+		  text-decoration: none;
+		  cursor: default;
+		}
+	  }
+
+
+	.tusur-csp-tabs-bodies {
+	  height: 100%;
+	}
+	.tusur-csp-tab-body{
+	  height: 100%;
+	}
+  }
+
 }

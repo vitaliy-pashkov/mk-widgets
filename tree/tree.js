@@ -15,6 +15,14 @@ MKWidgets.Tree = Class({
 			dataSource: "remote", //local, remote
 			data: [],       //url or $data
 
+			indexes: {
+				id: 'id', //{type1: type1_uid, type2: type2_uid,}
+				value: 'value',
+				type: 'type',
+				selectable: 'selectable',
+				childs: 'childs'
+			},
+
 			searchable: true,
 			title: "defaultTreeName",
 			filters: {
@@ -25,15 +33,16 @@ MKWidgets.Tree = Class({
 			indications: {},
 			debugLevel: "profile",
 			NoFiltersTreeOpen: false,
-			loadHtml: false
+			loadHtml: false,
+			saveSelectStates: true,
 		});
 		this.setOptions(options);
 
-		this.on("tree_data_ready", this.treeCreate);
-
-		this.getData();
 		this.local_Storage = $.initNamespaceStorage('tusur-csp-tree').localStorage;
 		this.createDom();
+
+		this.on("tree_data_ready", this.treeCreate);
+		this.getData();
 		},
 
 	getData: function ()
@@ -90,27 +99,28 @@ MKWidgets.Tree = Class({
 		this.local_Storage.set("tree", this.cookieBaseNodes);
 
 		this.element.append(this.domTreeContainer);
-
-
-		//this.root.states.openState = "open";
-		//this.treeContainer.append(this.root.domChilds.find(">.crudtree-node"));
-		//
-		//this.treeContainer.height(this.element.height() - this.searchContainer.height() - 35);
-		//
-		//this.treeRefresh();
-		//this.element.trigger("crudTreeReady");
 		},
 
 	treeCreate: function ()
 		{
-		this.root = new MKWidgets.TreeNS.TreeNodeObject({
-			childs: this.data,
-			value: "root",
-			type: "root",
-		}, null, this, 0, this.domTreeContainer, null);
-		this.treeRefresh();
+		this.scrollTop = 0;
+		this.on('select-node', this.selectNodeSlot, this);
+		this.selectedNodeCandidate = null;
 
-		this.initScrollbar();
+		var rootData = {};
+		rootData[this.options.indexes.childs] = this.data;
+		rootData[this.options.indexes.value] = 'root';
+		rootData[this.options.indexes.type] = 'root';
+
+		this.root = new MKWidgets.TreeNS.TreeNodeObject(rootData, null, this, 0, this.domTreeContainer, null);
+
+		$(window).resize($.proxy(this.treeRefresh, this));
+		this.on('mkw-resize', this.treeRefresh, true, this);
+		this.on('mkw-resize-silent', this.treeRefreshSilent, true, this);
+
+		this.selectNode(this.selectedNodeCandidate);
+
+		this.navigateInterface = new MKWidgets.TreeNS.NavigateInterface(this, this.options.navigation);
 		},
 
 	treeRefresh: function ()
@@ -118,8 +128,18 @@ MKWidgets.Tree = Class({
 		this.root.refreshChildsDom();
 		this.root.drawDepends(undefined);
 		this.cookieRefresh();
-		this.element.trigger("crudTreeResize");
+		this.deleteScrollbar();
+		this.createScrollbar();
+		this.trigger("mkw-inside-resize");
+		},
 
+	treeRefreshSilent: function ()
+		{
+		this.root.refreshChildsDom();
+		this.root.drawDepends(undefined);
+		this.cookieRefresh();
+		this.deleteScrollbar();
+		this.createScrollbar();
 		},
 
 	cookieRefresh: function ()
@@ -132,41 +152,63 @@ MKWidgets.Tree = Class({
 				this.cookieBaseNodes[$(value).attr('id')] = $(value).prop('checked');
 				}, this));
 			}
-		this.cookieBaseNodes["input"] = this.searchInput.val();
+		if (this.options.searcable)
+			{
+			this.cookieBaseNodes["input"] = this.searchInput.val();
+			}
 		this.local_Storage.set("tree", this.cookieBaseNodes);
 		},
 
-	initScrollbar: function ()
+	createScrollbar: function ()
 		{
-		this.setSizes();
 		if (this.listScroll == undefined)
 			{
-			this.listScroll = this.domTreeContainer.addClass("thin-skin").customScrollbar(CustomScrollbarSettings);
+			this.elementHeight = this.element.outerHeight(true);
+			this.element.css('height', 'auto');
+			this.domTreeContainer.css('height', 'auto');
+
+			var realContainerHeight = this.domTreeContainer.height();
+
+			var deltaHeight = this.element.outerHeight(true) - this.domTreeContainer.outerHeight();
+			this.element.css('height', this.elementHeight);
+			var containerHeight = (parseInt(this.element.css('height')) - deltaHeight);
+			this.domTreeContainer.height(containerHeight);//css('height', containerHeight + "px");
+
+			if (realContainerHeight > containerHeight)
+				{
+				this.listScroll = this.domTreeContainer.addClass("thin-skin")
+					.customScrollbar(CustomScrollbarSettings);
+
+				this.domTreeContainer.customScrollbar("scrollToY", this.scrollTop);
+				}
 			}
-		this.listScroll.customScrollbar("resize", true);
+		else
+			{
+			this.listScroll.customScrollbar("resize", true);
+			}
 
-		$(window).resize($.proxy(function ()
-		{
-		this.setSizes();
-		this.listScroll.customScrollbar("resize", true);
-		}, this));
-
-		this.element.on('crudTreeResize', $.proxy(function ()
-		{
-		this.listScroll.customScrollbar("resize", true);
-		}, this));
 		},
 
-	setSizes: function ()
+	deleteScrollbar: function ()
 		{
-		var elementHeight = this.element.css('height'),
-			elementCssHeight = window.getComputedStyle(this.element[0], null).getPropertyValue('height'),
-			containerHeight = this.domTreeContainer.css('height');
-		this.element.css('height', 'auto');
-		this.domTreeContainer.css('height', 'auto');
-		var deltaHeight = this.element.outerHeight(true) - this.domTreeContainer.outerHeight();
-		this.element.css('height', '');
-		this.domTreeContainer.css('max-height', (parseInt(this.element.css('height')) - deltaHeight) + "px");
+		if (this.listScroll != undefined)
+			{
+			this.scrollTop = -1 * this.domTreeContainer.find('.overview').position().top;
+			this.domTreeContainer.customScrollbar("remove");
+			this.listScroll = null;
+
+			this.domTreeContainer.css('max-height', 'none');
+			this.domTreeContainer.css('height', 'auto');
+			//this.element.css('height', 'auto');
+			}
+		},
+
+	getTreeRealHeight: function ()
+		{
+		this.deleteScrollbar();
+		var treeHeight = this.domTreeContainer.height();
+		this.createScrollbar();
+		return treeHeight;
 		},
 
 	filtersCreate: function ()
@@ -240,7 +282,7 @@ MKWidgets.Tree = Class({
 		this.trigger('run-search');
 		},
 
-	searchRun:function()
+	searchRun: function ()
 		{
 		if (this.searchInput.val().length > 0)
 			{
@@ -253,6 +295,7 @@ MKWidgets.Tree = Class({
 			this.root.searchReset();
 			}
 		this.treeRefresh();
+		this.trigger('search-complete');
 		},
 
 	searchControllerSlot: function (e)
@@ -263,6 +306,14 @@ MKWidgets.Tree = Class({
 			this.searchController.removeClass("active");
 			this.root.searchReset();
 			this.treeRefresh();
+			}
+		},
+
+	selectNodeSlot: function (node)
+		{
+		if (this.options.loadHtml)
+			{
+			this.loadHtml(node);
 			}
 		},
 
@@ -312,6 +363,41 @@ MKWidgets.Tree = Class({
 			}
 		},
 
+	selectNode: function (node)
+		{
+		if (node instanceof MKWidgets.TreeNS.TreeNodeObject)
+			{
+			this.unselectNode();
+
+			this.selectedNode = node;
+			node.parent.goUpState("Select", "child_select");
+			if (node.nodeData[this.options.indexes.selectable] != false)
+				{
+				node.states.selectState = "select";
+				node.parent.goUpState("open", "open");
+				this.trigger('select-node', node);
+				}
+			else
+				{
+				node.states.selectState = "fake_select";
+				}
+			node.refreshParentsDom();
+
+			this.treeRefresh();
+			}
+		},
+
+	unselectNode: function ()
+		{
+		if (this.selectedNode != undefined)
+			{
+			this.selectedNode.goUpState("Select", "not_select");
+			this.selectedNode.refreshParentsDom();
+			this.selectedNode = null;
+			}
+
+		},
+
 	dataReadySignal: function ()
 		{
 		this.element.trigger('crudTree_data_ready');
@@ -319,9 +405,40 @@ MKWidgets.Tree = Class({
 
 	destroy: function ()
 		{
-		$.Widget.prototype.destroy.call(this);
+		this.element.empty();
+		},
+});
+
+MKWidgets.TreeNS.NavigateInterface = Class({
+	extends: NavigateInterface,
+
+	constructor: function (widget, enable)
+		{
+		NavigateInterface.prototype.constructor.apply(this, [widget, enable]);
 		},
 
+	binder: function ()
+		{
+		this.widget.on('select-node', this.setter, this);
+		},
+
+	setter: function ()
+		{
+		this.navData = {};
+		this.navData['type'] = this.widget.selectedNode.nodeData[this.widget.options.indexes.type];
+		var idIndex = this.widget.options.indexes.id;
+		if(typeof idIndex == 'object')
+			{
+			idIndex = idIndex[this.navData['type']];
+			}
+		this.navData[idIndex] = this.widget.selectedNode.nodeData[idIndex];
+		this.setNavData();
+		},
+
+	navigate: function ()
+		{
+		this.widget.selectNode(this.widget.root.findNodeByData(this.navData));
+		},
 });
 
 MKWidgets.TreeNS.TreeNodeObject = Class({
@@ -345,6 +462,12 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		this.parentArray = parentArray;
 		//this.tree = parentArray.tree;
 		this.tree = tree;
+		this.indexes = $.extend({}, tree.options.indexes);
+		if(typeof this.indexes.id == 'object')
+			{
+			this.indexes.id = this.indexes.id[ data[this.indexes.type] ];
+			}
+
 		this.level = level;
 		this.nodeData = data;
 
@@ -364,11 +487,10 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 			this.render();
 			}
 
-		if (this.nodeData.selectable == undefined)
+		if (this.nodeData[this.indexes.selectable] == undefined)
 			{
-			this.selectable = false;
+			this.nodeData.selectable = false;
 			}
-
 		},
 
 	render: function ()
@@ -376,9 +498,10 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		if (this.level > 0)
 			{
 			this.domNode = $(this.sandbox);
-			$(this.sandbox).append(this.domNodeBody);
-			$(this.sandbox).append(this.domDependLine);
-			$(this.sandbox).data("crudtree-nodeStruct", this);
+			this.domNode.append(this.domNodeBody);
+			this.domNode.append(this.domDependLine);
+			this.domNode.data("crudtree-nodeStruct", this);
+
 			this.initLocalStorage();
 			}
 		$(this.sandbox).append(this.domChilds);
@@ -396,13 +519,13 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		this.childs = [];
 
 		this.domManageIco = $("<div/>").addClass("crudtree-node-manage-ico");
-		this.domNodeBodyText = $("<div/>").html(this.nodeData.value).addClass("crudtree-node-text");
+		this.domNodeBodyText = $("<div/>").html(this.nodeData[this.indexes.value]).addClass("crudtree-node-text");
 		this.domIndicator = $("<div/>").addClass("crudtree-node-indicator");
 
 		this.domNodeBody = $("<div/>").addClass("crudtree-node-body");
 		this.domNodeBody.append(this.domManageIco);
 		this.domNodeBody.append(this.domNodeBodyText);
-		if(this.tree.options.indications.dataIndex != null)
+		if (this.tree.options.indications.dataIndex != null)
 			{
 			this.domNodeBody.append(this.domIndicator);
 			}
@@ -413,14 +536,17 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		this.domNodeBodyText.on("click", $.proxy(this.textClickSlot, this));
 		this.domNodeBody.on("dblclick", $.proxy(this.manageClickSlot, this));
 
+		//this.domManageIco.on("mouseenter", $.proxy(this.mouseEnterSlot, this));
+		//this.domManageIco.on("mouseleave", $.proxy(this.mouseLeaveSlot, this));
+
 		this.createChilds();
 		},
 
 	createChilds: function ()
 		{
-		if (this.nodeData.childs != undefined)
+		if (this.nodeData[this.indexes.childs] != undefined)
 			{
-			if (this.nodeData.childs.length != 0)
+			if (this.nodeData[this.indexes.childs].length != 0)
 				{
 				if (this.level > 0)
 					{
@@ -431,7 +557,7 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 					this.domChilds = $(this.sandbox);
 					}
 
-				this.childs = new MKWidgets.TreeNS.TreeNodeArray(this.nodeData.childs, this, this.tree, this.domChilds, this.level + 1);
+				this.childs = new MKWidgets.TreeNS.TreeNodeArray(this.nodeData[this.indexes.childs], this, this.tree, this.domChilds, this.level + 1);
 				}
 			}
 		},
@@ -485,15 +611,23 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 			{
 			if (this.tree.cookieBaseNodes[this.states.hashId] != undefined)
 				{
+
 				this.states.jset(this.tree.cookieBaseNodes[this.states.hashId]);
-				if (this.states.selectState == "select" || this.states.selectState == "fake_select")
+
+				if (this.states.selectState == "select" && this.tree.options.saveSelectStates)
 					{
-					this.tree.selectedNode = this;
-					if (this.states.selectState == "select")
-						{
-						this.tree.loadHtml(this);
-						}
+					//this.tree.selectNode(this)
+
+					this.tree.selectedNodeCandidate = this;
+					//this.tree.trigger('select-node', this);
+					//this.tree.loadHtml(this);
 					}
+
+
+				//if(!this.tree.options.saveSelectStates)
+				//	{
+				this.states.selectState = this.defaultStates.selectState;
+				//}
 				}
 			else
 				{
@@ -509,25 +643,8 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 	textClickSlot: function (e)
 		{
 		e.stopPropagation();
-		if (this.tree.selectedNode != undefined)
-			{
-			this.tree.selectedNode.goUpState("Select", "not_select");
-			this.tree.selectedNode.refreshParentsDom();
-			}
-		this.tree.selectedNode = this;
-		this.parent.goUpState("Select", "child_select");
-		if (this.nodeData.selectable == true)
-			{
-			this.states.selectState = "select";
-			this.tree.loadHtml(this);
-			}
-		else
-			{
-			this.states.selectState = "fake_select";
-			}
-		this.refreshParentsDom();
 
-		this.tree.treeRefresh();
+		this.tree.selectNode(this);
 		},
 
 	manageClickSlot: function (e)
@@ -544,13 +661,38 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 				this.states.openState = "close";
 				}
 			}
+		this.tree.trigger('mkw-inside-resize');
 		this.tree.treeRefresh();
 		},
+
+	mouseEnterSlot: function()
+		{
+		if (this.states.openState == "close")
+			{
+			this.states.openState = "open";
+			this.openByHover = true;
+			}
+		this.tree.trigger('mkw-inside-resize');
+		this.tree.treeRefresh();
+		},
+
+	mouseLeaveSlot: function()
+		{
+		if (this.states.openState == "open" && this.openByHover == true)
+			{
+			this.states.openState = "close";
+			this.openByHover = false;
+			}
+		this.tree.trigger('mkw-inside-resize');
+		this.tree.treeRefresh();
+		},
+
+
 
 	refreshDom: function ()
 		{
 
-		this.domNodeBodyText.addClass("crudtree-icon-" + this.nodeData.type);
+		this.domNodeBodyText.addClass("crudtree-icon-" + this.nodeData[this.indexes.type]);
 
 		this.states.manageState = "normal";
 		if (this.childs.length == 0)
@@ -572,6 +714,11 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		this.refreshSearchState();
 		this.refreshFilterState();
 		this.refreshIndication();
+
+		if (this.domNodeBodyText.css('background-image') == 'none')
+			{
+			this.domNodeBodyText.addClass('without-ico');
+			}
 
 		this.tree.cookieBaseNodes[this.states.hashId] = this.states;
 		},
@@ -629,14 +776,6 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 			{
 			this.domIndicator.css('background', this.indicator.color);
 			}
-		//select, not_select, child_select, fake_select
-		//var borderColor = {
-		//	select: '',
-		//	not_select: '',
-		//	child_select: '',
-		//	fake_select: ''
-		//};
-		//this.domIndicator.css('border-color', borderColor[this.states.selectState]);
 		},
 
 	refreshManageState: function ()
@@ -758,12 +897,19 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 				var topNode = undefined;
 				if (i > 0)
 					{
-					topNode = this.childs[i - 1];
+					for (var j = i - 1; j >= 0; j--)
+						{
+						if (this.childs[j].states.searchState != 'hide' && this.childs[j].states.filterState != 'hide')
+							{
+							topNode = this.childs[j];
+							break;
+							}
+						}
 					}
 
 				this.childs[i].drawDepends(topNode, activeDepend);
 
-				if (this.childs[i].selectState == "child_select" || this.childs[i].selectState == "select" || this.childs[i].selectState == "fake_select")
+				if (this.childs[i].states.selectState == "child_select" || this.childs[i].states.selectState == "select" || this.childs[i].states.selectState == "fake_select")
 					{
 					activeDepend = false;
 					}
@@ -786,13 +932,15 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 					}
 				}
 			}
-		this.childs.forEach(function (child)
-		{
-		//if(child.states.searchState != 'display_by_parent')
-		//    {
-		child.search(searchStr);
-		//    }
-		}, this);
+
+		this.childs.forEach(
+			function (child)
+			{
+			child.search(searchStr);
+
+			}, this);
+
+
 		if (flag == true)
 			{
 			this.goDownState("Search", "display_by_parent");
@@ -800,12 +948,10 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 			this.states.searchState = "display";
 			this.goUpState("Open", "open");
 			this.setOpenState("close");
-			}
-		//for (var i in this.childs)
-		//{
-		//    this.childs[i].search(searchStr);
-		//}
 
+			return true;
+			}
+		return false;
 		},
 
 	setOpenState: function (state)
@@ -873,22 +1019,11 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 
 		if (flag == true)
 			{
-			//this.goDownState("Filter", "display_by_parent");
 			this.goUpState("Filter", "display_by_child");
 			this.states.filterState = "display";
 
 			this.goUpState("Open", "open");
-
-			//if ((filters.length == 0) && !this.tree.options.NoFiltersTreeOpen)
-			//	{
-			//	this.goUpState("Open", "close");
-			//	}
-			//else
-			//	{
-			//	this.goUpState("Open", "open");
-			//	}
 			this.setOpenState("close");
-			//this.refreshFilterState();
 			}
 		for (var i = 0; i < this.childs.length; i++)
 			{
@@ -900,6 +1035,36 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		{
 		this.goDownState("Filter", "display");
 		this.goDownState("Open", "close");
+		},
+
+	findNodeById: function (id)
+		{
+		if (this.nodeData[this.indexes.id] == id)
+			{
+			return this;
+			}
+		var node = null;
+		for (var i = 0; i < this.childs.length; i++)
+			{
+			node = this.childs[i].findNodeById(id);
+			if (node != null)
+				{
+				break;
+				}
+			}
+		return node;
+		},
+
+	findNodeByData: function (data)
+		{
+		if (data != undefined)
+			{
+			if (data[this.indexes.id] != undefined)
+				{
+				return this.findNodeById(data[this.indexes.id]);
+				}
+			}
+		return null;
 		},
 
 	getString: function (nodeData)

@@ -9,15 +9,17 @@ MKWidgets.CrudMaster = Class({
 		MKWidget.prototype.constructor.apply(this, [this.domBody, options]);
 
 		this.setOptions({
+			dataSource: 'remote',
 			title: 'Название',
 			action: "create", //create, read, update, delete
 			steps: [],
-
+			deleteText: 'Подтвердите удаление',
+			deleteSuccessText: 'Объект успешно удалён'
 		});
 		this.setOptions(options);
 
 		this.on('form_data_ready', this.crudMasterCreateInterfaces);
-		if (this.options.action == 'read' || this.options.action == 'update')
+		if (this.options.action == 'update' || this.options.action == 'delete')
 			{
 			this.getData();
 			}
@@ -26,13 +28,20 @@ MKWidgets.CrudMaster = Class({
 			this.generatePattern();
 			this.getDicts();
 			}
-
 		},
 
 	crudMasterCreateInterfaces: function ()
 		{
-		this.renderInterface = new MKWidgets.CrudMasterNS.RenderInterface(this, true);
-		this.saveInterface = new MKWidgets.CrudMasterNS.SaveInterface(this, true);
+		if (this.options.action == 'create' || this.options.action == 'update' )
+			{
+			this.renderInterface = new MKWidgets.CrudMasterNS.RenderInterface(this, true);
+			this.saveInterface = new MKWidgets.CrudMasterNS.SaveInterface(this, true);
+			}
+
+		if(this.options.action == 'delete')
+			{
+			this.deleteInterface = new MKWidgets.CrudMasterNS.DeleteInterface(this, true);
+			}
 		},
 
 	getDicts: function getDicts()
@@ -125,6 +134,10 @@ MKWidgets.CrudMaster = Class({
 				if (field.type == 'multiselect')
 					{
 					pattern[field.dictConfig.dictIdIndex] = [];
+					}
+				if (field.type == 'table')
+					{
+					pattern[field.index] = [];
 					}
 				}
 			}
@@ -286,6 +299,85 @@ MKWidgets.CrudMasterNS.SaveInterface = Class({
 });
 
 
+MKWidgets.CrudMasterNS.DeleteInterface = Class({
+	extends: WidgetInterface,
+	widget: null,
+	enable: false,
+
+	constructor: function (widget, enable)
+		{
+		WidgetInterface.prototype.constructor.apply(this, [widget, enable]);
+		},
+
+	create: function ()
+		{
+		var deleteText = this.widget.options.deleteText;
+		deleteText = Entity.applyContextValue(deleteText, this.widget.formData);
+
+		this.domDeleteText = $("<div/>").text(deleteText);
+
+		this.confirmPopup = new MKWidgets.PopupNS.ConfirmPopup( this.domDeleteText , {
+			title: this.widget.options.title,
+		});
+		this.confirmPopup.popup.openPopup();
+
+
+		WidgetInterface.prototype.create.apply(this);
+		},
+
+	turnOn: function ()
+		{
+		this.enabled = true;
+
+		this.confirmPopup.on('confirm', this.delete, this);
+		},
+	turnOff: function ()
+		{
+		this.enabled = false;
+		},
+
+	delete: function (rows)
+		{
+		if(this.widget.options.dataSource == 'remote')
+			{
+			$.ajax({
+				url: this.widget.options.deleteUrl,
+				data: {row: this.widget.formData.toJSON()},
+				type: "POST",
+				cache: false,
+				interface: this,
+				success: this.deleteSuccess,
+				error: this.deleteError,
+			});
+			}
+		},
+
+	deleteSuccess: function (responce, status, request)
+		{
+		//warning: another context! this = jqxhr, this.interface = interface, this.rows = deleted_rows
+		if (responce.status == 'OK')
+			{
+			var deleteSuccessText = this.interface.widget.options.deleteSuccessText;
+			deleteSuccessText = Entity.applyContextValue(deleteSuccessText, this.interface.widget.formData);
+
+			this.interface.domDeleteSuccessText = $("<div/>").text(deleteSuccessText);
+
+			this.interface.infoPopup = new MKWidgets.PopupNS.InfoPopup(this.interface.domDeleteSuccessText , {});
+			this.interface.infoPopup.popup.openPopup();
+			}
+		else
+			{
+			this.interface.widget.deleteError(responce.error);
+			}
+		},
+
+	deleteError: function (responce)
+		{
+		alert(JSON.stringify(responce));
+		},
+
+});
+
 MKWidgets.CrudMasterNS.RenderInterface = Class({
 	extends: WidgetInterface,
 	widget: null,
@@ -330,7 +422,6 @@ MKWidgets.CrudMasterNS.RenderInterface = Class({
 		this.enabled = false;
 		},
 
-
 	setupStep: function (step, index)
 		{
 		step.number = parseInt(index) + 1;
@@ -350,7 +441,6 @@ MKWidgets.CrudMasterNS.RenderInterface = Class({
 					actions: 'changeFormData',
 					fieldsModel: fieldsModel,
 					idIndex: this.widget.options.idIndex,
-
 				});
 				}
 

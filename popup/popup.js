@@ -4,8 +4,7 @@ MKWidgets.PopupNS = MKWidgets.PopupNS || {};
 MKWidgets.Popup = Class({
 	extends: MKWidget,
 
-	value: null,
-	oldValue: null,
+	isOpen: false,
 	windowBordersIndent: 50,
 	reverceFlag: true,
 	transitionTime: 0.27,
@@ -63,12 +62,14 @@ MKWidgets.Popup = Class({
 	createDom: function ()
 		{
 		this.domBackground = $("<div/>").addClass("tusur-csp-hide-popup-background");
+		this.domBackgroundSkin = $("<div/>").addClass("background-skin").on('click', $.proxy(this.closePopup, this));
+		this.domBackground.append(this.domBackgroundSkin);
 
 		this.domPopup = $("<div/>").addClass("tusur-csp-show-table-popup-container");
 		if (this.options.closeButton == true)
 			{
 			this.domCloseButton = $("<div/>").addClass("tusur-csp-popup-close-button")
-				.on('click', this.closePopup, this);
+				.on('click', $.proxy(this.closePopup, this));
 			this.domPopup.append(this.domCloseButton);
 			}
 		this.domInsideContainer = $("<div/>").addClass('tusur-csp-show-table-popup-inside-container');
@@ -77,9 +78,10 @@ MKWidgets.Popup = Class({
 		this.domBackground.append(this.domPopup);
 		this.options.popupContainer.append(this.domBackground);
 
-		if (this.options.background == true)
+		if (!this.options.background == true)
 			{
-			this.domBackground.addClass('tusur-csp-hide-popup-background-color');
+			this.domBackground.hide();
+			//this.domBackground.addClass('tusur-csp-hide-popup-background-color');
 			}
 
 		if (this.options.returnElementToDom == false)
@@ -114,10 +116,13 @@ MKWidgets.Popup = Class({
 			this.showSettings = window.app.getCascadeLevel(this.domPopup, this.options.cascade);
 			if (this.options.background == true)
 				{
-				this.domBackground.css('background', 'rgba(0, 0, 0, ' + this.showSettings.opacity + ')');
+				this.domBackgroundSkin.css('opacity', this.showSettings.opacity );
 				}
-			$(this.domBackground).css('z-index', this.showSettings['Zindex']);
+			this.domBackgroundSkin.css('z-index', this.showSettings['Zindex']-1);
+			this.domBackground.css('z-index', this.showSettings['Zindex']);
+			this.domPopup.css('z-index', this.showSettings['Zindex']);
 			}
+		this.isOpen = true;
 		},
 
 	showPopup: function ()
@@ -174,15 +179,16 @@ MKWidgets.Popup = Class({
 			}
 		if (this.options.background == true)
 			{
-			this.domBackground.css('background', 'rgba(0, 0, 0, ' + this.showSettings.opacity + ')');
+			this.domBackgroundSkin.css('opacity', this.showSettings.opacity );
 			}
 		this.trigger('set-position');
 		},
 
 	parentSizes: function ()
 		{
-		this.domPopup.css('width', this.element.parent().outerWidth());
-		this.domPopup.css('height', this.element.parent().outerHeight());    //for select only!!! warning! Delete this string!
+		this.domPopup.css('width', this.element.parent().outerWidth(true));
+		//this.domPopup.css('height', this.element.parent().outerHeight(true));    //for select only!!! warning! Delete
+		// this string!
 		},
 
 	closePopup: function ()
@@ -191,8 +197,14 @@ MKWidgets.Popup = Class({
 			{
 			window.app.closeLevel(this.options.cascade);
 			}
+		if (this.options.background == true)
+			{
+			this.domBackgroundSkin.css('opacity', 0 );
+			}
+
 		this.popupDisplay = false;
 		this.trigger('close-popup');
+		this.isOpen = false;
 		},
 
 	togglePopup: function ()
@@ -286,6 +298,15 @@ MKWidgets.Popup = Class({
 		{
 		position.x += positionCorrection.left;
 		position.y += positionCorrection.top;
+
+		if(position.x < 0)
+			{
+			position.x = 0;
+			}
+		if(position.y < 0)
+			{
+			position.y = 0;
+			}
 
 		this.domPopup.css({left: position.x});
 		this.domPopup.css({top: position.y});
@@ -454,7 +475,7 @@ MKWidgets.Popup = Class({
 			element.css('height', currentHeight);
 			}
 
-		element.css('max-height', maxHeight + 'px');
+		element.css('max-height', (maxHeight-30) + 'px');
 
 		if (scrollElementPosition != undefined)
 			{
@@ -738,7 +759,7 @@ MKWidgets.Popup = Class({
 
 		this.observer.observe(this.domPopup[0], {
 			subtree: true,
-			attributes: true,
+			//attributes: true,
 			childList: true,
 			characterData: true,
 			attributeOldValue: true,
@@ -857,6 +878,7 @@ MKWidgets.PopupNS.TabPopup = Class({
 				}
 			newTab.display = true;
 			this.activeStep = newTab;
+			app.trigger('mkw_resize');
 			}
 		}
 });

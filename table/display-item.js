@@ -153,7 +153,6 @@ MKWidgets.TableNS.DisplayItemNS.Details = Class({
 		{
         var image = $('<div/>').addClass('tusur-csp-table-mk-details-img')
         this.element.append(image);
-        console.log('1');
 		},
 
 	init: function ()
@@ -271,12 +270,16 @@ MKWidgets.TableNS.DisplayItemNS.Master = Class({
 
 	createField: function ()
 		{
-		var represent = this.options.columnModel.represent; //'manager/person/master';
+		var action = 'update';
+		if(this.options.rowData[ this.options.tableOptions.idIndex ] < 0 )
+			{
+			action = 'create';
+			}
+		var represent = this.options.columnModel.represent;
 		app.registrateWidgetByRepresent(represent, 'master-'+represent, {}, {
-			action: 'update',
+			action: action,
 			title: this.options.columnModel.masterTitle,
 			context: this.options.rowData
-
 		});
 		},
 

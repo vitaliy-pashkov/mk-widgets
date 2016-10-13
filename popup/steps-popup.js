@@ -187,10 +187,14 @@ MKWidgets.PopupNS.StepsPopup = Class({
 			}
 		newStep.display = true;
 		this.activeStep = newStep;
+
+		app.trigger('mkw_resize');
+
 		this.activeStep.setMaxSizes();
 		this.options.sizeRestrictionsScrollBar = this.activeStep.body;
 		//this.
 		this.domStepTitle.html(this.activeStep.title);
+
 		}
 });
 

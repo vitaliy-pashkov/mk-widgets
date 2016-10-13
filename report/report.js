@@ -29,7 +29,7 @@ MKWidgets.Report = Class({
 		},
 
 
-	closeSlot: function()
+	closeSlot: function ()
 		{
 		this.validateInterface.turnOff();
 		this.renderInterface.turnOff();
@@ -38,24 +38,24 @@ MKWidgets.Report = Class({
 		this.destroy();
 		},
 
-	destroy: function()
+	destroy: function ()
 		{
-		if(this.reportInterface.tableWidget!=undefined)
+		if (this.reportInterface.tableWidget != undefined)
 			{
 			this.reportInterface.tableWidget.destroy();
 			}
 
-		if(this.reportInterface.plotWidget!=undefined)
+		if (this.reportInterface.plotWidget != undefined)
 			{
 			this.reportInterface.plotWidget.destroy();
 			}
 
-		if(this.stepsPopup!=undefined)
+		if (this.stepsPopup != undefined)
 			{
 			this.stepsPopup.destroy();
 			}
 
-		if(this.renderInterface.paramsStep.crudForm!=undefined)
+		if (this.renderInterface.paramsStep.crudForm != undefined)
 			{
 			this.renderInterface.paramsStep.crudForm.destroy();
 			}
@@ -198,19 +198,21 @@ MKWidgets.ReportNS.ReportInterface = Class({
 		this.domExport = this.widget.renderInterface.presentStep.tabsObject.export.body;
 
 
-
 		this.domExport.empty();
 		this.domExportButton = $('<button/>').text('Сохранить PDF');
-		this.domPreview = $('<iframe/>').attr('id', 'pdfV').attr("type","application/pdf").addClass('tusur-csp-report-pdfpreview');
-		this.domPreview.height( (parseInt(this.widget.renderInterface.presentStep.body.css('max-height')) ) - 100);
+		this.domPreview = $('<iframe/>')
+			.attr('id', 'pdfV')
+			.attr("type", "application/pdf")
+			.addClass('tusur-csp-report-pdfpreview');
+		this.domPreview.height((parseInt(this.widget.renderInterface.presentStep.body.css('max-height')) ) - 100);
 		this.domExport.append(this.domExportButton);
 		this.domExport.append(this.domPreview);
 		this.domExportButton.on('click', $.proxy(this.exportButtonClickSlot, this));
 		},
 
-	exportReadySlot: function()
+	exportReadySlot: function ()
 		{
-		if(this.plotReady == true && this.tableReady == true)
+		if (this.plotReady == true && this.tableReady == true)
 			{
 			this.docDefinitionStr = this.generatePdfDefinition();
 			pdfMake.createPdf(JSON.parse(this.docDefinitionStr)).getDataUrl(
@@ -228,12 +230,13 @@ MKWidgets.ReportNS.ReportInterface = Class({
 
 	exportPdf: function ()
 		{
-		if(this.docDefinitionStr == undefined)
+		if (this.docDefinitionStr == undefined)
 			{
 			this.docDefinitionStr = this.generatePdfDefinition();
 			}
 
-		pdfMake.createPdf(JSON.parse(this.docDefinitionStr)).download();
+		var pdfDoc = pdfMake.createPdf(JSON.parse(this.docDefinitionStr));
+		pdfDoc.download();
 		},
 
 	generatePdfDefinition: function ()
@@ -280,19 +283,41 @@ MKWidgets.ReportNS.ReportInterface = Class({
 		var body = [header];
 		var rows = this.tableWidget.rows;
 
-		rows.forEach(
-			function (row)
+		for (var i = 0; i < rows.length; i++)
 			{
-			var pdfRow = [];
-			row.forEach(
-				function (cell)
+			var rowData = rows[i].rowData;
+			if (rows[i].displayTotal == 1)
 				{
-				pdfRow.push({
-					text: cell.value,
-				})
-				});
-			body.push(pdfRow);
-			});
+				var pdfRow = [];
+				for (var j = 0; j < header.length; j++)
+					{
+					var value = rowData[columns[j].index];
+					if (value == undefined)
+						{
+						value = '-';
+						}
+					pdfRow.push({
+						text: value,
+					})
+					}
+				body.push(pdfRow);
+				}
+			}
+
+
+		//rows.forEach(
+		//	function (row)
+		//	{
+		//	var pdfRow = [];
+		//	row.forEach(
+		//		function (cell)
+		//		{
+		//		pdfRow.push({
+		//			text: cell.value,
+		//		})
+		//		});
+		//	body.push(pdfRow);
+		//	});
 
 		var table = {
 			table: {
@@ -392,13 +417,13 @@ MKWidgets.ReportNS.ReportInterface = Class({
 		this.tableWidget.on('table_ready', this.tableReadySlot, this);
 		},
 
-	plotReadySlot: function()
+	plotReadySlot: function ()
 		{
 		this.plotReady = true;
 		this.trigger('export-ready');
 		},
 
-	tableReadySlot: function()
+	tableReadySlot: function ()
 		{
 		this.tableReady = true;
 		this.trigger('export-ready');
@@ -481,7 +506,11 @@ MKWidgets.ReportNS.RenderInterface = Class({
 		};
 
 
-		this.presentStep.tabs = new MKWidgets.Tabs(this.presentStep.body, {tabs: this.presentStep.tabsObject});
+		this.presentStep.tabs = new MKWidgets.Tabs(this.presentStep.body, {
+			source: 'data',
+			skin: 'report-skin',
+			tabs: this.presentStep.tabsObject
+		});
 
 		return [this.paramsStep, this.presentStep];
 		},

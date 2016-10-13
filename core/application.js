@@ -9,9 +9,9 @@ var Application = Class(
 		pageIsInit: false,
 
 		popupZindex: 100,
-		basicOpasity: 0.6,
+		basicOpasity: 0.7,
 		opacityStep: 0.6,
-		cascadeLevel: 1,
+		cascadeLevel: 2,
 		indent: [20, 20],
 
 		nullSymbol: '-',
@@ -85,7 +85,7 @@ var Application = Class(
 				}
 			},
 
-		initWidget: function (name, widget, options)
+		initWidget: function (name, widget, options, element)
 			{
 			if (options != undefined)
 				{
@@ -104,21 +104,22 @@ var Application = Class(
 					widgetName = widgetName.substr(widgetName.indexOf('.') + 1);
 					}
 
-				if (widget.element == undefined)
-					{
-					this.widgets[name] = new ns[widgetName]($('<div/>'), widget.config);
-					}
 
+				var resultElement = element;
+				if (widget.element == undefined && element == undefined)
+					{
+					resultElement = $('<div/>');
+					}
 				if (typeof widget.element == 'string')
 					{
-					this.widgets[name] = new ns[widgetName]('#' + widget.element, widget.config);
+					resultElement = '#' + widget.element;
 					}
 				if (widget.element instanceof jQuery)
 					{
-					this.widgets[name] = new ns[widgetName](widget.element, widget.config);
+					resultElement = widget.element
 					}
+				this.widgets[name] = new ns[widgetName](resultElement, widget.config);
 				}
-
 			if (widget.type == "jui")
 				{
 				var widgetName = widget.widget;
@@ -127,7 +128,7 @@ var Application = Class(
 			return this.widgets[name];
 			},
 
-		registrateWidget: function (name, widget, options, afterInit)
+		registrateWidget: function (name, widget, options, afterInit, element)
 			{
 			//if (this.widgets[name] != null)
 			//	{
@@ -140,7 +141,7 @@ var Application = Class(
 				{
 				if (this.page.pageIsInit)
 					{
-					var widget = this.initWidget(name, widget, options);
+					var widget = this.initWidget(name, widget, options, element);
 					if (typeof afterInit == 'function')
 						{
 						afterInit(widget);
@@ -149,7 +150,7 @@ var Application = Class(
 				}
 			},
 
-		registrateWidgetByRepresent: function (represent, name, getData, options, afterInit)
+		registrateWidgetByRepresent: function (represent, name, getData, options, afterInit, element)
 			{
 			$.ajax(
 				{
@@ -159,6 +160,7 @@ var Application = Class(
 					cache: false,
 					widgetName: name,
 					widgetOptions: options,
+					widgetElement: element,
 					afterInit: afterInit,
 					app: this,
 					success: this.loadWidgetConfigSuccess,
@@ -169,7 +171,7 @@ var Application = Class(
 		loadWidgetConfigSuccess: function (data)
 			{
 			//warning: another context! this = jqxhr, this.app = app, this.widgetName = widgetName
-			this.app.registrateWidget(this.widgetName, data, this.widgetOptions, this.afterInit);
+			this.app.registrateWidget(this.widgetName, data, this.widgetOptions, this.afterInit, this.widgetElement);
 			},
 
 		log: function (level, message)
@@ -212,7 +214,7 @@ var Application = Class(
 				{
 				dict = this.getDictByName(dictConfig.dictName);
 				}
-			if (dict == null || dictConfig.cache == false)
+			if (dict == null )
 				{
 				dict = this.getDictByUrl(dictConfig);
 				}
@@ -240,6 +242,9 @@ var Application = Class(
 				dictConfig.dictName = dictConfig.dictUrl;
 				}
 
+
+
+
 			var url = dictConfig.dictUrl;
 			if (dictConfig.dictUrlData != null)
 				{
@@ -261,6 +266,16 @@ var Application = Class(
 					offset = begin + 1;
 					}
 				}
+
+			if(dictConfig.cache != false)
+				{
+				var cacheDict = this.getDictByName(url);
+				if( cacheDict != null)
+					{
+					return cacheDict;
+					}
+				}
+
 			$.ajax(
 				{
 					url: url,
@@ -268,16 +283,18 @@ var Application = Class(
 					cache: false,
 					async: false,
 					dictConfig: dictConfig,
-					//app: this,
-					success: $.proxy(this.getDictByUrlSuccess, this, dictConfig.dictName),
+					dictUrl: url,
+					app: this,
+					success: this.getDictByUrlSuccess,
 					error: this.getDictError
 				});
-			return this.getDictByName(dictConfig.dictName);
+			return this.getDictByName(url);
 			},
 
-		getDictByUrlSuccess: function (name, data)
+		getDictByUrlSuccess: function (data)
 			{
-			this.saveDict(data, name);
+			//this.app.saveDict(data, this.dictConfig.dictName);
+			this.app.saveDict(data, this.dictUrl);
 			},
 
 		addDictNullElement: function (data, dictConfig)
@@ -303,7 +320,7 @@ var Application = Class(
 					}
 				if (f == 0)
 					{
-					if(data == null)
+					if (data == null)
 						{
 						data = [];
 						}
@@ -389,12 +406,11 @@ var Application = Class(
 				this.cascadeLevel++;
 
 
-
 				this.trigger('cascade-changed');
 
 				}
 
-			this.popupZindex++;
+			this.popupZindex += 5;
 			return {
 				level: this.cascadeLevel,
 				Zindex: this.popupZindex,
@@ -411,7 +427,7 @@ var Application = Class(
 				this.cascadeLevel--;
 				this.trigger('cascade-changed');
 				}
-			this.popupZindex--;
+			this.popupZindex -= 5;
 
 			},
 
@@ -439,13 +455,13 @@ var Application = Class(
 
 		getMaxPopupZindex: function ()
 			{
-			this.popupZindex++;
+			this.popupZindex += 5;
 			return this.popupZindex;
 			},
 
 		decrementPopupZindex: function ()
 			{
-			this.popupZindex--;
+			this.popupZindex -= 5;
 			}
 	});
 
@@ -474,129 +490,234 @@ var Entity = Class({
 			{
 			this.setOptions(options);
 
-			this.initDocsFunctions();
+			//this.initDocsFunctions();
 			},
 
 		setOptions: function (options)
 			{
-			this.options = Entity.assignObject(this.options, options);
+			var context = null;
+			if (options != null)
+				{
+				context = options.context;
+				}
+			this.options = Entity.assignObject(this.options, options, context);
 			this.optionsPattern = jQuery.extend(true, {}, options);
 
-			if (this.options.context != undefined)
-				{
-				this.options = this.applyContext(this.options, this.options.context);
-
-				//this.on('options@change:context', this.reApplyContext);
-				}
+			//if (this.options.context != undefined)
+			//	{
+			//	//this.options = this.applyContext(this.options, this.options.context);
+			//
+			//	//this.on('options@change:context', this.reApplyContext);
+			//	}
 			},
 
-		applyContext: function (options, context)
-			{
-			var configStr = JSON.stringify(options);
-			var offset = 0;
-			while (configStr.indexOf('`', offset) > -1)
-				{
-				var begin = configStr.indexOf('`', offset) + 1;
-				var end = configStr.indexOf('`', begin);
+		//applyContext: function (options, context)
+		//	{
+		//	var configStr = JSON.stringify(options);
+		//	var offset = 0;
+		//	while (configStr.indexOf('`', offset) > -1)
+		//		{
+		//		var begin = configStr.indexOf('`', offset) + 1;
+		//		var end = configStr.indexOf('`', begin);
+		//
+		//		if (configStr.length - 1 > begin && begin < end)
+		//			{
+		//			var index = configStr.substring(begin, end);
+		//			if (context[index] != undefined)
+		//				{
+		//				var regexp = new RegExp("`" + index + "`", 'g');
+		//				configStr = configStr.replace(regexp, context[index]);
+		//				}
+		//			}
+		//		offset = begin + 1;
+		//		}
+		//	var newOptions = JSON.parse(configStr);
+		//
+		//	return newOptions;
+		//	},
 
-				if (configStr.length - 1 > begin && begin < end)
-					{
-					var index = configStr.substring(begin, end);
-					if (context[index] != undefined)
-						{
-						var regexp = new RegExp("`" + index + "`", 'g');
-						configStr = configStr.replace(regexp, context[index]);
-						}
-					}
-				offset = begin + 1;
-				}
-			var newOptions = JSON.parse(configStr);
+		//reApplyContext: function ()
+		//	{
+		//	this.options = jQuery.extend(true, {}, this.optionsPattern);
+		//
+		//	this.options = this.applyContext(this.options, this.options.context);
+		//	},
 
-			return newOptions;
-			},
+		//initDocsFunctions: function ()
+		//	{
+		//	if (this.docsLevel != 'none')
+		//		{
+		//		for (var i in this)
+		//			{
+		//			if (typeof this[i] === 'function')
+		//				{
+		//				this[i] = this.callEvent(this[i], this.callStartSlot, this.callFinishSlot);
+		//				}
+		//			}
+		//		}
+		//	},
 
-		reApplyContext: function ()
-			{
-			this.options = jQuery.extend(true, {}, this.optionsPattern);
-
-			this.options = this.applyContext(this.options, this.options.context);
-			},
-
-		initDocsFunctions: function ()
-			{
-			if (this.docsLevel != 'none')
-				{
-				for (var i in this)
-					{
-					if (typeof this[i] === 'function')
-						{
-						this[i] = this.callEvent(this[i], this.callStartSlot, this.callFinishSlot);
-						}
-					}
-				}
-			},
-
-		callEvent: function (func, startCallback, finishCallback)
-			{
-			return function ()
-				{
-				var args = [].slice.call(arguments);
-				var result;
-				try
-					{
-					startCallback(args, this);
-					result = func.apply(this, arguments);
-					finishCallback(result, args, this);
-					}
-				catch (e)
-					{
-					throw e;
-					}
-				return result;
-				}
-			},
-
-		callStartSlot: function(args, context)
-			{
-			console.log('startCall');
-			},
-		callFinishSlot: function(result, args, context)
-			{
-			console.log('finishCall');
-			},
+		//callEvent: function (func, startCallback, finishCallback)
+		//	{
+		//	return function ()
+		//		{
+		//		var args = [].slice.call(arguments);
+		//		var result;
+		//		try
+		//			{
+		//			startCallback(args, this);
+		//			result = func.apply(this, arguments);
+		//			finishCallback(result, args, this);
+		//			}
+		//		catch (e)
+		//			{
+		//			throw e;
+		//			}
+		//		return result;
+		//		}
+		//	},
+		//
+		//callStartSlot: function (args, context)
+		//	{
+		//	console.log('startCall');
+		//	},
+		//callFinishSlot: function (result, args, context)
+		//	{
+		//	console.log('finishCall');
+		//	},
 
 	},
 	{
-		assignObject: function (targetObject, object)
+		assignObject: function (targetObject, object, context)
 			{
-			var result = {};
-			result = Object.assign(result, targetObject);
-			for (var key in object)
+			if (typeof object != 'object')
 				{
-				if (object[key] instanceof HTMLElement || object[key] instanceof EventTarget || object[key] instanceof jQuery || object[key] instanceof Matreshka || typeof object[key] == 'function' || moment.isMoment(object[key]))
+				if (typeof object == 'string')
 					{
-					result[key] = object[key];
+					object = Entity.applyContextValue(object, context);
 					}
-				else
-					{
-					if (!(object[key] instanceof Object) || (object[key] instanceof Array))
-						{
-						result[key] = object[key];
-						}
-					else
-						{
-
-						var target = {};
-						if (result[key] != undefined)
-							{
-							target = targetObject[key]
-							}
-						result[key] = Entity.assignObject(target, object[key]);
-						}
-					}
-
+				return object;
 				}
+
+			if (object instanceof HTMLElement || object instanceof EventTarget || object instanceof jQuery || object instanceof Matreshka || moment.isMoment(object))
+				{
+				return object;
+				}
+
+			var result = null;
+			if (object instanceof Array)
+				{
+				result = [];
+				if (!(targetObject instanceof Array))
+					{
+					targetObject = [];
+					}
+				for (var i = 0; i < Math.max(targetObject.length, object.length); i++)
+					{
+					if (targetObject[i] != undefined && object[i] != undefined)
+						{
+						result.push(Entity.assignObject(targetObject[i], object[i], context));
+						}
+					else if (targetObject[i] == undefined && object[i] != undefined)
+						{
+						result.push(Entity.assignObject({}, object[i], context));
+						}
+					else if (targetObject[i] != undefined && object[i] == undefined)
+						{
+						result.push(Entity.assignObject(targetObject[i], {}, context));
+						}
+					}
+				}
+			else if (object instanceof Object)
+				{
+				result = {};
+				result = Object.assign(result, targetObject);
+				for (var key in object)
+					{
+					var target = {};
+					if (result[key] != undefined)
+						{
+						target = targetObject[key]
+						}
+					result[key] = Entity.assignObject(target, object[key], context);
+					}
+				}
+
 			return result;
+
+			//var result = {};
+			//result = Object.assign(result, targetObject);
+			//for (var key in object)
+			//	{
+			//	if (object[key] instanceof HTMLElement || object[key] instanceof EventTarget || object[key] instanceof jQuery || object[key] instanceof Matreshka || typeof object[key] == 'function' || moment.isMoment(object[key]) || object[key] instanceof MK.Object)
+			//		{
+			//		result[key] = object[key];
+			//		}
+			//	else
+			//		{
+			//		if(key == 'dictUrl')
+			//			{
+			//			console.log(Entity.applyContextValue(object[key], context));
+			//			}
+			//		if(typeof object[key] == 'string')
+			//			{
+			//			object[key] = Entity.applyContextValue(object[key], context);
+			//			}
+			//
+			//		if (!(object[key] instanceof Object) || (object[key] instanceof Array))
+			//			{
+			//			result[key] = object[key];
+			//			}
+			//		else
+			//			{
+			//			var target = {};
+			//			if (result[key] != undefined)
+			//				{
+			//				target = targetObject[key]
+			//				}
+			//			result[key] = Entity.assignObject(target, object[key], context);
+			//			}
+			//		}
+			//
+			//	}
+			//return result;
+			},
+
+		applyContextValue: function (value, context)
+			{
+			if (context != undefined)
+				{
+				var offset = 0;
+				while (value.indexOf('`', offset) > -1)
+					{
+					var begin = value.indexOf('`', offset) + 1;
+					var end = value.indexOf('`', begin);
+
+					if (value.length - 1 > begin && begin < end)
+						{
+						var fullIndex = value.substring(begin, end);
+
+						var target = context;
+						var index = fullIndex;
+
+						while (index.substring(0, 3) == '../')
+							{
+							if (target['#parent'] != undefined)
+								{
+								target = target['#parent'];
+								index = index.substring(3, index.length);
+								}
+							}
+						if (target[index] != undefined)
+							{
+							var regexp = new RegExp("`" + fullIndex + "`", 'g');
+							value = value.replace(regexp, target[index]);
+							}
+						}
+					offset = begin + 1;
+					}
+				}
+			return value;
 			}
 	});
 
@@ -620,10 +741,27 @@ var MKWidget = Class({
 				}
 			},
 
-		destructor: function ()
+		destroy: function ()
 			{
-			this.off();
-			}
+
+			if(this.navigateInterface != undefined)
+				{
+				this.navigateInterface.removeNavData();
+				}
+
+			//this.off();
+			},
+
+		randomId: function ()
+			{
+			var text = '';
+			var possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+			for (var i = 0; i < 10; i++)
+				{
+				text += possible.charAt(Math.floor(Math.random() * possible.length));
+				}
+			return text;
+			},
 	}
 );
 
@@ -677,3 +815,136 @@ var WidgetInterface = Class({
 		this.turnOnEvents();
 		}
 });
+
+NavigateInterface = Class({
+	extends: WidgetInterface,
+
+	constructor: function (widget, enable)
+		{
+		this.navConfig = enable;
+		WidgetInterface.prototype.constructor.apply(this, [widget, enable]);
+		},
+
+	create: function ()
+		{
+		WidgetInterface.prototype.create.apply(this);
+		},
+
+	turnOn: function ()
+		{
+		this.navData = this.getNavData();
+		console.log(this.navData);
+		this.navigate();
+		this.binder();
+		},
+
+	binder: function ()
+		{
+
+		},
+
+	navigate: function ()
+		{
+		},
+
+	getGeneralNavData: function ()
+		{
+		var hrefParts = window.location.href.split('#', 2);
+		var navString = hrefParts[1] || '';
+		var generalNavData = this.parseParams(navString);
+		return generalNavData;
+		},
+
+	setGeneralNavData: function (generalNavData)
+		{
+		var hrefParts = window.location.href.split('#', 2);
+		if (hrefParts.length == 1)
+			{
+			hrefParts.push($.param(generalNavData));
+			}
+		else
+			{
+			hrefParts[1] = $.param(generalNavData);
+			}
+		window.location.href = hrefParts.join('#');
+		},
+
+	getNavData: function ()
+		{
+		var generalNavData = this.getGeneralNavData();
+		return generalNavData[this.navConfig.name];
+		},
+
+	setNavData: function ()
+		{
+		var generalNavData = this.getGeneralNavData();
+		console.log(this.navData);
+		generalNavData[this.navConfig.name] = this.navData;
+		this.setGeneralNavData(generalNavData);
+		},
+
+	removeNavData: function ()
+		{
+		var generalNavData = this.getGeneralNavData();
+		generalNavData[this.navConfig.name] = undefined;
+		this.setGeneralNavData(generalNavData);
+		},
+
+	parseParams: function (query)
+		{
+		var setValue = function (root, path, value)
+			{
+			if (path.length > 1)
+				{
+				var dir = path.shift();
+				if (typeof root[dir] == 'undefined')
+					{
+					root[dir] = path[0] == '' ? [] : {};
+					}
+
+				arguments.callee(root[dir], path, value);
+				}
+			else
+				{
+				if (root instanceof Array)
+					{
+					root.push(value);
+					}
+				else
+					{
+					root[path] = value;
+					}
+				}
+			};
+		var nvp = [];
+		if (query.length > 0)
+			{
+			nvp = query.split('&');
+			}
+		var data = {};
+		for (var i = 0; i < nvp.length; i++)
+			{
+			var pair = nvp[i].split('=');
+			var name = decodeURIComponent(pair[0]);
+			var value = decodeURIComponent(pair[1]);
+
+			var path = name.match(/(^[^\[]+)(\[.*\]$)?/);
+			var first = path[1];
+			if (path[2])
+				{
+				//case of 'array[level1]' || 'array[level1][level2]'
+				path = path[2].match(/(?=\[(.*)\]$)/)[1].split('][')
+				}
+			else
+				{
+				//case of 'name'
+				path = [];
+				}
+			path.unshift(first);
+
+			setValue(data, path, value);
+			}
+		return data;
+		}
+
+})

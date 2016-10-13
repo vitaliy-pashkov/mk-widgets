@@ -6,6 +6,8 @@ MKWidgets.CrudTable = Class({
 
 	constructor: function (elementSelector, options)
 		{
+		this.on('table_interface_ready', this.initInterfacesSlot);
+
 		MKWidgets.Table.prototype.constructor.apply(this, [elementSelector, options]);
 		this.setOptions({
 			saveUrl: null,
@@ -16,10 +18,22 @@ MKWidgets.CrudTable = Class({
 			creatable: true,
 			deletable: true,
 			addable: true,
+			readable: false, // {index: 'read'}
+
+			addByMaster: null, //{represent: 'represent/name/', title: ''}
 		});
 		this.setOptions(options);
 
-		this.on('table_ready', this.crudTableCreateInterfaces);
+		this.initDone = true;
+		this.initInterfacesSlot();
+		},
+
+	initInterfacesSlot: function()
+		{
+		if(this.initDone == true && this.tableReady == true && this.crudTableInterfacesInit != true)
+			{
+			this.crudTableCreateInterfaces();
+			}
 		},
 
 	crudTableCreateInterfaces: function ()
@@ -29,7 +43,11 @@ MKWidgets.CrudTable = Class({
 
 		this.selectInterface = new MKWidgets.CrudTableNS.SelectInterface(this, this.options.addable);
 		this.addInterface = new MKWidgets.CrudTableNS.AddInterface(this, this.options.addable);
-		this.deleteInterface = new MKWidgets.CrudTableNS.DeleteInterface(this, this.options.addable);
+		this.deleteInterface = new MKWidgets.CrudTableNS.DeleteInterface(this, this.options.deletable);
+
+		this.readInterface = new MKWidgets.CrudTableNS.ReadInterface(this, this.options.readable);
+
+		this.crudTableInterfacesInit = true;
 		// поменял местами add и delete интерфейсы!!!
 		},
 
@@ -57,6 +75,52 @@ MKWidgets.CrudTable = Class({
 			this.editInterface.cancel(newCell);
 			}
 		},
+});
+
+MKWidgets.CrudTableNS.ReadInterface = Class({
+	extends: WidgetInterface,
+	widget: null,
+	enable: false,
+
+	constructor: function (widget, enable)
+		{
+		WidgetInterface.prototype.constructor.apply(this, [widget, enable]);
+		},
+
+	create: function ()
+		{
+		for (var i = 0; i < this.widget.rows.length; i++)
+			{
+			if (this.widget.rows[i].rowData[this.widget.options.readable.index] != true)
+				{
+				this.widget.rows[i].read = false;
+				}
+			}
+		WidgetInterface.prototype.create.apply(this);
+		},
+
+	turnOn: function ()
+		{
+		this.widget.viewInterface.on('change:viewRow', this.viewRowChanged, this);
+		},
+	turnOff: function ()
+		{
+		this.widget.viewInterface.off('change:viewRow', this.viewRowChanged, this);
+		},
+
+	viewRowChanged: function ()
+		{
+		if (this.widget.viewInterface.viewRow != undefined)
+			{
+			if (this.widget.viewInterface.viewRow.rowData[this.widget.options.readable.index] != true)
+				{
+				this.widget.viewInterface.viewRow.rowData[this.widget.options.readable.index] = true;
+				this.widget.editInterface.saveRow(this.widget.viewInterface.viewRow);
+				//this.widget.viewInterface.viewRow.read = true;
+				}
+			}
+		}
+
 });
 
 MKWidgets.CrudTableNS.DeleteInterface = Class({
@@ -89,9 +153,9 @@ MKWidgets.CrudTableNS.DeleteInterface = Class({
 		this.deleteDomButton.off('click', $.proxy(this.deleteClickSlot, this));
 		},
 
-	changeSelectionSlot: function()
+	changeSelectionSlot: function ()
 		{
-		if(this.widget.selectInterface.selectRows.length == 0)
+		if (this.widget.selectInterface.selectRows.length == 0)
 			{
 			this.deleteDomButton.prop('disabled', true)
 				.addClass('disable');
@@ -112,16 +176,24 @@ MKWidgets.CrudTableNS.DeleteInterface = Class({
 		{
 		if (rows.length > 0)
 			{
-			$.ajax({
-				url: this.widget.options.deleteUrl,
-				data: {rows: rows.toJSON()},
-				type: "POST",
-				cache: false,
-				interface: this,
-				rows: rows,
-				success: this.deleteSuccess,
-				error: this.deleteError,
-			});
+			if(this.widget.options.dataSource == 'remote')
+				{
+				$.ajax({
+					url: this.widget.options.deleteUrl,
+					data: {rows: rows.toJSON()},
+					type: "POST",
+					cache: false,
+					interface: this,
+					rows: rows,
+					success: this.deleteSuccess,
+					error: this.deleteError,
+				});
+				}
+			else
+				{
+				this.deleteRowsDom( rows );
+				}
+
 			}
 		else
 			{
@@ -134,21 +206,22 @@ MKWidgets.CrudTableNS.DeleteInterface = Class({
 		//warning: another context! this = jqxhr, this.interface = interface, this.rows = deleted_rows
 		if (responce.status == 'OK')
 			{
-			this.rows.each(
-				function (row)
-				{
-				var index = this.interface.widget.rows.indexOf(row);
-				this.interface.widget.rows.splice(index, 1);
-				}, this);
-
-			this.interface.widget.selectInterface.clearAll();
-			this.interface.widget.trigger('table-display-changed');
-            this.interface.widget.log("change", "Данные успешно удалены");
+			this.interface.deleteRowsDom( this.rows );
 			}
 		else
 			{
 			this.interface.widget.deleteError(responce.error);
 			}
+		},
+
+	deleteRowsDom: function(rows)
+		{
+		this.widget.rows.deleteRows(rows);
+
+		this.widget.selectInterface.clearAll();
+		this.widget.trigger('table-changed');
+		this.widget.trigger('table-display-changed');
+		this.widget.log("change", "Данные успешно удалены");
 		},
 
 	deleteError: function (responce)
@@ -297,7 +370,30 @@ MKWidgets.CrudTableNS.AddInterface = Class({
 
 	clickSlot: function ()
 		{
-		this.addRow(this.addGetNewLine());
+		if(this.widget.options.addByMaster != undefined)
+			{
+			var represent = this.widget.options.addByMaster.represent;
+			app.registrateWidgetByRepresent(represent, 'master-'+represent, {}, {
+				action: 'create',
+				title: this.widget.options.addByMaster.masterTitle,
+			}, $.proxy(this.afterMasterInit, this));
+			}
+		else
+			{
+			this.addRow(this.addGetNewLine());
+			}
+
+		},
+
+	afterMasterInit: function(master)
+		{
+		this.master = master;
+		this.master.on('master-success-save', this.masterSaveSlot, this);
+		},
+
+	masterSaveSlot: function(rowData)
+		{
+		this.addRow(rowData);
 		},
 
 	addRow: function (rowData)
@@ -419,7 +515,7 @@ MKWidgets.CrudTableNS.EditInterface = Class({
 		this.turnOffEvents();
 
 		this.editInputItem = null;
-        this.editCell = null;
+		this.editCell = null;
 
 		this.widget.trigger('turnOn-view-interface');
 		this.widget.trigger('table-display-changed');
@@ -471,7 +567,7 @@ MKWidgets.CrudTableNS.EditInterface = Class({
 
 	cancel: function ()
 		{
-		if(this.editInputItem != undefined)
+		if (this.editInputItem != undefined)
 			{
 			this.editInputItem.itemCancel();
 			this.unsetCell();
@@ -491,16 +587,25 @@ MKWidgets.CrudTableNS.EditInterface = Class({
 		{
 		if (this.validateRow(row))
 			{
-			$.ajax({
-				url: this.widget.options.saveUrl,
-				data: {row: JSON.stringify(row.rowData.toJSON())},
-				type: "POST",
-				cache: false,
-				row: row,
-				interface: this,
-				success: this.saveSuccess,
-				error: this.saveError,
-			});
+			if(this.widget.options.dataSource == 'remote')
+				{
+				$.ajax({
+					url: this.widget.options.saveUrl,
+					data: {row: JSON.stringify(row.rowData.toJSON())},
+					type: "POST",
+					cache: false,
+					row: row,
+					interface: this,
+					success: this.saveSuccess,
+					error: this.saveError,
+				});
+				}
+			else
+				{
+				this.widget.trigger('save-success');
+				this.widget.trigger('table-changed');
+				}
+
 			}
 		else
 			{
@@ -515,7 +620,7 @@ MKWidgets.CrudTableNS.EditInterface = Class({
 			function (cell)
 			{
 			var inputItem = this.createInputItem(cell);
-			if (!inputItem.preValidate())
+			if (!inputItem.validate())
 				{
 				rowValid = false;
 				cell.error = true;
@@ -535,11 +640,11 @@ MKWidgets.CrudTableNS.EditInterface = Class({
 			{
 			this.row.recreateRow(responce.row);
 			this.interface.widget.trigger('reset-interfaces');
-
-
 			this.interface.widget.trigger('table-display-changed');
 
 			this.interface.widget.log("success", "Данные успешно сохранены");
+
+			this.interface.widget.trigger('save-success');
 			}
 		else
 			{
@@ -597,18 +702,20 @@ MKWidgets.CrudTableNS.ViewInterface = Class({
 
 	turnOn: function ()
 		{
-		if(this.widget.rows.length > 0)
+		if (this.widget.rows.length > 0)
 			{
 			this.enabled = true;
 			this.bindNode('tableActive', this.widget.element, this.tableActiveBinder);
 			this.bindNode('viewCell', this.widget.domBody.find('.tusur-csp-table-cell'), this.cellViewBinder);
+			this.on('change:tableActive', this.tableActiveChangeSlot, this);
 			$(document).on('keydown', $.proxy(this.keypressSlot, this));
 			}
-
+		this.setCell(undefined);
+		this.setRow(undefined);
 		},
 	turnOff: function ()
 		{
-		if(this.enabled)
+		if (this.enabled)
 			{
 			this.enabled = false;
 			this.unbindNode('tableActive', this.widget.element, this.tableActiveBinder);
@@ -617,15 +724,32 @@ MKWidgets.CrudTableNS.ViewInterface = Class({
 			}
 		},
 
+	tableActiveChangeSlot: function ()
+		{
+		if (this.tableActive == false)
+			{
+			this.setCell(undefined);
+			this.setRow(undefined);
+			}
+		},
+
 	setCell: function (cell)
 		{
-		this.setRow(cell.parent);
 		if (this.viewCell != undefined)
 			{
 			this.viewCell.view = false;
 			}
-		this.viewCell = cell;
-		this.viewCell.view = true;
+
+		if (cell != undefined)
+			{
+			this.setRow(cell.parent);
+			this.viewCell = cell;
+			this.viewCell.view = true;
+			}
+		else
+			{
+			this.viewCell = undefined
+			}
 		},
 	setRow: function (row)
 		{
@@ -634,7 +758,10 @@ MKWidgets.CrudTableNS.ViewInterface = Class({
 			this.viewRow.view = false;
 			}
 		this.viewRow = row;
-		this.viewRow.view = true;
+		if (row != undefined)
+			{
+			this.viewRow.view = true;
+			}
 		},
 
 	keypressSlot: function (event)

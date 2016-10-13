@@ -10,7 +10,6 @@ MKWidgets.HcPlot = Class({
 
 		this.setOptions({
 			dataSource: "remote", //local, remote
-			//data: [],       //url or $data
 			dtFormat: 'DD.MM.YYYY HH:mm:ss',
 			dataParams: null,
 			plotConfig: {
@@ -33,7 +32,7 @@ MKWidgets.HcPlot = Class({
 		this.setHighchartsOptions();
 		this.initPlotDefaultConfig();
 
-		this.plotConfig = jQuery.extend(true, [], this.options.plotConfig);
+		this.plotConfig = jQuery.extend(true, {}, this.options.plotConfig);
 		this.plotConfig = Entity.assignObject(this.plotDefaultConfig, this.plotConfig);
 
 		this.on("one-data-ready", this.oneDataReadySlot);
@@ -86,7 +85,6 @@ MKWidgets.HcPlot = Class({
 			}
 		if (this.options.dataSource == "local")
 			{
-			this.data = this.options.data;
 			this.trigger("data-ready");
 			}
 		},
@@ -94,6 +92,14 @@ MKWidgets.HcPlot = Class({
 	setData: function setData(data)
 		{
 		//warning: another context! this = jqxhr, this.series = series
+
+		if(data.points.length == 0)
+			{
+			this.widget.element.addClass("plot-dummy").text("Нет данных за указанный период.");
+			return;
+			}
+
+		this.widget.element.removeClass("plot-dummy");
 
 		this.widget.plotConfig.series[this.seriesIndex].data = data.points;
 		this.widget.plotConfig.series[this.seriesIndex].name = data.name;
@@ -171,7 +177,7 @@ MKWidgets.HcPlot = Class({
 		this.chart = this.element.highcharts();
 		this.redrawPlot();
 
-		this.element.parents().on('custom_resize', $.proxy(this.redrawPlot, this));
+		app.on('mkw_resize', $.proxy(this.redrawPlot, this));
 
 		this.trigger('plot-ready');
 		},
@@ -196,7 +202,11 @@ MKWidgets.HcPlot = Class({
 
 	destroy: function()
 		{
-		this.chart.destroy();
+		if(this.chart != undefined)
+			{
+			this.chart.destroy();
+			}
+
 		this.element.empty();
 		delete this;
 		},

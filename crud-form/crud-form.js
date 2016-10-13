@@ -1,6 +1,6 @@
 var MKWidgets = MKWidgets || {};
 MKWidgets.CrudFormNS = MKWidgets.CrudFormNS || {};
-//MKWidgets.PopupCrudFormNS = MKWidgets.PopupCrudFormNS || {};
+
 
 MKWidgets.CrudForm = Class({
 	extends: MKWidget,
@@ -26,13 +26,29 @@ MKWidgets.CrudForm = Class({
 			editable: true,
 			creatable: true,
 			deletable: true,
-
 			addable: true,
+
+
+			saveOnChange: false,
+			saveButton: false,
+			saveButtonText: 'Сохранить',
+			domStatus: null,
 
 			controlPanel: null,
 			controls: {
 				cansel: "Отменить",
 				save: "Сохранить"
+			},
+
+			statuses: {
+				saveSuccess: {
+					text: 'Данные сохранены успешно',
+					class: 'success'
+				},
+				saveError: {
+					text: 'Ошибка при сохранении данных',
+					class: 'error'
+				},
 			},
 
 			logsTypes: {
@@ -44,12 +60,7 @@ MKWidgets.CrudForm = Class({
 		});
 		this.setOptions(options);
 
-		/*
-		this.fieldsModel = Entity.assignObject({},  {array_: this.options.fieldsModel});
-		this.fieldsModel = this.fieldsModel.array_;
-		*/
 		this.fieldsModel = jQuery.extend(true, [], this.options.fieldsModel);
-
 		this.on('form_data_ready', this.crudFormCreateInterfaces);
 
 		if (this.options.action == 'read' || this.options.action == 'update')
@@ -73,7 +84,8 @@ MKWidgets.CrudForm = Class({
 		this.renderInterface = new MKWidgets.CrudFormNS.RenderInterface(this, true);
 		this.saveInterface = new MKWidgets.CrudFormNS.SaveInterface(this, true);
 
-		this.trigger('crud-form-ready');
+		this.formReady = true;
+		this.trigger('crud-form-ready', this);
 		},
 
 	getDicts: function getDicts()
@@ -120,17 +132,21 @@ MKWidgets.CrudForm = Class({
 		if (this.options.dataSource == "local")
 			{
 			this.formData = this.options.data;
-			if(this.formData[this.options.idIndex] == undefined)
+			if (this.formData[this.options.idIndex] == undefined)
 				{
 				this.generatePattern();
 				}
+			//if(!(this.formData instanceof MK.Object))
+			//	{
+			//	this.formData = new MK.Object(this.formData);
+			//	}
 			this.trigger("form_data_ready");
 			}
 		},
 
 	setData: function setData(data)
 		{
-		this.formData = MK.Object(data.data);
+		this.formData = new MK.Object(data.data);
 		this.dicts = data.dicts;
 		window.app.saveDicts(this.dicts);
 		//this.patternInsertData();
@@ -156,18 +172,14 @@ MKWidgets.CrudForm = Class({
 				{
 				pattern[field.index] = "-";
 				}
-			//if (field.type == 'select')
-			//	{
-			//	pattern[field.dictConfig.dictIdIndex] = -1;
-			//	}
 			if (field.type == 'array')
 				{
 				pattern[field.index] = [];
 				}
-			//if (field.type == 'multiselect')
-			//	{
-			//	pattern[field.dictConfig.dictIdIndex] = [];
-			//	}
+			if (field.type == 'table')
+				{
+				pattern[field.index] = [];
+				}
 			}
 		for (var j in this.options.parents)
 			{
@@ -178,16 +190,35 @@ MKWidgets.CrudForm = Class({
 		pattern[this.options.idIndex] = -1;
 		var parent = this.formData['#parent'];
 		this.formData = new MK.Object(pattern);
-		this.formData.set('#parent', parent) ;
+		this.formData.set('#parent', parent);
 		//this.addRowDataPattern = JSON.stringify(pattern);
 		},
 
-	formDataChangeSignal: function()
+	formDataChangeSignal: function ()
 		{
 		this.trigger('form-data-change');
 		},
 
-	destroy: function()
+	setStatus: function (status)
+		{
+		if (this.options.domStatus != undefined && this.options.statuses[status] != undefined)
+			{
+			this.options.domStatus.text(this.options.statuses[status].text);
+			this.options.domStatus.addClass(this.options.statuses[status].class);
+			this.options.domStatus.show();
+			this.options.domStatus.fadeOut(
+					1000,
+					$.proxy(function ()
+					{
+					this.options.domStatus.removeClass(this.options.statuses[status].class);
+					this.options.domStatus.hide();
+					}, this)
+				);
+
+			}
+		},
+
+	destroy: function ()
 		{
 		this.element.empty();
 		delete this;
@@ -204,28 +235,41 @@ MKWidgets.CrudFormNS.SaveInterface = Class({
 	constructor: function (widget, enable)
 		{
 		WidgetInterface.prototype.constructor.apply(this, [widget, enable]);
-		this.widget.on('save-button-click', this.save, this);
-		},
-
-	createInputItem: function (field)
-		{
-		var config = field.toJSON();
-		config.formData = field.fields.formData;
-		config.formIndex = config.index;
-		return MKWidgets.CrudFormNS.InputItem.factory($(field.sandbox), config);
-		},
-
-	cancel: function ()
-		{
-		if (this.editInputItem != undefined)
+		if(this.widget.options.action != 'changeFormData')
 			{
-			this.editInputItem.itemCancel();
+			this.widget.on('save-button-click', this.save, this);
 			}
 		},
 
 	save: function ()
 		{
 		this.saveFields();
+		},
+
+	create: function ()
+		{
+		if (this.widget.options.saveButton == true)
+			{
+			this.domSaveButton = $('<button/>').text(this.widget.options.saveButtonText);
+			var container = $('<div class="tusur-csp-form-field form-columns-50-50"></div>');
+			container.append(this.domSaveButton);
+			this.widget.element.append(container)
+			}
+
+		WidgetInterface.prototype.create.apply(this);
+		},
+
+	turnOn: function ()
+		{
+		this.enabled = true;
+		if (this.widget.options.saveButton == true)
+			{
+			this.domSaveButton.on('click', $.proxy(this.save, this));
+			}
+		if (this.widget.options.saveOnChange == true)
+			{
+			this.widget.onDebounce('form-data-change', $.proxy(this.save, this), 100);
+			}
 		},
 
 	saveFields: function ()
@@ -272,34 +316,32 @@ MKWidgets.CrudFormNS.SaveInterface = Class({
 	saveSuccess: function (responce, status, request)
 		{
 		//warning: another context! this = jqxhr, this.interface = interface, this.row = current_edit_row
-		//if (responce.status == 'OK')
-		//	{
-		//	this.interface.widget.popup.closePopup();
-		//	this.domSuccess = $("<div/>").html('Данные успешно сохранены!')
-		//		.css('background', '#FDFDFD')
-		//		.css('padding', '30px');
-		//	this.successPopup = new MKWidgets.Popup(this.domSuccess, {
-		//		width: '250px',
-		//		linkVertical: 'center', //top, center, bottom
-		//		linkHorizontal: 'center', //left, center, right
-		//		linkingPoint: 'center',
-		//	});
-		//	this.successPopup.openPopup();
-		//	}
-		//else
-		//	{
-		//	this.interface.editSaveError(responce.error);
-		//	}
+		if (responce.status == 'OK')
+			{
+			//alert('Данные сохранены успешно');
+			this.interface.widget.formData = new MK.Object(responce.row);
+			this.fields.reInit();
+
+			this.interface.widget.setStatus('saveSuccess');
+
+			this.interface.widget.trigger('save-success');
+			}
+		else
+			{
+			this.interface.editSaveError(responce);
+			}
 		},
 
 	saveError: function (responce)
 		{
-		alert(JSON.stringify(responce));
+		this.interface.widget.setStatus('saveError');
+		//alert(JSON.stringify(responce));
 		},
 
 	editSaveError: function (responce)
 		{
-		alert(JSON.stringify(responce));
+		this.interface.widget.setStatus('saveError');
+		//alert(JSON.stringify(responce));
 		},
 });
 
@@ -315,8 +357,20 @@ MKWidgets.CrudFormNS.RenderInterface = Class({
 
 	create: function ()
 		{
-		this.widget.element.addClass('tusur-csp-crud-form-body');
-		this.widget.fields = new MKWidgets.CrudFormNS.Fields(this.widget, this.widget.fieldsModel, this.widget.formData, this.widget.element);
+		if (this.widget.options.dependForm == true)
+			{
+			this.widget.element.addClass('tusur-csp-crud-depend-form');
+			}
+		else if (this.widget.options.subForm == true)
+			{
+			this.widget.element.addClass('tusur-csp-crud-sub-form');
+			}
+		else
+			{
+			this.widget.element.addClass('tusur-csp-crud-form-body');
+			}
+
+		this.widget.fields = new MKWidgets.CrudFormNS.Fields(this.widget, this.widget.fieldsModel, this.widget.element);
 
 		WidgetInterface.prototype.create.apply(this);
 		},
@@ -352,11 +406,16 @@ MKWidgets.CrudFormNS.Field = Class({
 		//this.bindNode('type', ':sandbox', MK.binders.html());
 		this.inputItem = this.createInputItem();
 		this.inputItem.createField();
-		this.inputItem.on('change:value',this.fields.formWidget.formDataChangeSignal, this.fields.formWidget );
-		this.inputItem.on('value-changed',this.fields.formWidget.formDataChangeSignal, this.fields.formWidget );
+		this.inputItem.on('change:value', this.fields.formWidget.formDataChangeSignal, this.fields.formWidget);
+		this.inputItem.on('value-changed', this.fields.formWidget.formDataChangeSignal, this.fields.formWidget);
 		},
 
-	afterRender: function()
+	reInit: function ()
+		{
+		this.inputItem.reInit();
+		},
+
+	afterRender: function ()
 		{
 
 		},
@@ -364,7 +423,7 @@ MKWidgets.CrudFormNS.Field = Class({
 	createInputItem: function ()
 		{
 		var config = this.toJSON();
-		config.formData = this.fields.formData;
+		config.formData = this.fields.formWidget.formData;
 		config.formIndex = config.index;
 		config.formWidget = this.fields.formWidget;
 		return MKWidgets.CrudFormNS.InputItem.factory($(this.sandbox), config);
@@ -377,126 +436,29 @@ MKWidgets.CrudFormNS.Fields = Class({
 	Model: MKWidgets.CrudFormNS.Field,
 	itemRenderer: '<div class="tusur-csp-form-field"></div>',
 
-	constructor: function (formWidget, fieldsModel, data, domBody)
+	constructor: function (formWidget, fieldsModel, domBody)
 		{
 		this.formWidget = formWidget;
-		this.formData = data;
 		this.fieldsModel = fieldsModel;
 		this.bindSandbox(domBody);
 
 		this.recreate(fieldsModel);
 		},
 
+	reInit: function ()
+		{
+		for (var i = 0; i < this.length; i++)
+			{
+			this[i].reInit();
+			}
+		},
+
 	toJSON: function ()
 		{
-		return this.formData.toJSON();
+		return this.formWidget.formData.toJSON();
 		}
 
 });
 
 
-//MKWidgets.PopupCrudForm = Class({
-//	extends: MKWidgets.CrudForm,
-//
-//	constructor: function (elementSelector, options)
-//		{
-//		this.createDom();
-//
-//		MKWidgets.CrudForm.prototype.constructor.apply(this, [this.domBody, options]);
-//		this.setOptions({
-//			title: 'Название',
-//			controlPanel: null,
-//			controls: {
-//				cansel: "Отменить",
-//				save: "Сохранить"
-//			},
-//		});
-//		this.setOptions(options);
-//
-//		this.setupDom();
-//		},
-//
-//	createDom: function()
-//		{
-//		this.domHeaderTitle = $('<span/>').addClass('tusur-csp-popup-crud-form-title');
-//		this.domHeader = $('<div/>').addClass('tusur-csp-popup-crud-form-header').append(this.domHeaderTitle);
-//		this.domBody = $('<div/>').addClass('tusur-csp-popup-crud-form-body');
-//		this.domFooter = $('<div/>').addClass('tusur-csp-popup-crud-form-footer');
-//
-//		this.domPopupElement = $('<div/>').addClass('tusur-csp-popup-crud-form-popup-element');
-//		this.domPopupElement.append(this.domHeader);
-//		this.domPopupElement.append(this.domBody);
-//		this.domPopupElement.append(this.domFooter);
-//
-//        this.controlInterface = new MKWidgets.PopupCrudFormNS.ControlInterface(this, true);
-//
-//        this.popup = new MKWidgets.Popup(this.domPopupElement, {
-//			background: true,
-//            width: '50%',
-//			linkVertical: 'center',
-//			linkHorizontal: 'center',
-//			linkingPoint: 'center',
-//		});
-//
-//		this.popup.openPopup();
-//        },
-//
-//	setupDom: function()
-//		{
-//		this.domHeaderTitle.text(this.options.title);
-//		}
-//});
-//
-//MKWidgets.PopupCrudFormNS.ControlInterface = Class({
-//    extends: WidgetInterface,
-//    widget: null,
-//    enable: false,
-//
-//    constructor: function (widget, enable)
-//        {
-//        WidgetInterface.prototype.constructor.apply(this, [widget, enable]);
-//        this.createDom();
-//        },
-//
-//    create: function ()
-//        {
-//        WidgetInterface.prototype.create.apply(this);
-//        },
-//
-//    createDom: function()
-//        {
-//        this.domInputSave = $("<input>").attr('type', 'button')
-//            .addClass('tusur-csp-popup-crud-form-save-button')
-//            .val('Далее')
-//            ;
-//        this.domInputCancel = $("<input>").attr('type', 'button')
-//            .addClass('tusur-csp-popup-crud-form-cancel-button')
-//            .val('Отменить')
-//            ;
-//        this.widget.domFooter.append(this.domInputCancel)
-//            .append(this.domInputSave)
-//            ;
-//        this.events();
-//        },
-//
-//    events: function()
-//        {
-//        this.domInputSave.on('click', $.proxy(this.saveSlot, this));
-//        this.domInputCancel.on('click', $.proxy(this.canсelSlot, this));
-//        },
-//
-//    turnOn: function ()
-//        {
-//        },
-//
-//    saveSlot: function()
-//        {
-//        this.widget.trigger('save-button-click');
-//        },
-//
-//    canсelSlot: function()
-//        {
-//        this.widget.popup.closePopup();
-//        },
-//
-//});
+

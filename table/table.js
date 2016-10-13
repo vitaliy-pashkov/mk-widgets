@@ -11,15 +11,17 @@ MKWidgets.Table = Class({
 			title: "Название таблицы",
 			dataSource: "remote", //local, remote
 			data: [],       //url or $data
+			dictUrl: null,
 			dataParams: null,
 			columnsModel: {},
 			idIndex: "id",
 			autoColumnWidth: true,
 			autoTableHeight: true,
+			skin: '',
 
 			selectableRows: false,
 			filters: {},
-			filterable: true,
+			filterable: false,
 			export: true,
 			settings: false,
 			logsTypes: {
@@ -27,7 +29,9 @@ MKWidgets.Table = Class({
 				'success': {name: 'Событие', class: 'tusur-csp-table-mk-logs-change'},
 				'error': {name: 'Ошибка', class: 'tusur-csp-table-mk-logs-error'},
 				'change': {name: 'Изменение', class: 'tusur-csp-table-mk-logs-change'}
-			}
+			},
+			pagination: null, // { pageSize: 100,  }
+			deleteByFlag: false,
 		});
 		this.setOptions(options);
 		this.logCounter = 0;
@@ -47,6 +51,9 @@ MKWidgets.Table = Class({
 		this.searchInterface = new MKWidgets.TableNS.SearchInterface(this, true);
 		this.exportInterface = new MKWidgets.TableNS.ExportInterface(this, this.options.export);
 		this.drawInterface = new MKWidgets.TableNS.DrawInterface(this, true);
+		this.copyInterface = new MKWidgets.TableNS.CopyInterface(this, true);
+		this.tableReady = true;
+		this.trigger("table_interface_ready");
 		},
 	getData: function getData()
 		{
@@ -65,9 +72,32 @@ MKWidgets.Table = Class({
 			}
 		if (this.options.dataSource == "local")
 			{
-			this.data = this.options.data;
-			this.element.trigger("table_data_ready");
+			this.rows = this.options.data;
+			if (this.options.dictUrl != undefined)
+				{
+				$.ajax(
+					{
+						url: this.options.dictUrl,
+						data: this.options.dataParams,
+						type: "GET",
+						cache: false,
+						contentType: "application/json",
+						success: $.proxy(this.setDicts, this),
+						error: $.proxy(this.serverError, this),
+					});
+				}
+			else
+				{
+				this.trigger("table_data_ready");
+				}
 			}
+		},
+
+	setDicts: function setData(data)
+		{
+		this.dicts = data;
+		window.app.saveDicts(this.dicts);
+		this.trigger('table_data_ready');
 		},
 
 	setData: function setData(data)
@@ -87,7 +117,7 @@ MKWidgets.Table = Class({
 	createDom: function ()
 		{
 		var tempDiv = $('<div/>');
-		this.element.addClass('tusur-csp-table-element')
+		this.element.addClass('tusur-csp-table-element').addClass(this.options.skin)
 			.before(tempDiv);
 		this.element.detach();
 		this.bindNode('sandbox', this.element);
@@ -132,9 +162,9 @@ MKWidgets.Table = Class({
 		this.on('table-display-changed', this.redrawEvent, this);
 		this.on('table-reset-interfaces', this.displayChangedEvent, this);
 
+
 		this.trigger('table-display-changed');
 		this.trigger("table_ready");
-
 		},
 
 	redrawEvent: function ()
@@ -155,7 +185,6 @@ MKWidgets.Table = Class({
 	destroy: function ()
 		{
 		this.element.empty();
-		delete this;
 		}
 });
 
@@ -274,39 +303,208 @@ MKWidgets.TableNS.ExportInterface = Class({
 
 	create: function ()
 		{
-		this.domExportButton = $("<button>").addClass("tusur-csp-table-export-input").html('Экспорт');
-		this.domExportLink = $("<a/>")
-			.prepend(this.domExportButton);
-		this.widget.domControlPanelRight.prepend(this.domExportLink);
-		this.domExportLink.on('click', $.proxy(this.exportTableSlot, this));
-		},
-
-	exportTableSlot: function ()
-		{
-		//this.preventDefault();
 		if (this.widget.options.exportColumnsModel == undefined)
 			{
 			this.widget.options.exportColumnsModel = this.widget.options.columnsModel;
 			}
-
-		var data = this.parseData(this.widget.options.exportColumnsModel, this.widget.rows, this.widget.options.title);
-
-		if (this.exporter === undefined)
-			{
-			this.exporter = new MKWidgets.XmlExporter(this.domExportLink,
-				{
-					sheets: data,
-					returnUri: true,
-					title: this.widget.options.title
-				});
-			}
-		else
-			{
-			this.exporter.getXML({sheets: data});
-			}
+		this.domExportButton = $("<button>").addClass("tusur-csp-table-export-input").html('Экспорт');
+		//this.domExportLink = $("<a/>")
+		//	.prepend(this.domExportButton);
+		this.widget.domControlPanelRight.prepend(this.domExportButton);
+		this.domExportButton.on('click', $.proxy(this.exportTableSlot, this));
 		},
 
-	parseData: function (header, data, title)
+	exportTableSlot: function ()
+		{
+		this.exportForm = new MKWidgets.PopupCrudForm($('<div/>'), {
+			dataSource: 'local',
+			data: new MK.Object,
+			action: 'changeFormData',
+			title: 'Настройки экспорта',
+			fieldsModel: [
+				{
+					title: 'Название файла',
+					index: 'fileName',
+					type: 'varchar',
+					default: this.widget.options.title
+				},
+				{
+					title: 'Формат',
+					index: 'format',
+					type: 'select',
+					dictConfig: {
+						dictIdIndex: 'code',
+						dictDisplayIndex: 'name',
+						formIdIndex: 'format',
+						formDisplayIndex: 'formatName'
+					},
+					dict: [
+						{
+							code: 'xls',
+							name: '.xls'
+						},
+						{
+							code: 'xml',
+							name: '.xml'
+						},
+						{
+							code: 'csv',
+							name: '.csv'
+						},
+						{
+							code: 'pdf',
+							name: '.pdf'
+						},
+					],
+					default: 'xls'
+				}
+			]
+		});
+		this.exportForm.on('save-button-click', this.export, this);
+		},
+
+	export: function ()
+		{
+		var exportConfig = this.exportForm.formData;
+
+		if (exportConfig.format == 'xls')
+			{
+			this.exportXls(exportConfig);
+			}
+		else if (exportConfig.format == 'xml')
+			{
+			this.exportXls(exportConfig);
+			}
+		else if (exportConfig.format == 'csv')
+			{
+			this.exportCsv(exportConfig);
+			}
+		else if (exportConfig.format == 'pdf')
+			{
+			this.exportPdf(exportConfig);
+			}
+
+		this.exportForm.controlInterface.canсelSlot();
+		},
+
+	exportPdf: function (exportConfig)
+		{
+		var table = this.formatForPdf(this.widget.options.exportColumnsModel, this.widget.rows, this.widget.options.title);
+		var docDefinition = {
+			content: [
+				{
+					text: this.widget.options.title,
+					alignment: 'center'
+				},
+				table
+			],
+			styles: {
+				tableHeader: {
+					bold: true,
+					fontSize: 13,
+					color: 'black'
+				}
+			}
+		};
+		var pdfDoc = pdfMake.createPdf(docDefinition);
+		pdfDoc.download(exportConfig.fileName + '.' + exportConfig.format);
+		},
+
+	formatForPdf: function (columns, data, title)
+		{
+		var header = [];
+		for (var i in columns)
+			{
+			header.push({
+				text: columns[i].title,
+				style: 'tableHeader'
+			});
+			}
+		var body = [header];
+
+		for (var i = 0; i < data.length; i++)
+			{
+			var rowData = data[i].rowData;
+			if (data[i].displayTotal == 1)
+				{
+				var pdfRow = [];
+				for (var j = 0; j < header.length; j++)
+					{
+					var value = rowData[columns[j].index];
+					if (value == undefined)
+						{
+						value = '-';
+						}
+					pdfRow.push({
+						text: value,
+					})
+					}
+				body.push(pdfRow);
+				}
+			}
+
+		var table = {
+			table: {
+				headerRows: 1,
+				dontBreakRows: true,
+				body: body
+			}
+		};
+		return table;
+		},
+
+	exportCsv: function (exportConfig)
+		{
+		var data = this.formatForCsv(this.widget.options.exportColumnsModel, this.widget.rows, this.widget.options.title);
+		MKWidgets.FileLoader.load(exportConfig.fileName + '.' + exportConfig.format, data);
+		},
+
+	formatForCsv: function (header, data, title)
+		{
+		var csvString = '';//"data:text/csv;charset=utf-8,";
+		for (var i in header)
+			{
+			csvString += header[i].title + ';';
+			}
+		csvString += "\n";
+
+		for (var i = 0; i < data.length; i++)
+			{
+			var rowData = data[i].rowData;
+			if (data[i].displayTotal == 1)
+				{
+				for (var j = 0; j < header.length; j++)
+					{
+					var value = rowData[header[j].index]+'';
+					if((value.match(/^-?\d*(\.\d+)?$/)))
+						{
+						value = (value+'').replace('.', ',');
+						}
+					if (value == undefined)
+						{
+						value = '-';
+						}
+					csvString += value + ';';
+					}
+				csvString += "\n";
+				}
+			}
+
+		var uri = 'data:text/csv;charset=windows-1251,';
+		return uri + escape(windows1251.encode(csvString));
+		},
+
+	exportXls: function (exportConfig)
+		{
+		var data = this.formatForXls(this.widget.options.exportColumnsModel, this.widget.rows, this.widget.options.title);
+		var exporter = new MKWidgets.XlsExporter(null, {
+			sheets: data,
+			title: exportConfig.fileName + '.' + exportConfig.format
+		});
+		exporter.download();
+		},
+
+	formatForXls: function (header, data, title)
 		{
 		var sheetTitle = title;
 		var columns = [];
@@ -334,32 +532,12 @@ MKWidgets.TableNS.ExportInterface = Class({
 						}
 					readyRow[header[j].index] = {"value": value};
 					}
-				readyData.push(readyRow);
+				readyData.push(readyRow)
+
 				}
 
 
 			}
-
-		//data.forEach(
-		//	function (row)
-		//	{
-		//	//row =row.rowData;
-		//	if (row.displayTotal == 1)
-		//		{
-		//		var readyRow = {};
-		//		row.forEach(
-		//			function (cell)
-		//			{
-		//			var value = cell.value;
-		//			if (cell.value === undefined)
-		//				{
-		//				value = '-';
-		//				}
-		//			readyRow[cell.index] = {"value": value};
-		//			}, this);
-		//		readyData.push(readyRow);
-		//		}
-		//	}, this);
 
 		var readyObject = {};
 		readyObject[sheetTitle] = {
@@ -373,6 +551,59 @@ MKWidgets.TableNS.ExportInterface = Class({
 
 });
 
+
+MKWidgets.TableNS.CopyInterface = Class({
+	extends: WidgetInterface,
+	widget: null,
+	enable: false,
+
+	constructor: function (widget, enable)
+		{
+		WidgetInterface.prototype.constructor.apply(this, [widget, enable]);
+		},
+
+	create: function ()
+		{
+		WidgetInterface.prototype.create.apply(this);
+		},
+
+	turnOn: function ()
+		{
+		this.enabled = true;
+		this.widget.domTableContainer.on('copy', this.copySlot);
+		},
+
+	turnOff: function ()
+		{
+		this.enabled = false;
+		},
+
+	copySlot: function (event)
+		{
+		var text = $selection.getText();
+		text = text.replace(/\u00A0/g, '\u0009');
+		var html = '<table>';
+		var lines = text.split('\n');
+		for (var i = 0; i < lines.length; i++)
+			{
+			html += '<tr>';
+			var cells = lines[i].split('\t');
+			for (var j = 0; j < cells.length; j++)
+				{
+				html += '<td>';
+				html += cells[j];
+				html += '</td>';
+				}
+			html += '</tr>';
+			}
+		html += '</table>';
+		event.originalEvent.clipboardData.setData('text/plain', text);
+		event.originalEvent.clipboardData.setData('text/html', html);
+		event.preventDefault();
+		},
+
+
+});
 
 MKWidgets.TableNS.SearchInterface = Class({
 	extends: WidgetInterface,
@@ -499,7 +730,7 @@ MKWidgets.TableNS.DrawInterface = Class({
 	widget: null,
 	enable: false,
 	scrollbarWidth: 20,
-	minTableWidth: 600,
+	minTableWidth: 300,
 	widthCalcType: 'byOuterWidth', // byOuterWidth, byMaxWidth
 	heightCalcType: 'byOuterHeight', // byOuterHeight, byMaxHeight, byScreenHeight
 
@@ -522,8 +753,7 @@ MKWidgets.TableNS.DrawInterface = Class({
 		this.enabled = true;
 		this.widget.on('table_ready', this.drawTable, this, true);
 		this.widget.on('table_redraw', this.drawTable, this);
-		this.widget.element.on('custom_resize', $.proxy(this.drawTable, this));
-		this.widget.element.parents().on('custom_resize', $.proxy(this.drawTable, this));
+		app.on('mkw_resize', $.proxy(this.drawTable, this));
 		},
 	turnOff: function ()
 		{
@@ -540,10 +770,15 @@ MKWidgets.TableNS.DrawInterface = Class({
 
 	drawTable: function (event)
 		{
-		if (event != undefined && event.type == 'custom_resize')
+		if (event != undefined && event.type == 'mkw_resize')
 			{
 			event.stopPropagation();
 			}
+		if (!this.widget.element.is(':visible'))
+			{
+			return;
+			}
+
 		this.detectSizingType();
 		this.resetSizeToAuto();
 		this.calcParametrs();
@@ -579,6 +814,7 @@ MKWidgets.TableNS.DrawInterface = Class({
 		else
 			{
 			this.heightCalcType = "byScreenHeight";
+
 			}
 		},
 
@@ -661,6 +897,20 @@ MKWidgets.TableNS.DrawInterface = Class({
 			{
 			this.tableWidth = this.minTableWidth;
 			}
+		for (var i in this.widget.options.columnsModel)
+			{
+			if (typeof this.widget.options.columnsModel[i].width == 'number')
+				{
+				this.tableWidth -= this.widget.options.columnsModel[i].width;
+				this.columnsCount--;
+				}
+			else
+				{
+				this.widget.options.columnsModel[i].calcWidth = true;
+
+				}
+			}
+
 
 		var widgetWitoutBodyHeight = this.widget.domTableContainer.outerHeight(true) - this.widget.domBody.height();
 		var elementMarginHeight = this.widget.element.outerHeight(true) - this.widget.element.height();
@@ -727,37 +977,54 @@ MKWidgets.TableNS.DrawInterface = Class({
 
 		for (var i in this.widget.options.columnsModel)
 			{
-			var maxWidth = 0;
-			var averageWidthSum = 0;
-			var count = 0;
-			this.widget.domTable.find(".tusur-csp-table-cell[data-tusur-csp-table-column='" + this.widget.options.columnsModel[i].index + "']")
-				.each(
-					function ()
-					{
-					averageWidthSum += $(this).outerWidth(true);
-					count++;
-					if (maxWidth < $(this).outerWidth(true))
+			if (this.widget.options.columnsModel[i].calcWidth)
+				{
+				var maxWidth = 0;
+				var averageWidthSum = 0;
+				var count = 0;
+				this.widget.domTable.find(".tusur-csp-table-cell[data-tusur-csp-table-column='" + this.widget.options.columnsModel[i].index + "']")
+					.each(
+						function ()
 						{
-						maxWidth = $(this).outerWidth(true);
-						}
+						averageWidthSum += $(this).outerWidth(true);
+						count++;
+						if (maxWidth < $(this).outerWidth(true))
+							{
+							maxWidth = $(this).outerWidth(true);
+							}
 
-					});
+						});
 
-			var averageWidth = averageWidthSum / count;
-			columnMaxWidth.push(maxWidth);
-			columnAverageWidth.push(averageWidth);
-			sumMaxWidth += maxWidth;
-			sumAverageWidth += averageWidth;
-			sumDelta += maxWidth - averageWidth;
-			//console.log(maxWidth + " " + averageWidth);
+				var averageWidth = averageWidthSum / count;
+				columnMaxWidth.push(maxWidth);
+				columnAverageWidth.push(averageWidth);
+				sumMaxWidth += maxWidth;
+				sumAverageWidth += averageWidth;
+				sumDelta += maxWidth - averageWidth;
+				//console.log(maxWidth + " " + averageWidth);
+				}
+
 			}
 
 		columnResultWidth = this.calcColumnResultWidth(columnMaxWidth, columnAverageWidth, sumMaxWidth, sumAverageWidth, sumDelta);
 
-		for (var i in this.widget.options.columnsModel)
+		var j = 0;
+		for (var i = 0; i < this.widget.options.columnsModel.length; i++)
 			{
-			this.widget.domTableContainer.find(".tusur-csp-table-cell[data-tusur-csp-table-column='" + this.widget.options.columnsModel[i].index + "']")
-				.width(columnResultWidth[i]);
+			if (this.widget.options.columnsModel[i].calcWidth)
+				{
+				this.widget.domTableContainer.find(".tusur-csp-table-cell[data-tusur-csp-table-column='" + this.widget.options.columnsModel[i].index + "']")
+					.width(columnResultWidth[j]);
+				j++;
+				}
+			else
+				{
+				this.widget.domTableContainer.find(".tusur-csp-table-cell[data-tusur-csp-table-column='" + this.widget.options.columnsModel[i].index + "']")
+					.width(this.widget.options.columnsModel[i].width)
+
+				}
+
+
 			}
 
 		var width = this.widget.domHeader.find(".tusur-csp-table-cell-header:last").width() + this.scrollbarWidth - 1;
@@ -830,6 +1097,8 @@ MKWidgets.TableNS.DrawInterface = Class({
 					columnResultWidth.push(resultWidth + 1);
 					//console.log(columnAverageWidth[i] + " " + resultWidth);
 					resultSummWidth += resultWidth;
+
+
 					}
 				}
 
@@ -855,7 +1124,9 @@ MKWidgets.TableNS.DrawInterface = Class({
 				}
 			}
 		return columnResultWidth;
-		},
+
+
+		}
 });
 
 
@@ -892,7 +1163,7 @@ MKWidgets.TableNS.DisplayInterface = Class({
 
 	cellDbclickSlot: function (event)
 		{
-		event.preventDefault();
+		//event.preventDefault();
 		var cell = $(event.currentTarget).data("cell");
 		if (cell.displayItem != null)
 			{
@@ -1151,6 +1422,7 @@ MKWidgets.TableNS.FilterLines = Class({
 
 MKWidgets.TableNS.HeaderCell = Class({
 	'extends': MK.Object,
+	view: false,
 	constructor: function (data)
 		{
 		this.jset(data);
@@ -1163,6 +1435,7 @@ MKWidgets.TableNS.HeaderCell = Class({
 		{
 		this.createPopup();
 		this.parent = event.parentArray;
+		this.title += '&nbsp;';
 		this.bindNode('title', ':sandbox .tusur-csp-table-cell-text', MK.binders.html())
 			.bindNode('index', ':sandbox', MK.binders.attr('data-tusur-csp-table-column'))
 			.bindNode('all', this.domFilters.find('.tusur-csp-table-cell-settings-filter-element-all .data-tusur-csp-table-filter-counter'), MK.binders.html())
@@ -1211,6 +1484,8 @@ MKWidgets.TableNS.HeaderCell = Class({
 			}, this);
 
 		this.popup.on('popup-positioning-finish', $.proxy(this.changeFilterContainerHeightSlot, this));
+
+		this.bindNode('view', ':sandbox', MK.binders.className('view-state'));
 		},
 
 	createPopup: function ()
@@ -1223,8 +1498,7 @@ MKWidgets.TableNS.HeaderCell = Class({
 
 		this.domSortAsc = $("<div/>").addClass('tusur-csp-table-cell-settings-sort-asc')
 			.text('По возрастанию')
-			.attr('data-sort-direction', 'asc')
-		;
+			.attr('data-sort-direction', 'asc');
 
 
 		this.domSortDesc = $("<div/>").addClass('tusur-csp-table-cell-settings-sort-desc')
@@ -1295,9 +1569,9 @@ MKWidgets.TableNS.HeaderCell = Class({
 MKWidgets.TableNS.Header = Class({
 	'extends': MK.Array,
 	Model: MKWidgets.TableNS.HeaderCell,
-	itemRenderer: '<div class="tusur-csp-table-cell tusur-csp-table-cell-header">' +
-	'<div class="tusur-csp-table-cell-text"></div>' +
-	'</div>',
+	itemRenderer: '<span class="tusur-csp-table-cell tusur-csp-table-cell-header">' +
+	'<span class="tusur-csp-table-cell-text"></span>' +
+	'</span>',
 
 	constructor: function (columnModel, domTable, parent, filterable)
 		{
@@ -1325,9 +1599,14 @@ MKWidgets.TableNS.Cell = Class({
 	view: false,
 	edit: false,
 	error: false,
-	constructor: function (columnModel)
+	constructor: function (columnModel, parent, indexInArray)
 		{
 		this.jset(columnModel);
+		this.parent = parent;
+		this.indexInArray = indexInArray;
+
+		this.headerCell = this.findHeaderCell(this.parent.parent.header);
+
 		this.columnModel = columnModel;
 		this.display = true;
 		this.on('render', this.render);
@@ -1337,9 +1616,22 @@ MKWidgets.TableNS.Cell = Class({
 			this.parent.calcDisplay(this.value);
 			}, this);
 		},
+
+	findHeaderCell: function (header)
+		{
+		for (var i = 0; i < header.length; i++)
+			{
+			if (header[i].index == this.index)
+				{
+				return header[i];
+				}
+			}
+		},
+
 	render: function (event)
 		{
 		$(this.sandbox).data('cell', this);
+		$(this.sandbox).addClass(this.skin);
 		this.parent = event.parentArray;
 
 		this.displayItem = MKWidgets.TableNS.DisplayItem.factory(this.sandbox, {
@@ -1364,7 +1656,7 @@ MKWidgets.TableNS.Cell = Class({
 		this.bindNode('value', ':sandbox', {
 			setValue: function (value)
 				{
-				$(this).html(value);
+				$(this).html(value + '&nbsp;');
 				}
 		});
 		this.bindNode('index', ':sandbox', MK.binders.attr('data-tusur-csp-table-column'))
@@ -1372,19 +1664,22 @@ MKWidgets.TableNS.Cell = Class({
 		this.bindNode('edit', ':sandbox', MK.binders.className('edit-state'))
 		this.bindNode('error', ':sandbox', MK.binders.className('error-state'))
 
+		this.headerCell.linkProps('view', [this, 'view']);
 		}
 });
 
 MKWidgets.TableNS.Row = Class({
 	'extends': MK.Array,
 	Model: MKWidgets.TableNS.Cell,
-	itemRenderer: '<div class="tusur-csp-table-cell"></div>',
+	itemRenderer: '<span class="tusur-csp-table-cell"></span>',
 	view: false,
 	select: false,
+	read: true,
 	displayFilter: true,
 	displaySearch: true,
-	constructor: function (rowData)
+	constructor: function (rowData, parent, index)
 		{
+		this.parent = parent;
 		this.rowData = new MK.Object(rowData);
 		this.once('render', this.renderCells);
 		},
@@ -1395,9 +1690,10 @@ MKWidgets.TableNS.Row = Class({
 		this.parent = event.parentArray;
 		this.tableWidget = this.parent.tableWidget;
 		this.on('change:searchInput', this.searchDisplay, this);
-		this.recreate(event.parentArray.columnsModel);
+		this.recreate(this.parent.columnsModel);
 		this.bindNode('view', ':sandbox', MK.binders.className('view-state'));
 		this.bindNode('select', ':sandbox', MK.binders.className('select-state'));
+		this.bindNode('read', ':sandbox', MK.binders.className('!unread-state'));
 		$(this.sandbox).data('row', this);
 		this.linkProps('displayTotal', 'displayFilter displaySearch',
 			function (displayFilter, displaySearch)
@@ -1490,6 +1786,8 @@ MKWidgets.TableNS.Rows = Class({
 
 		this.recreate(data);
 		this.on('change:length', this.changeLengthSlot, this, true);
+
+		this.deletedRows = new MK.Array;
 		},
 
 	changeLengthSlot: function ()
@@ -1513,4 +1811,35 @@ MKWidgets.TableNS.Rows = Class({
 		this.domDummy = $("<div/>").addClass("tusur-csp-table-dummy").text("Нет данных для отображения");
 		$(this.sandbox).append(this.domDummy);
 		},
+
+	deleteRows: function (rows)
+		{
+		rows.each(this.deleteRow, this);
+		},
+
+	deleteRow: function (row)
+		{
+		if (this.tableWidget.options.deleteByFlag)
+			{
+			row.rowData.jset('#delete', true);
+			this.deletedRows.push(row);
+			}
+
+		var index = this.indexOf(row);
+		this.splice(index, 1);
+		},
+
+	toJSON: function ()
+		{
+		var result = MK.Array.prototype.toJSON.apply(this, []);
+
+		if (this.tableWidget.options.deleteByFlag && this.deletedRows.length > 0)
+			{
+			var deletedRows = this.deletedRows.toJSON();
+			result.push.apply(result, deletedRows)
+			}
+		return result;
+		}
+
+
 });

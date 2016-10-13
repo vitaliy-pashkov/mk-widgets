@@ -14,7 +14,8 @@ MKWidgets.PopupNS.Tooltip = Class({
 		this.setOptions({
 			dynamicElement: $('<div/>'),
 			indent: 0,
-			sizeRestrictions: false
+			sizeRestrictions: false,
+			closeOnHeaderClick: false,
 		});
 		this.setOptions(options);
 
@@ -27,6 +28,8 @@ MKWidgets.PopupNS.Tooltip = Class({
 	createDom: function ()
 		{
 		this.domBackground = $("<div/>").addClass("tusur-csp-hide-popup-background");
+		this.domBackgroundSkin = $("<div/>").addClass("background-skin").on('click', $.proxy(this.closePopup, this));
+		this.domBackground.append(this.domBackgroundSkin);
 		this.domPopup = $("<div/>").addClass("tusur-csp-show-table-popup-container");
 
 
@@ -38,6 +41,7 @@ MKWidgets.PopupNS.Tooltip = Class({
 		this.domInsideContainer = $("<div/>").addClass('tusur-csp-show-table-popup-inside-container')
 			.append(this.domInsideStaticContainer)
 			.append(this.domInsideDynamicContainer);
+		this.domInsideContainer.addClass('tooltip')
 
 		this.domPopup.append(this.domInsideContainer);
 		this.domBackground.append(this.domPopup);
@@ -75,6 +79,11 @@ MKWidgets.PopupNS.Tooltip = Class({
 				this.reverceSlot();
 				}
 			}, this);
+		if(this.options.closeOnHeaderClick)
+			{
+			this.domInsideStaticContainer.on('click', $.proxy(this.closePopup, this));
+			}
+
 		},
 
 	parentSizes: function ()
@@ -89,7 +98,9 @@ MKWidgets.PopupNS.Tooltip = Class({
 		else
 			{
 			this.domInsideStaticContainer.css('width', this.element.parent().parent().outerWidth());
-			this.domInsideStaticContainer.css('height', this.element.parent().parent().outerHeight());    //for select only!!! warning! Delete this string!
+			//this.domInsideStaticContainer.css('height', this.element.parent().parent().outerHeight());    //for select only!!! warning! Delete this string!
+
+			this.domInsideDynamicContainer.css('min-width', this.element.parent().parent().outerWidth());
 			}
 		},
 
@@ -99,7 +110,7 @@ MKWidgets.PopupNS.Tooltip = Class({
 			{
 			if (this.clone == undefined)
 				{
-				this.clone = this.element.clone().empty();
+				this.clone = this.element.clone().empty().html('&nbsp;');
 				this.clone.width(0);
 				this.clone.height(0);
 				this.element.before(this.clone);
@@ -108,8 +119,8 @@ MKWidgets.PopupNS.Tooltip = Class({
 				{
 				this.clone.show();
 				}
-			var elementWidth = this.element.width()-1,
-				elementHeight = this.element.height()-1
+			var elementWidth = this.element.width() - 1,
+				elementHeight = this.element.height() - 1
 				;
 
 
@@ -154,13 +165,14 @@ MKWidgets.PopupNS.Tooltip = Class({
 		{
 		if (this.popupDisplay == true)
 			{
-			var insideContainerthisMaxHeight = this.domInsideContainer.css('max-height');
-			this.domInsideContainer.css('max-height', '');
 
-			var bottomPoint = this.domPopup.outerHeight() + this.domPopup.offset().top,
-				dynamicContainerHeight = this.domInsideDynamicContainer.outerHeight() + 2 * this.options.indent;
-			//this.domInsideDynamicContainer.css('height', 'calc(100% - '+ this.domInsideStaticContainer.outerHeight() + 'px)');
-			if (bottomPoint + this.bottomIndent > $(window).height() && this.inverceVertical == false)
+			var insideContainerthisMaxHeight = this.domInsideContainer.css('max-height');
+			this.domInsideContainer.css('max-height', 'none');
+
+			var bottomPoint = this.domPopup.outerHeight(true) + this.domPopup.offset().top,
+				dynamicContainerHeight = this.domInsideDynamicContainer.outerHeight(true);// + 2 * this.options.indent;
+			this.domInsideDynamicContainer.css('height', 'auto');
+			if (bottomPoint + this.bottomIndent > $(window).height() && this.inverceVertical == false )
 				{
 				this.domInsideDynamicContainer.insertBefore(this.domInsideStaticContainer);
 
@@ -169,20 +181,21 @@ MKWidgets.PopupNS.Tooltip = Class({
 					left: this.positionCorrectionsBackup.left
 				};
 				this.options.positionCorrections.top -= dynamicContainerHeight;
-				//this.setPosition();
+
 				this.inverceVertical = true;
 				this.reverceFlag = true;
 				}
-			else if (this.inverceVertical == true && bottomPoint + dynamicContainerHeight + this.bottomIndent < $(window)
-					.height())
+			if (this.inverceVertical == true && bottomPoint + dynamicContainerHeight + this.bottomIndent < $(window).height() )
 				{
 				this.options.positionCorrections = {
 					top: this.positionCorrectionsBackup.top,
 					left: this.positionCorrectionsBackup.left
 				};
+
+
+
 				this.domInsideDynamicContainer.insertAfter(this.domInsideStaticContainer);
-				//this.options.positionCorrections.top += dynamicContainerHeight;
-				//this.setPosition();
+
 				this.inverceVertical = false;
 				this.reverceFlag = true;
 				}
@@ -195,7 +208,7 @@ MKWidgets.PopupNS.Tooltip = Class({
 		if (this.popupDisplay == true)
 			{
 			var insideContainerthisMaxWidth = this.domInsideContainer.css('max-width');
-			this.domInsideContainer.css('max-width', '');
+			this.domInsideContainer.css('max-width', 'none');
 
 			var rightPointCoordinate = this.domInsideDynamicContainer.offset().left + this.domInsideDynamicContainer.outerWidth(),
 				deltaCoordinates = this.domInsideDynamicContainer.outerWidth() - this.domInsideStaticContainer.outerWidth();

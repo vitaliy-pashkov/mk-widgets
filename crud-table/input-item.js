@@ -53,20 +53,14 @@ MKWidgets.CrudTableNS.InputItem = Class({
 
 		linkPropValue: function ()
 			{
+			this.oldValue = this.options.formData[this.options.formIndex];
 			this.value = this.options.formData[this.options.formIndex];
-			//this.linkProps("value", [this.options.formData, this.options.formIndex]);
-			//this.options.formData.linkProps(this.options.formIndex, [this, 'value']);
-			this.on('change:value',
-				function (event)
-				{
-				this.options.formData.jset(this.options.formIndex, this.value);
-				var newValue = event.value;
-				if (event.value != event.previousValue)
-					{
-					this.preValidate()
-					}
-				});
-			this.value = this.options.formData[this.options.formIndex];
+			this.on('change:value', this.changeValueSlot);
+			},
+
+		changeValueSlot: function ()
+			{
+			this.options.formData.jset(this.options.formIndex, this.value);
 			},
 
 		cancel: function ()
@@ -77,25 +71,16 @@ MKWidgets.CrudTableNS.InputItem = Class({
 			{
 			},
 
+		finaly: function ()
+			{
+			},
+
 		init: function ()
 			{
 			},
 
 		createField: function ()
 			{
-			},
-
-		preValidate: function ()
-			{
-			if (this.options.notNull == true || !(this.value == '' || this.value == undefined || this.value == this.nullSymbol))
-				{
-				return this.validate();
-				}
-			else
-				{
-				this.errorCode = null;
-				return this.itemValidate();
-				}
 			},
 
 		validate: function ()
@@ -118,21 +103,19 @@ MKWidgets.CrudTableNS.InputItem = Class({
 		itemCancel: function ()
 			{
 			this.cancel();
+			this.finaly();
 			},
 
 		itemSave: function ()
 			{
 			this.save();
-			return this.isValueChanged() && !this.options.support ;
+			this.finaly();
+			return this.isValueChanged() && !this.options.support;
 			},
 
 		isValueChanged: function ()
 			{
-			if (this.oldValue != this.value)
-				{
-				return true;
-				}
-			return false;
+			return this.oldValue != this.value;
 			},
 	},
 	{
@@ -159,6 +142,14 @@ MKWidgets.CrudTableNS.InputItem = Class({
 				{
 				inputItem = new MKWidgets.CrudTableNS.InputItemNS.DependsSelect(elementSelector, options);
 				}
+			else if (options.type == 'treeSelect')
+				{
+				inputItem = new MKWidgets.CrudTableNS.InputItemNS.TreeSelect(elementSelector, options);
+				}
+			else if (options.type == 'dependTreeSelect')
+				{
+				inputItem = new MKWidgets.CrudTableNS.InputItemNS.DependTreeSelect(elementSelector, options);
+				}
 			else if (options.type == 'date')
 				{
 				inputItem = new MKWidgets.CrudTableNS.InputItemNS.Date(elementSelector, options);
@@ -176,81 +167,12 @@ MKWidgets.CrudTableNS.InputItem = Class({
 				inputItem = new MKWidgets.CrudTableNS.InputItem(elementSelector, options);
 				}
 
-			inputItem.linkPropValue();
 			inputItem.init();
+			inputItem.linkPropValue();
 
 			return inputItem;
 			}
 	});
-
-MKWidgets.CrudTableNS.InputItemNS.Float = Class({
-	extends: MKWidgets.CrudTableNS.InputItem,
-
-	constructor: function (elementSelector, options)
-		{
-		MKWidgets.CrudTableNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
-		this.setOptions({
-			default: "",
-			validation: {
-				minVal: 0,			//varchar, text
-				maxVal: Infinity,	//varchar, text
-			},
-		});
-		this.setOptions(options);
-		},
-
-	init: function ()
-		{
-		this.errors = {
-			minVal: "Значение должно быть больше или равно " + this.options.validation.minLen,
-			maxVal: "Значение должно быть меньше или равно " + this.options.validation.maxLen,
-			notFloat: "Значение должно быть вещественным числом"
-		};
-		},
-
-	createField: function ()
-		{
-		this.oldValue = this.value;
-		this.domInput = $('<input />')
-			.addClass('input-item-float');
-		if (this.value == '-')
-			{
-			this.value = '';
-			}
-		this.bindNode("value", this.domInput);
-		this.element.empty().append(this.domInput);
-		this.domInput.focus();
-		},
-
-	validate: function ()
-		{
-		this.errorCode = null;
-		if (this.value < this.options.validation.minVal)
-			{
-			this.errorCode = 'minVal';
-			}
-		if (this.value > this.options.validation.maxVal)
-			{
-			this.errorCode = 'maxVal';
-			}
-		if (parseFloat(this.value.replace(",", ".")) == NaN)
-			{
-			this.errorCode = 'notFloat';
-			}
-		return this.itemValidate();
-		},
-
-	cancel: function ()
-		{
-		this.element.empty().html(this.oldValue);
-		},
-
-	save: function ()
-		{
-		this.element.empty().html(this.value);
-		}
-});
-
 
 MKWidgets.CrudTableNS.InputItemNS.Varchar = Class({
 	extends: MKWidgets.CrudTableNS.InputItem,
@@ -278,9 +200,7 @@ MKWidgets.CrudTableNS.InputItemNS.Varchar = Class({
 
 	createField: function ()
 		{
-		this.oldValue = this.value;
-		this.domInput = $('<input />')
-			.addClass('input-item-varchar');
+		this.domInput = $.emmet('input.input-item-varchar')
 		this.bindNode("value", this.domInput);
 		this.element.empty().append(this.domInput);
 		this.domInput.focus();
@@ -309,19 +229,25 @@ MKWidgets.CrudTableNS.InputItemNS.Varchar = Class({
 		{
 		this.element.empty().html(this.value);
 		},
+
+	finaly: function ()
+		{
+		this.domInput.remove();
+		this.domInput = null;
+		}
 });
 
-MKWidgets.CrudTableNS.InputItemNS.Integer = Class({
-	extends: MKWidgets.CrudTableNS.InputItem,
+MKWidgets.CrudTableNS.InputItemNS.Float = Class({
+	extends: MKWidgets.CrudTableNS.InputItemNS.Varchar,
 
 	constructor: function (elementSelector, options)
 		{
-		MKWidgets.CrudTableNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
+		MKWidgets.CrudTableNS.InputItemNS.Varchar.prototype.constructor.apply(this, [elementSelector, options]);
 		this.setOptions({
 			default: "",
 			validation: {
-				minVal: -Infinity,			//varchar, text
-				maxVal: Infinity,	//varchar, text
+				minVal: -Infinity,
+				maxVal: Infinity,
 			},
 		});
 		this.setOptions(options);
@@ -330,20 +256,54 @@ MKWidgets.CrudTableNS.InputItemNS.Integer = Class({
 	init: function ()
 		{
 		this.errors = {
-			minVal: "Длина значения должна быть больше или равна " + this.options.validation.minLen + " символов",
-			maxVal: "Длина значения должна быть меньше или равна " + this.options.validation.maxLen + " символов",
-			notInt: "Введенные данные не являются числовым значением"
+			minVal: "Значение должно быть больше или равно " + this.options.validation.minLen,
+			maxVal: "Значение должно быть меньше или равно " + this.options.validation.maxLen,
+			notFloat: "Значение должно быть вещественным числом"
 		};
 		},
 
-	createField: function ()
+	validate: function ()
 		{
-		this.oldValue = this.value;
-		this.domInput = $('<input />')
-			.addClass('input-item-integer');
-		this.bindNode("value", this.domInput);
-		this.element.empty().append(this.domInput);
-		this.domInput.focus();
+		this.errorCode = null;
+		if (this.value < this.options.validation.minVal)
+			{
+			this.errorCode = 'minVal';
+			}
+		if (this.value > this.options.validation.maxVal)
+			{
+			this.errorCode = 'maxVal';
+			}
+		if (parseFloat(this.value.replace(",", ".")) == NaN)
+			{
+			this.errorCode = 'notFloat';
+			}
+		return this.itemValidate();
+		},
+});
+
+MKWidgets.CrudTableNS.InputItemNS.Integer = Class({
+	extends: MKWidgets.CrudTableNS.InputItemNS.Varchar,
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudTableNS.InputItemNS.Varchar.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			default: "",
+			validation: {
+				minVal: -Infinity,
+				maxVal: Infinity,
+			},
+		});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+		this.errors = {
+			minVal: "Значение должно быть больше или равно " + this.options.validation.minLen,
+			maxVal: "Значение должно быть меньше или равно " + this.options.validation.maxLen,
+			notInt: "Значение должно быть целым числом"
+		};
 		},
 
 	validate: function ()
@@ -368,6 +328,388 @@ MKWidgets.CrudTableNS.InputItemNS.Integer = Class({
 		{
 		var er = /^-?[0-9]+$/;
 		return er.test(value);
+		},
+});
+
+MKWidgets.CrudTableNS.InputItemNS.Select = Class({
+	extends: MKWidgets.CrudTableNS.InputItem,
+	noItem: {},
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudTableNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			default: "",
+			data: "",
+			validation: {
+				minVal: 0,			//varchar, text
+				maxVal: Infinity,	//varchar, text
+			},
+			dict: null,
+			dictConfig: {},
+			formData: {},
+			formIndex: "",
+			index: "",
+		});
+		this.setOptions(options);
+
+		this.dictConfig = this.options.dictConfig;
+		if (this.dictConfig.formIdIndex == undefined)
+			{
+			this.dictConfig.formIdIndex = this.dictConfig.dictIdIndex;
+			}
+		if (this.dictConfig.formDisplayIndex == undefined)
+			{
+			this.dictConfig.formDisplayIndex = this.options.formIndex;
+			}
+		if (this.dictConfig.dictName == undefined)
+			{
+			this.dictConfig.dictName = this.options.formIndex;
+			}
+		if (this.dictConfig.linkProp == undefined)
+			{
+			this.dictConfig.linkProp = [];
+			}
+		},
+
+	init: function ()
+		{
+		this.selectWidget = new MKWidgets.Select(this.element, {
+			dictConfig: this.dictConfig,
+			value: this.options.formData[this.dictConfig.formIdIndex],
+			renderOnInit: false,
+			customClass: 'table-item',
+			popupOptions: {
+				positionCorrections: {top: -13, left: -11},
+				background: true,
+				parentWidth: true
+			},
+			inputField: true
+		});
+
+		this.errors = {
+			noValue: "Не выбрано значение",
+		};
+		},
+
+	linkPropValue: function ()
+		{
+		this.value = this.options.formData[this.dictConfig.formIdIndex];
+		this.oldValue = this.options.formData[this.dictConfig.formIdIndex];
+		this.displayValue = this.options.formData[this.dictConfig.formDisplayIndex] || '-';
+		this.oldDisplayValue = this.options.formData[this.dictConfig.formDisplayIndex] || '-';
+
+		this.selectWidget.on('option-changed', this.changeValueSlot, this);
+		},
+
+	changeValueSlot: function ()
+		{
+		var selectedItem = this.selectWidget.selectedOption;
+
+		if (selectedItem != undefined)
+			{
+			this.value = selectedItem.data[this.dictConfig.dictIdIndex];
+			this.displayValue = selectedItem.data[this.dictConfig.dictDisplayIndex];
+
+			this.options.formData.jset(this.dictConfig.formIdIndex, selectedItem.data[this.dictConfig.dictIdIndex]);
+			this.options.formData.jset(this.dictConfig.formDisplayIndex, selectedItem.data[this.dictConfig.dictDisplayIndex]);
+			for (var i = 0; i < this.dictConfig.linkProp.length; i++)
+				{
+				this.options.formData.jset(this.dictConfig.linkProp[i].form, selectedItem.data[this.dictConfig.linkProp[i].dict]);
+				}
+			}
+		},
+
+	createField: function ()
+		{
+		this.element.empty();
+		this.selectWidget.render();
+		this.selectWidget.showList = true;
+		this.selectWidget.on('hideList', this.hideListSlot, this);
+		},
+
+	hideListSlot: function ()
+		{
+		if (this.displayValue == this.oldDisplayValue)
+			{
+			this.trigger('cancelEvent');
+			}
+		else
+			{
+			this.trigger('saveEvent');
+			}
+		},
+
+	validate: function ()
+		{
+		this.errorCode = null;
+
+		this.selectedItem = this.selectWidget.selectedOption;
+
+		if (this.selectedItem == null)
+			{
+			this.errorCode = 'noValue';
+			this.displayValue = '-';
+			}
+		return this.itemValidate();
+		},
+
+	cancel: function ()
+		{
+		this.element.empty().html(this.oldDisplayValue);
+		},
+
+	save: function ()
+		{
+		this.element.empty().html(this.displayValue);
+		},
+
+	finaly: function ()
+		{
+		this.selectWidget.deleteSelect();
+		}
+
+});
+
+MKWidgets.CrudTableNS.InputItemNS.DependsSelect = Class({
+	extends: MKWidgets.CrudTableNS.InputItemNS.Select,
+	noItem: {},
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudTableNS.InputItemNS.Select.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+		});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+		for (var i in this.dictConfig.depend)
+			{
+			this.dictConfig.depend[i].object = this.options.formData;
+			}
+
+		this.selectWidget = new MKWidgets.DependsSelect(this.element, {
+			dictConfig: this.dictConfig,
+			value: this.options.formData[this.dictConfig.formIdIndex],
+			customClass: 'table-item',
+			renderOnInit: false,
+			popupOptions: {
+				positionCorrections: {top: -13, left: -11},
+				background: true,
+				parentWidth: true,
+				positionElement: this.element
+			},
+			inputField: true
+		});
+
+		this.errors = {
+			noValue: "Не выбрано значение",
+			notInParent: "Выбранное значение недоступно ввиду ограничения зависимостью"
+		};
+		},
+
+	validate: function ()
+		{
+		this.errorCode = null;
+
+		this.selectedItem = this.selectWidget.selectedOption;
+		if (this.selectedItem != null)
+			{
+			for (var i in this.options.dictConfig.depend)
+				{
+				var objectIndex = this.options.dictConfig.depend[i].objectIdIndex,
+					dictIndex = this.options.dictConfig.depend[i].dictIdIndex,
+					formDependId = this.options.formData[objectIndex],
+					dictDependId = this.selectedItem.data[dictIndex];
+
+				if (dictDependId != formDependId)
+					{
+					this.errorCode = 'noInParent';
+					}
+				}
+			}
+		else
+			{
+			this.errorCode = 'noValue';
+			this.displayValue = '-';
+			}
+
+		if (this.selectedItem != undefined)
+			{
+
+			}
+		return this.itemValidate();
+		},
+});
+
+MKWidgets.CrudTableNS.InputItemNS.TreeSelect = Class({
+	extends: MKWidgets.CrudTableNS.InputItemNS.Select,
+	noItem: {},
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudTableNS.InputItemNS.Select.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			treeConfig: {},
+		});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+		this.selectWidget = new MKWidgets.TreeSelect(this.domInputItem, {
+			dictConfig: this.dictConfig,
+			treeConfig: this.options.treeConfig,
+			value: this.options.formData[this.dictConfig.formIdIndex],
+			//customClass: 'table-item',
+			popupOptions: {
+				positionCorrections: {top: -13, left: -11},
+				background: true,
+				parentWidth: true,
+				positionElement: this.element
+			},
+		});
+
+		this.errors = {
+			noValue: "Не выбрано значение",
+			notInParent: "Выбранное значение недоступно ввиду ограничения зависимостью"
+		};
+		},
+});
+
+MKWidgets.CrudTableNS.InputItemNS.DependTreeSelect = Class({
+	extends: MKWidgets.CrudTableNS.InputItemNS.Select,
+	noItem: {},
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudTableNS.InputItemNS.Select.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			treeConfig: {},
+		});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+		for (var i in this.dictConfig.depend)
+			{
+			if (this.dictConfig.depend[i].object === '../')
+				{
+				this.dictConfig.depend[i].object = this.options.formData['#parent'];
+				}
+			else if (this.dictConfig.depend[i].object === './' || this.dictConfig.depend[i].object == undefined)
+				{
+				this.dictConfig.depend[i].object = this.options.formData;
+				}
+			}
+
+		this.selectWidget = new MKWidgets.DependTreeSelect(this.domInputItem, {
+			dictConfig: this.dictConfig,
+			treeConfig: this.options.treeConfig,
+			value: this.options.formData[this.dictConfig.formIdIndex],
+			context: this.options.formData,
+			popupOptions: {
+				positionCorrections: {top: -13, left: -11},
+				background: true,
+				parentWidth: true,
+				positionElement: this.element
+			},
+		});
+
+
+		this.errors = {
+			noValue: "Не выбрано значение",
+			notInParent: "Выбранное значение недоступно ввиду ограничения зависимостью"
+		};
+		},
+});
+
+// not refactoring
+
+MKWidgets.CrudTableNS.InputItemNS.Date = Class({
+	extends: MKWidgets.CrudTableNS.InputItem,
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudTableNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			default: "",
+		});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+		this.errors = {};
+		},
+
+	parseDates: function ()
+		{
+		var separator,
+			startDate = '',
+			endDate = '';
+		if (this.options.dictConfig.separator != undefined)
+			{
+			separator = this.options.dictConfig.separator;
+			}
+		else
+			{
+			separator = ' - ';
+			}
+		var dates = this.oldValue.split(separator);
+		startDate = dates[0];
+		if (dates[1] != undefined)
+			{
+			endDate = dates[1];
+			}
+		return {
+			"startDate": startDate,
+			"endDate": endDate
+		};
+		},
+
+	createField: function ()
+		{
+		this.domInput = $.emmet('input.input-item-date');
+		this.domInputContainer = $('<div/>').append(this.domInput);
+		this.element.empty().append(this.domInputContainer);
+
+		var dates = this.parseDates();
+
+		this.datePicker = new MKWidgets.DateRangePicker(this.domInput, $.extend({
+			parentElement: this.element,
+			parentWidth: true,
+			startDate: this.oldValue,
+			endDate: dates.endDate,
+
+			locales: {
+				ru: {
+					format: "YYYY-MM-DD"
+				}
+			},
+			popupConfigs: {
+				positionCorrections: {top: -6, left: -7},
+			}
+		}, this.options.dictConfig));
+
+		this.domInput.focus();
+		this.bindNode("value", this.domInput);
+		this.datePicker.on('calendar-hide',
+			function ()
+			{
+			this.value = this.domInput.val();
+			this.trigger('saveEvent');
+			}, this);
+		},
+
+	validate: function ()
+		{
+		this.errorCode = null;
+
+		return this.itemValidate();
 		},
 
 	cancel: function ()
@@ -502,444 +844,6 @@ MKWidgets.CrudTableNS.InputItemNS.Cron = Class({
 		}
 });
 
-MKWidgets.CrudTableNS.InputItemNS.Select = Class({
-	extends: MKWidgets.CrudTableNS.InputItem,
-	noItem: {},
-
-	constructor: function (elementSelector, options)
-		{
-		MKWidgets.CrudTableNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
-		this.setOptions({
-			default: "",
-			data: "",
-			validation: {
-				minVal: 0,			//varchar, text
-				maxVal: Infinity,	//varchar, text
-			},
-			dict: null,
-			dictConfig: {},
-			formData: {},
-			formIndex: "",
-			dict_url: "",
-			index: "",
-		});
-		this.setOptions(options);
-
-		},
-
-	linkPropValue: function ()
-		{
-		},
-
-	linkPropValueSelect: function ()
-		{
-		this.value = this.options.formData[this.dictConfig.formIdIndex];
-		this.displayValue = this.options.formData[this.dictConfig.formDisplayIndex]
-		//this.dictItem = this.findItemById(this.value);
-		//this.displayValue = this.dictItem[this.dictConfig.dictDisplayIndex];
-
-		this.on('change:value',
-			function (event)
-			{
-			this.options.formData.jset(this.dictConfig.formIdIndex, this.value);
-			var displayItem = this.selectWidget.selectedOption;
-			if (displayItem != null)
-				{
-				this.displayValue = displayItem[this.dictConfig.dictDisplayIndex];
-				this.options.formData.jset(this.dictConfig.formDisplayIndex, this.displayValue);
-
-				for (var i = 0; i < this.dictConfig.linkProp.length; i++)
-					{
-					this.options.formData.jset(this.dictConfig.linkProp[i].form, displayItem[this.dictConfig.linkProp[i].dict]);
-					}
-				}
-
-			var newValue = event.value;
-
-			if (event.value != event.previousValue)
-				{
-				this.validate();
-				}
-			}, this);
-		},
-
-	init: function ()
-		{
-		this.dictConfig = this.options.dictConfig;
-		if (this.dictConfig.formIdIndex == undefined)
-			{
-			this.dictConfig.formIdIndex = this.dictConfig.dictIdIndex;
-			}
-		if (this.dictConfig.formDisplayIndex == undefined)
-			{
-			this.dictConfig.formDisplayIndex = this.options.formIndex;
-			}
-		if (this.dictConfig.dictName == undefined)
-			{
-			this.dictConfig.dictName = this.options.formIndex;
-			}
-		if (this.dictConfig.linkProp == undefined)
-			{
-			this.dictConfig.linkProp = [];
-			}
-
-		this.linkPropValueSelect();
-
-		this.selectWidget = new MKWidgets.Select(this.element, {
-			dictConfig: this.dictConfig,
-			value: this.value,
-			renderOnInit: false,
-			customClass: 'table-item',
-			popupOptions: {
-				positionCorrections: {top: -13, left: -11},
-				background: true,
-				parentWidth: true
-			},
-			inputField: true
-		});
-
-		this.errors = {
-			noValue: "Не выбрано значение",
-		};
-		},
-
-	createField: function ()
-		{
-		if (this.displayValue != null)
-			{
-			this.oldDisplayValue = this.displayValue;
-			}
-		else
-			{
-			this.oldDisplayValue = '-';
-			}
-
-		this.element.empty();
-		this.selectWidget.render();
-		this.selectWidget.showList = true;
-
-		this.linkProps('value', 'selectWidget.value');
-
-		this.selectWidget.on('change:showList',
-			function ()
-			{
-			if (this.selectWidget.showList == false && this.displayValue == this.oldDisplayValue)
-				{
-				this.cancel();
-				}
-			}, this);
-		this.on('selectWidget@hideList',
-			function ()
-			{
-			this.trigger('saveEvent');
-			});
-		},
-
-	validate: function ()
-		{
-		this.errorCode = null;
-
-		//this.dictItem = this.findItemById(this.value);
-		this.dictItem = this.selectWidget.selectedOption;
-
-		if (this.dictItem != null)
-			{
-			this.displayValue = this.dictItem[this.dictConfig.dictDisplayIndex];
-			}
-		else
-			{
-			this.errorCode = 'noValue';
-			this.displayValue = '-';
-			}
-
-		if (this.value == undefined)
-			{
-			this.errorCode = 'noValue';
-			}
-		return this.itemValidate();
-		},
-
-	cancel: function ()
-		{
-		this.selectWidget.deleteSelect();
-		this.element.empty().html(this.oldDisplayValue);
-		},
-
-	save: function ()
-		{
-		this.element.empty().html(this.displayValue);
-		this.selectWidget.deleteSelect();
-		},
-
-});
-
-MKWidgets.CrudTableNS.InputItemNS.DependsSelect = Class({
-	extends: MKWidgets.CrudTableNS.InputItemNS.Select,
-	noItem: {},
-
-	constructor: function (elementSelector, options)
-		{
-		MKWidgets.CrudTableNS.InputItemNS.Select.prototype.constructor.apply(this, [elementSelector, options]);
-		this.setOptions({
-			default: "",
-			data: "",
-			validation: {
-				minVal: 0,			//varchar, text
-				maxVal: Infinity,	//varchar, text
-			},
-			dict: null,
-			dictConfig: {},
-			formData: {},
-			formIndex: "",
-			dict_url: "",
-			index: "",
-			defaultText: "Выберите значение",
-			noValues: "Нет значений"
-		});
-		this.setOptions(options);
-		},
-
-	init: function ()
-		{
-		this.dictConfig = this.options.dictConfig;
-		if (this.dictConfig.formIdIndex == undefined)
-			{
-			this.dictConfig.formIdIndex = this.dictConfig.dictIdIndex;
-			}
-		if (this.dictConfig.formDisplayIndex == undefined)
-			{
-			this.dictConfig.formDisplayIndex = this.options.formIndex;
-			}
-		if (this.dictConfig.dictName == undefined)
-			{
-			this.dictConfig.dictName = this.options.formIndex;
-			}
-		if (this.dictConfig.linkProp == undefined)
-			{
-			this.dictConfig.linkProp = [];
-			}
-
-		this.linkPropValueSelect();
-
-		for (var i in this.dictConfig.depend)
-			{
-			this.dictConfig.depend[i].object = this.options.formData;
-			}
-
-		this.selectWidget = new MKWidgets.DependsSelect(this.element, {
-			dictConfig: this.dictConfig,
-			value: this.value,
-			customClass: 'table-item',
-			renderOnInit: false,
-			popupOptions: {
-				positionCorrections: {top: -13, left: -11},
-				background: true,
-				parentWidth: true,
-				positionElement: this.element
-			},
-			inputField: true
-		});
-
-		//this.selectWidget.on('recreateArray', function(){
-		//	if(this.selectWidget.optionsList.length == 0)
-		//		{
-		//		this.element.empty().html(this.options.noValues);
-		//		}
-		//}, this);
-
-
-		this.errors = {
-			noValue: "Не выбрано значение",
-			notInParent: "Выбранное значение недоступно ввиду ограничения зависимостью"
-		};
-		},
-
-	createField: function ()
-		{
-		if (this.displayValue != null)
-			{
-			this.oldDisplayValue = this.displayValue;
-			}
-		else
-			{
-			this.oldDisplayValue = '-';
-			}
-
-		this.element.empty();
-		this.selectWidget.render();
-		this.selectWidget.showList = true;
-
-		this.linkProps('value', 'selectWidget.value');
-
-		this.selectWidget.on('change:showList',
-			function ()
-			{
-			if (this.selectWidget.showList == false && this.displayValue == this.oldDisplayValue)
-				{
-				this.trigger('cancelEvent');
-				//this.cancel();
-				}
-			}, this);
-		this.on('selectWidget@hideList',
-			function ()
-			{
-			this.trigger('saveEvent');
-			});
-		},
-
-	validate: function ()
-		{
-		this.errorCode = null;
-
-		this.dictItem = this.selectWidget.selectedOption;
-
-		if (this.dictItem != null)
-			{
-			this.displayValue = this.dictItem[this.dictConfig.dictDisplayIndex];
-			}
-		else
-			{
-			this.errorCode = 'noValue';
-			this.displayValue = '-';
-			}
-
-		if (this.value == undefined)
-			{
-			this.errorCode = 'noValue';
-			}
-		if (this.dictItem != undefined)
-			{
-			for (i in this.options.dictConfig.depend)
-				{
-				var objectIndex = this.options.dictConfig.depend[i].objectIdIndex,
-					dictIndex = this.options.dictConfig.depend[i].dictIdIndex,
-					formDependId = this.options.formData[objectIndex],
-					dictDependId = this.dictItem[dictIndex];
-
-				//var formDependIdIndex = this.options.dictConfig.formDependIdIndex,
-				//	formDependId = this.options.formData[formDependIdIndex],
-				//	dictDependId = this.dictItem[this.options.dictConfig.dictDependIdIndex];
-				if (dictDependId != formDependId)
-					{
-					this.errorCode = 'noInParent';
-					//this.element.empty().html(this.options.defaultText);
-					}
-				}
-			}
-
-		return this.itemValidate();
-		},
-
-	cancel: function ()
-		{
-		this.selectWidget.deleteSelect();
-		this.element.empty().html(this.oldDisplayValue);
-		},
-
-	save: function ()
-		{
-		this.element.empty().html(this.displayValue);
-		this.selectWidget.deleteSelect();
-		}
-});
-
-MKWidgets.CrudTableNS.InputItemNS.Date = Class({
-	extends: MKWidgets.CrudTableNS.InputItem,
-
-	constructor: function (elementSelector, options)
-		{
-		MKWidgets.CrudTableNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
-		this.setOptions({
-			default: "",
-		});
-		this.setOptions(options);
-		},
-
-	init: function ()
-		{
-		this.errors = {};
-		},
-
-	parseDates: function ()
-		{
-		var separator,
-			startDate = '',
-			endDate = '';
-		if (this.options.dictConfig.separator != undefined)
-			{
-			separator = this.options.dictConfig.separator;
-			}
-		else
-			{
-			separator = ' - ';
-			}
-		var dates = this.oldValue.split(separator);
-		startDate = dates[0];
-		if (dates[1] != undefined)
-			{
-			endDate = dates[1];
-			}
-		return {
-			"startDate": startDate,
-			"endDate": endDate
-		};
-		},
-
-	createField: function ()
-		{
-		this.oldValue = this.value;
-		this.domInput = $('<input />')
-			.addClass('input-item-date');
-		this.bindNode("value", this.domInput);
-		this.domInputContainer = $('<div/>').append(this.domInput);
-		this.element.empty().append(this.domInputContainer);
-
-		var dates = this.parseDates();
-
-		this.datePicker = new MKWidgets.DateRangePicker(this.domInput, $.extend({
-			parentElement: this.element,
-			parentWidth: true,
-			startDate: this.oldValue,
-			endDate: dates.endDate,
-
-			locales: {
-				ru: {
-					format: "YYYY-MM-DD"
-				}
-			},
-			popupConfigs: {
-				positionCorrections: {top: -6, left: -7},
-			}
-		}, this.options.dictConfig));
-
-		this.domInput.focus();
-		this.bindNode("value", this.domInput);
-		this.datePicker.on('calendar-hide',
-			function ()
-			{
-			this.value = this.domInput.val();
-			this.trigger('saveEvent');
-			}, this);
-		},
-
-	validate: function ()
-		{
-		this.errorCode = null;
-
-		return this.itemValidate();
-		},
-
-	cancel: function ()
-		{
-		this.element.empty().html(this.oldValue);
-		},
-
-	save: function ()
-		{
-		this.element.empty().html(this.value);
-		}
-});
-
 MKWidgets.CrudTableNS.InputItemNS.Address = Class({
 	extends: MKWidgets.CrudTableNS.InputItem,
 
@@ -977,13 +881,13 @@ MKWidgets.CrudTableNS.InputItemNS.Address = Class({
 			{
 			}
 
-		this.addressWidget = new MKWidgets.Address(this.element, $.extend(this.options.addressOptions,{
+		this.addressWidget = new MKWidgets.Address(this.element, $.extend(this.options.addressOptions, {
 			addressId: this.options.formData [this.options.addressIdIndex],
 			popup: {
 				positionCorrections: {top: 0, left: 0},
 			}
 		}));
-		if(this.addressWidget.ready == true)
+		if (this.addressWidget.ready == true)
 			{
 			this.initAddressEvents();
 			}
@@ -994,7 +898,7 @@ MKWidgets.CrudTableNS.InputItemNS.Address = Class({
 
 		},
 
-	initAddressEvents: function()
+	initAddressEvents: function ()
 		{
 		this.addressWidget.domMainInput.addClass('tusur-csp-crud-table-input-item');
 		this.addressWidget.popup.openPopup();
@@ -1014,10 +918,10 @@ MKWidgets.CrudTableNS.InputItemNS.Address = Class({
 			{
 			this.options.formData.jset(this.options.addressPrefix + '.' + index, address[index].value);
 			}
-		this.options.formData.jset(this.options.addressPrefix+'.text_full', this.addressWidget.fullTextValue);
-		this.options.formData.jset(this.options.addressPrefix+'.text_point', this.addressWidget.getTextValue(4,8, false, false));
-		this.options.formData.jset(this.options.addressPrefix+'.text_home', this.addressWidget.getTextValue(6,8, false, false));
-		this.options.formData.jset(this.options.addressPrefix+'.text_home_detail', this.addressWidget.getTextValue(6,8, true, true));
+		this.options.formData.jset(this.options.addressPrefix + '.text_full', this.addressWidget.fullTextValue);
+		this.options.formData.jset(this.options.addressPrefix + '.text_point', this.addressWidget.getTextValue(4, 8, false, false));
+		this.options.formData.jset(this.options.addressPrefix + '.text_home', this.addressWidget.getTextValue(6, 8, false, false));
+		this.options.formData.jset(this.options.addressPrefix + '.text_home_detail', this.addressWidget.getTextValue(6, 8, true, true));
 		},
 
 	validate: function (silent)

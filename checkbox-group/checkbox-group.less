@@ -1,0 +1,27 @@
+.mkw-checkbox-group(@widgetPath);
+
+.mkw-checkbox-group(@widgetPath) {
+  @path-img : "@{widgetPath}/mk-widgets/select/img";
+
+  .mkw-checkbox-group {
+	.mkw-checkbox-group-container {
+
+	  border: 1px solid #B6B6B6;
+	  border-radius: 4px;
+
+	  .mkw-checkbox-group-checkbox-container {
+		width: ~'calc(50% - 20px)';
+		display: inline-block;
+		vertical-align: top;
+	  }
+
+	  .mkw-checkbox-group-checkbox-container.all {
+		display: block;
+	  }
+	}
+
+	.mkw-checkbox-group-label-all {
+	  font-weight: bold;
+	}
+  }
+}

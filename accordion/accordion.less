@@ -3,29 +3,38 @@
 .tusur-csp-accordion(@widgetPath){
   @path-img : "@{widgetPath}/mk-widgets/accordion/img";
 
-  @color-header-background: #ededed;
 
   .accordion {
     height: 100%;
 
     .section {
-      margin-bottom: 10px;
+      margin-bottom: 20px;
+	  border: 1px solid #DFDFDF;
+	  border-radius: 4px;
+	  position: relative;
+
+
       header {
-        background-color: @color-header-background;
-        font-weight: bold;
-        padding: 5px 0 8px 15px;
+        font-weight: 600;
+        padding: 0px 0 0px 8px;
         border-radius: 3px 3px 0 0;
-        position: relative;
-        margin-bottom: 12px;
+
+		position: relative;
+		margin: -8px 0 10px 0;
+
+		span {
+		  //background: #FDFDFD;
+		  padding: 0 10px;
+		}
 
         .accordion-controller {
           position: absolute;
-          top: 5px;
+          top: -1px;
           width: 17px;
           height: 17px;
-          right: 7px;
+          right: 6px;
           cursor: pointer;
-
+		  //background-color: #FDFDFD;
         }
 
         .accordion-controller-rollup {
@@ -37,14 +46,15 @@
         }
       }
       .section-body {
-        margin-right: 5px;
         height: 100%;
         position:relative;
-
-        .scroll-bar.vertical {
-          right: 9px;
-        }
+		padding: 0px 0 13px 0;
+		//margin-right: 5px;
       }
+
+	  .scroll-bar.vertical{
+		right: 5px;
+	  }
       .overview {
         width: 100%;
       }

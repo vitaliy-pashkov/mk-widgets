@@ -1,7 +1,5 @@
 var MKWidgets = MKWidgets || {};
 MKWidgets.SelectNS = MKWidgets.SelectNS || {};
-MKWidgets.DependsSelectNS = MKWidgets.DependsSelectNS || {};
-
 
 MKWidgets.Select = Class({
 	extends: MKWidget,
@@ -13,7 +11,7 @@ MKWidgets.Select = Class({
 	isRendered: false,
 
 
-	constructor: function (elementSelector, options)
+	constructor: function MKWidgets_Select(elementSelector, options)
 		{
 		MKWidget.prototype.constructor.apply(this, [elementSelector, options]);
 		this.setOptions({
@@ -25,19 +23,22 @@ MKWidgets.Select = Class({
 			renderOnInit: true,
 			dict: null,
 			value: null,
-			inputField: false,
+			inputField: true,
 			customClass: null,
 			defaultDisplayValue: 'Выберите значение',
 			activeDisplayValue: 'Выберите значение', //
 			defaultNoValues: 'Нет значений',
+
 			popupOptions: {
 				dynamicElement: $(),
-				background: false,
+				background: true,
 				positioning: true,
 				paddingCorrect: true,
 				positionCorrections: {top: 0, left: 0},
+				indent: 10,
 				returnElementToDom: true,
-				parentWidth: false
+				parentWidth: true,
+
 			}
 		});
 
@@ -67,11 +68,6 @@ MKWidgets.Select = Class({
 		this.isRendered = true;
 		this.createDom();
 		this.createInterfaces();
-
-		if (this.selectedOptionByDom != undefined)
-			{
-			this.listInterface.setSelectedOption(this.selectedOptionByDom);
-			}
 		},
 
 	setupByDomSelect: function ()
@@ -107,7 +103,7 @@ MKWidgets.Select = Class({
 			dict.push(dictRow);
 			if ($(value).attr('selected') == 'selected')
 				{
-				this.selectedOptionByDom = dictRow;
+				this.options.value = dictRow.id ;
 				}
 			}, this));
 		this.options.dict = dict;
@@ -153,6 +149,7 @@ MKWidgets.Select = Class({
 		this.domHeaderBlock.append(this.domImageBlock);
 
 		this.domOptionsList = $("<div>").addClass('custom-select-list');
+		this.domDummy = $('<div/>').addClass('custom-select-dummy').text(this.options.defaultNoValues).hide();
 
 
 		this.on('change:selectedOption',
@@ -160,31 +157,21 @@ MKWidgets.Select = Class({
 			{
 			if (this.selectedOption != null)
 				{
-				if (this.selectedOption.value != null)
+				if (this.selectedOption.data[this.dictConfig.dictIdIndex] != null)
 					{
-					this.value = this.selectedOption[this.dictConfig.dictIdIndex];
-					this.displayValue = this.selectedOption[this.dictConfig.dictDisplayIndex];
-					//if(this.displayValue == null)
-					//	{
-					//	this.options.defaultDisplayValue;
-					//	}
-					//this[this.options.dictConfig.dictIdIndex] = this.selectedOption.value;
+					this.value = this.selectedOption.data[this.dictConfig.dictIdIndex];
+					this.displayValue = this.selectedOption.data[this.dictConfig.dictDisplayIndex];
 					this.trigger('option-changed');
 					}
 				}
-			//else
-			//{
-			//this.value = null;
-			//this.inputInterface.displayValue = this.options.defaultDisplayValue;
-			//}
 			}, this)
 
-		//
 		this.optionsList.render(this.domOptionsList);
 
 
 		this.domOptionsScroll = $("<div>").addClass("custom-select-list-scroll")
-			.append(this.domOptionsList);
+			.append(this.domOptionsList)
+			.append(this.domDummy);
 
 		this.domSelect
 			.append(this.domHeaderBlock)
@@ -211,12 +198,11 @@ MKWidgets.Select = Class({
 		this.set('enable', false, {
 			silent: true
 		});
-		this.domInputBlock.addClass('disable');
+		this.domHeaderBlock.addClass('disable');
 		if (this.inputInterface != undefined)
 			{
 			this.inputInterface.domInput.prop("disabled", true);
 			}
-		this.domImageBlock.addClass('disable');
 		},
 
 	turnOn: function ()
@@ -228,8 +214,7 @@ MKWidgets.Select = Class({
 			{
 			this.inputInterface.domInput.prop("disabled", false);
 			}
-		this.domInputBlock.removeClass('disable');
-		this.domImageBlock.removeClass('disable');
+		this.domHeaderBlock.removeClass('disable');
 		},
 
 	binding: function ()
@@ -275,7 +260,7 @@ MKWidgets.Select = Class({
 		{
 		if (selectedOptionId != null)
 			{
-			this.dict.forEach(
+			this.optionsList.forEach(
 				function (option)
 				{
 				if (option[this.options.dictConfig.dictIdIndex] == selectedOptionId)
@@ -294,7 +279,7 @@ MKWidgets.Select = Class({
 
 	setTitle: function (title)
 		{
-		if (this.options.inputField == true)
+		if (this.options.inputField != undefined)
 			{
 			this.inputInterface.customTitleValue = title;
 			}
@@ -308,7 +293,7 @@ MKWidgets.Select = Class({
 		{
 		if (this.selectedOption != null)
 			{
-			return this.selectedOption[this.options.dictConfig.dictIdIndex];
+			return this.selectedOption.data[this.options.dictConfig.dictIdIndex];
 			}
 		else
 			{
@@ -342,7 +327,7 @@ MKWidgets.SelectNS.SelectHeaderInterface = Class({
 
 	customTitleValue: '',
 
-	constructor: function (widget, enable)
+	constructor: function MKWidgets_SelectNS_SelectHeaderInterface(widget, enable)
 		{
 		WidgetInterface.prototype.constructor.apply(this, [widget, enable]);
 		},
@@ -359,7 +344,7 @@ MKWidgets.SelectNS.SelectHeaderInterface = Class({
 		this.on('change:customTitleValue', this.setDisplayValue, false, this);
 		this.on('widget@change:selectedOption', this.setDisplayValue, true, this);
 
-		this.bindNode('displayValue', this.widget.domInputBlock, MK.binders.html());
+		this.bindNode('displayValue', this.widget.domInputBlock, MK.binders.text());
 		this.bindNode('displayValue', this.widget.domInputBlock, MK.binders.attr('title'));
 		this.widget.bindNode('showList', this.widget.domSelect, MK.binders.className('open'))
 			.bindNode('showList', this.widget.domHeaderBlock, MK.binders.className('open'));
@@ -396,15 +381,19 @@ MKWidgets.SelectNS.SelectHeaderInterface = Class({
 			}
 		else
 			{
-			this.displayValue = this.widget.selectedOption[this.widget.options.dictConfig.dictDisplayIndex];
+			this.displayValue = this.getDisplayValue();
 			}
-
 		},
 
 	changeShowList: function ()
 		{
 		this.widget.showList = !this.widget.showList;
 		},
+
+	getDisplayValue: function()
+		{
+		return this.widget.selectedOption.data[this.widget.options.dictConfig.dictDisplayIndex];
+		}
 });
 
 MKWidgets.SelectNS.SelectInputInterface = Class({
@@ -412,7 +401,7 @@ MKWidgets.SelectNS.SelectInputInterface = Class({
 	widget: null,
 	enable: false,
 
-	constructor: function (widget, enable)
+	constructor: function MKWidgets_SelectNS_SelectInputInterface(widget, enable)
 		{
 		MKWidgets.SelectNS.SelectHeaderInterface.prototype.constructor.apply(this, [widget, enable]);
 		},
@@ -461,7 +450,7 @@ MKWidgets.SelectNS.SelectInputInterface = Class({
 		{
 		if (this.widget.selectedOption != null)
 			{
-			this.domInput.val(this.widget.selectedOption[this.widget.options.dictConfig.dictDisplayIndex]);
+			this.domInput.val(this.getDisplayValue());
 			}
 		else
 			{
@@ -484,21 +473,32 @@ MKWidgets.SelectNS.SelectInputInterface = Class({
 		this.widget.trigger('options-view-update');
 		},
 
-	searchOptionsUpdateSlot: function()
+	searchOptionsUpdateSlot: function ()
 		{
 		var countVisible = 0;
 		var lastVisible = null;
-		for(var i=0;i<this.widget.optionsList.length; i++)
+		for (var i = 0; i < this.widget.optionsList.length; i++)
 			{
-			if(this.widget.optionsList[i].show == true)
+			if (this.widget.optionsList[i].show == true)
 				{
-				countVisible ++;
-				lastVisible =this.widget.optionsList[i];
+				countVisible++;
+				lastVisible = this.widget.optionsList[i];
 				}
 			}
-		if(countVisible == 1)
+		if(this.widget.listInterface != undefined)
 			{
-			this.widget.listInterface.setSelectedOption(lastVisible);
+			if (countVisible == 1)
+				{
+				this.widget.listInterface.setSelectedOption(lastVisible);
+				}
+			if (countVisible == 0)
+				{
+				this.widget.listInterface.toggleDummy(true);
+				}
+			else
+				{
+				this.widget.listInterface.toggleDummy(false);
+				}
 			}
 		},
 
@@ -514,7 +514,7 @@ MKWidgets.SelectNS.SelectInputInterface = Class({
 			{
 			if (this.widget.selectedOption != undefined)
 				{
-				this.domInput.val(this.widget.selectedOption[this.widget.options.dictConfig.dictDisplayIndex]);
+				this.domInput.val(this.getDisplayValue());
 				}
 			else
 				{
@@ -553,9 +553,10 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 	turnOn: function ()
 		{
 		this.enabled = true;
-		this.widget.bindNode('showList', this.widget.domOptionsScroll, MK.binders.display());
+		//this.widget.bindNode('showList', this.widget.domOptionsScroll, MK.binders.display());
 		this.widget.optionsList.on('*@click::sandbox', this.optionClickSlot, this);
 		this.widget.optionsList.on('*@mouseenter::sandbox', this.optionHoverSlot, this);
+		this.widget.optionsList.on('mouseout::sandbox', this.mouseOutSlot, this);
 		$(document).keydown($.proxy(this.keyPressSlot, this));
 		},
 
@@ -593,6 +594,7 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 		{
 		var option = $(event.target).data('option');
 		this.setSelectedOption(option);
+		this.widget.showList = false;
 		},
 
 	setSelectedOption: function (newSelectedOption)
@@ -603,8 +605,6 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 			}
 		newSelectedOption.selected = true;
 		this.widget.selectedOption = newSelectedOption;
-
-		this.widget.showList = false;
 		},
 
 	listHeight: function ()
@@ -614,6 +614,11 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 			listMaxSize = ($(window).outerHeight() - this.widget.domHeaderBlock.outerHeight() - paddings) / 3,
 			optionsMaxSize = options.first().outerHeight() * options.length + paddings
 			;
+
+		if (options.length == 0)
+			{
+			optionsMaxSize = this.widget.domDummy.outerHeight();
+			}
 
 		if (listMaxSize > optionsMaxSize)
 			{
@@ -628,20 +633,6 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 			this.widget.domOptionsScroll.parent().css('height', listMaxSize);
 			}
 
-		//if (options.length > 10)
-		//	{
-		//	var height = (options.first().outerHeight() * 10 + paddings) + 'px';
-		//	this.widget.domOptionsScroll.css('max-height', height)
-		//		.css('height', height);
-		//	this.widget.domOptionsScroll.parent().css('height', height);
-		//	}
-		//else
-		//	{
-		//	var height = (options.first().outerHeight() * options.length + paddings) + 'px';
-		//	this.widget.domOptionsScroll.css('max-height', height)
-		//		.css('height', height);
-		//	this.widget.domOptionsScroll.parent().css('height', height);
-		//	}
 		this.listScroll.customScrollbar("resize", true);
 		},
 
@@ -661,6 +652,17 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 		this.widget.hoverOption = newHoverOption;
 		},
 
+	mouseOutSlot: function()
+		{
+		if (this.widget.hoverOption != undefined)
+			{
+			this.widget.hoverOption.hover = false;
+			this.widget.hoverOption = null;
+			}
+		},
+
+
+
 	keyPressSlot: function (event)
 		{
 		if (this.widget.showList == true)
@@ -671,6 +673,7 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 				event.stopPropagation();
 				var option = this.nextHoverOption();
 				this.setHoverOption(option);
+				this.listScroll.customScrollbar('scrollTo', option.sandbox);
 				}
 			else if (event.keyCode == 38)   //upkey
 				{
@@ -678,6 +681,7 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 				event.stopPropagation();
 				var option = this.prevHoverOption();
 				this.setHoverOption(option);
+				this.listScroll.customScrollbar('scrollTo', option.sandbox);
 				}
 			else if (event.keyCode == 13)   //enter
 				{
@@ -734,7 +738,7 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 
 	getFirstVisible: function (begin, end)
 		{
-		for (var i = begin; begin <= end ? i < end : i >= end; begin <= end ? i++ : i--)
+		for (var i = begin; begin <= end ? i <= end && i >= 0 && i < this.widget.optionsList.length : i >= end && i >= 0 && i < this.widget.optionsList.length; begin <= end ? i++ : i--)
 			{
 			if (this.widget.optionsList[i].show == true)
 				{
@@ -742,6 +746,21 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 				}
 			}
 		return null;
+		},
+
+	toggleDummy: function (show)
+		{
+		if (show)
+			{
+			this.widget.domOptionsList.hide();
+			this.widget.domDummy.show();
+			}
+		else
+			{
+			this.widget.domOptionsList.show();
+			this.widget.domDummy.hide();
+			}
+		this.widget.trigger('options-view-update');
 		}
 
 });
@@ -755,11 +774,13 @@ MKWidgets.SelectNS.SelectModel = Class({
 	constructor: function (data, parent)
 		{
 		this.parent = parent;
+		this.widget = parent.parent;
 		this.dictConfig = this.parent.parent.options.dictConfig;
 
-		this.jset(data);
-		this.value = this[this.dictConfig.dictIdIndex];
-		this.displayValue = this[this.dictConfig.dictDisplayIndex];
+		//this.jset(data);
+		this.data = data;
+		this.value = this.data[this.dictConfig.dictIdIndex];
+		this.displayValue = this.data[this.dictConfig.dictDisplayIndex];
 		this.selected = this.isSelected();
 
 		this.on('render', this.render, this);
@@ -780,9 +801,9 @@ MKWidgets.SelectNS.SelectModel = Class({
 
 	isSelected: function ()
 		{
-		if (this.parent.parent.options.value === this[this.dictConfig.dictIdIndex])
+		if (this.widget.options.value === this.data[this.dictConfig.dictIdIndex])
 			{
-			this.parent.parent.selectedOption = this;
+			this.widget.selectedOption = this;
 			return true;
 			}
 		return false;
@@ -793,7 +814,7 @@ MKWidgets.SelectNS.SelectModel = Class({
 		if (this.parent.searchInput != '')
 			{
 			this.show = false;
-			if ((this[this.dictConfig.dictDisplayIndex] + '').toLowerCase()
+			if ((this.data[this.dictConfig.dictDisplayIndex] + '').toLowerCase()
 					.indexOf((this.parent.searchInput + '').toLowerCase()) > -1)
 				{
 				this.show = true;
@@ -825,233 +846,3 @@ MKWidgets.SelectNS.SelectArray = Class({
 
 });
 
-MKWidgets.DependsSelect = Class({
-	extends: MKWidgets.Select,
-	dependValues: {},
-
-	constructor: function (elementSelector, options)
-		{
-		MKWidgets.Select.prototype.constructor.apply(this, [elementSelector, options]);
-		this.setOptions({
-			dictConfig: {
-				dictIdIndex: 'value',
-				dictDisplayIndex: 'text',
-				nullValue: false,
-				dictUrl: null,
-				depend: [], //[{object, objectIdIndex, dictIdIndex},...{}]
-				cache: true,
-			},
-			dict: null,
-			defaultDisplayValue: 'Сначала выберите значение родителя',
-			activeDisplayValue: 'Выберите значение',
-			noValuesText: 'Нет значений',
-		});
-
-		this.setOptions(options);
-
-		this.initDependSelect();
-		},
-
-	initSelect: function ()
-		{
-		},
-
-	initDependSelect: function ()
-		{
-		this.initDepends();
-		this.getDict();
-		this.optionsList = new MKWidgets.SelectNS.SelectArray(this.dict, this);
-
-		if (this.options.renderOnInit == true)
-			{
-			this.render();
-			}
-		},
-
-	render: function ()
-		{
-		this.isRendered = true;
-		this.createDom();
-		this.createInterfaces();
-		this.updateOptions();
-		},
-
-	initDepends: function ()
-		{
-		this.dictConfig = Entity.assignObject({}, this.options.dictConfig);
-
-		if (this.dict != null)
-			{
-			this.dictConfig.dictName = window.app.saveDict(this.dict, this.element.prop('id'));
-			}
-
-		if (!this.dictConfig.depend instanceof Array)
-			{
-			this.dictConfig.depend = [this.dictConfig.depend];
-			}
-		var depend = this.dictConfig.depend;
-		for (var i in depend)
-			{
-			if (depend[i]['dictIdIndex'] == undefined)
-				{
-				depend[i]['dictIdIndex'] = depend[i]['objectIdIndex'];
-				}
-			if (!(depend[i].object instanceof MK))
-				{
-				depend[i].object = new MK.Object(depend[i].object);
-				}
-			this.dependEvent(depend[i]);
-			}
-		this.updateDependValues();
-		this.updateOptions();
-		},
-
-	dependEvent: function (depend)
-		{
-		depend.object.on('change:' + depend['objectIdIndex'], this.updatesOptionsSlot, this);
-		},
-
-	updatesOptionsSlot: function ()
-		{
-		this.updateDependValues();
-		this.dict = window.app.getDict(this.dictConfig);
-		this.setSelectedOptionById(null);
-		this.updateOptions();
-		},
-
-	updateOptions: function ()
-		{
-		var depend = this.dictConfig.depend,
-			newOptions = [];
-
-		if (depend != undefined && this.dict != undefined)
-			{
-			this.dict.forEach(
-				function (dictRow)
-				{
-				var pushFlag = true;
-				for (var i in depend)
-					{
-					if (!(dictRow[depend[i]['dictIdIndex']] == depend[i]['object'][depend[i].objectIdIndex] ||
-						dictRow[depend[i][depend[i].dictIdIndex]] == this.nullSymbol))
-						{
-						pushFlag = false;
-						}
-					}
-				if (pushFlag == true)
-					{
-					newOptions.push(dictRow);
-					}
-				}, this);
-			}
-		this.recreateOptions(newOptions);
-		},
-
-	updateDependValues: function ()
-		{
-		this.allValuesFlag = true;
-		var depend = this.dictConfig.depend;
-
-		this.dependValues = {};
-		for (var i in depend)
-			{
-			var dependValue = depend[i].object[depend[i].objectIdIndex];
-			if (dependValue == undefined)
-				{
-				this.allValuesFlag = false;
-				}
-			this.dependValues[depend[i].objectIdIndex] = dependValue;
-			}
-		this.dictConfig.dictUrlData = this.dependValues;
-		},
-
-	recreateOptions: function (newOptions)
-		{
-		if (this.isRendered)
-			{
-			this.optionsList.recreate(newOptions);
-
-			if (this.allValuesFlag == true)
-				{
-				if (newOptions.length > 0)
-					{
-					this.turnOn();
-
-					if (this.selectedOption != null)
-						{
-						this.setTitle(this.displayValue);
-						}
-					else
-						{
-						this.setTitle(this.options.activeDisplayValue);
-						}
-					}
-				else
-					{
-					this.setTitle(this.options.noValuesText);
-					}
-				}
-			else
-				{
-				this.turnOff();
-				this.setTitle(this.options.defaultDisplayValue);
-				}
-			}
-		this.trigger('recreateArray');
-		},
-});
-
-MKWidgets.DependsSelectNS.ParentDict = Class({
-	extends: MKWidgets.DependsSelect,
-	dict: [],
-
-	constructor: function (elementSelector, options)
-		{
-		MKWidgets.DependsSelect.prototype.constructor.apply(this, [elementSelector, options]);
-		this.setOptions({
-			parent: {},
-			level: 1,
-		});
-		this.setOptions(options);
-		},
-
-	updateDependValues: function ()
-		{
-		if (this.dict.length == 0)
-			{
-			this.allValuesFlag = false;
-			this.trigger('hide-form');
-			}
-		else
-			{
-			this.allValuesFlag = true;
-			this.trigger('show-form');
-			}
-		},
-
-	dependEvent: function (depend)
-		{
-		this.on('dictionary-changed', this.updatesOptionsSlot, true, this);
-		},
-
-	updatesOptionsSlot: function ()
-		{
-		this.dict = this.options.parent.getDict(this.options.level);
-		this.setSelectedOptionById(null);
-		this.updateDependValues();
-		this.updateOptions();
-		},
-
-	updateOptions: function ()
-		{
-		this.recreateOptions(this.dict);
-		},
-
-	getDict: function ()
-		{
-		if (this.options.parent != undefined)
-			{
-			this.dict = this.options.parent.getDict(this.options.level);
-			}
-		},
-});

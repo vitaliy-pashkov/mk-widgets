@@ -1,0 +1,61 @@
+.mkw-report-view(@widgetPath);
+
+.mkw-report-view(@widgetPath) {
+  @path-img: "@{widgetPath}/tusur-csp.report-view/img";
+
+  .mkw-report-view {
+	.mkw-report-view-container {
+
+	  .mkw-report-view-menu  {
+		float: right;
+		height: 15px;
+		width: 15px;
+		background: #000;
+	  }
+
+	  .mkw-report-view-header {
+		margin-bottom: 20px;
+	  }
+
+	  .mkw-report-view-title {
+		display: inline;
+		font-weight: bold;
+		font-size: 16px;
+	  }
+
+	  .tusur-csp-table-element{
+		width: 100%;
+		padding: 0;
+
+		.tusur-csp-table-container {
+		  padding: 15px;
+
+		  .tusur-csp-table {
+			padding: 0;
+
+			.tusur-csp-table-control-panel {
+			  display: none;
+			}
+		  }
+		  .tusur-csp-show-table-log-container {
+			display: none;
+		  }
+		}
+	  }
+
+	  .tusur-csp-hc-plot-element {
+		width: 100% !important;
+		padding: 0 !important;
+	  }
+
+	}
+	.mkw-report-view-dummy {
+	  .middle-text();
+	  text-align: center;
+	  vertical-align: middle;
+	  margin: 100px 0;
+	}
+
+  }
+
+}

@@ -114,11 +114,12 @@ MKWidgets.Date = Class({
 			{
 			this.autoConfigs();
 			}
-		if (!moment(this.options.startDate).isValid())
+		if (!moment(this.options.startDate).isValid() || this.options.startDate == undefined)
 			{
 			this.options.startDate = moment().startOf('day');
 			}
-		if (!moment(this.options.endDate).isValid() && this.options.singleDatePicker == false)
+		if ((!moment(this.options.endDate)
+				.isValid() || this.options.endDate == undefined ) && this.options.singleDatePicker == false)
 			{
 			this.options.endDate = moment().endOf('day');
 			}
@@ -128,6 +129,7 @@ MKWidgets.Date = Class({
 		this.setStartDate(this.options.startDate, true);
 		this.setEndDate(this.options.endDate);
 		this.init();
+		this.updateElement();
 		},
 
 	setStartDate: function (startDate, init)
@@ -244,26 +246,26 @@ MKWidgets.Date = Class({
 		};
 		var twice = {};
 		var format = this.options.locales[this.options.localeLang].format;
-		for (i = 0; i < format.length; i++)
+		//for (var i = 0; i < format.length; i++)
+		//	{
+		//var charts = format[i] + format[i + 1];
+		if (format.indexOf('MM') >= 0 || format.indexOf('DD') >= 0 || format.indexOf('M') >= 0 || format.indexOf('D') >= 0)
 			{
-			var charts = format[i] + format[i + 1];
-			if (charts == 'MM' || charts == 'DD')
-				{
-				tempOptions.datePicker = true;
-				}
-			else if (charts == 'HH')
-				{
-				tempOptions.timePicker = true;
-				}
-			else if (charts == 'mm')
-				{
-				tempOptions.timePickerMinutes = true;
-				}
-			else if (charts == 'ss')
-				{
-				tempOptions.timePickerSeconds = true;
-				}
+			tempOptions.datePicker = true;
 			}
+		if (format.indexOf('HH') >= 0 || format.indexOf('H') >= 0)
+			{
+			tempOptions.timePicker = true;
+			}
+		if (format.indexOf('mm') >= 0 || format.indexOf('m') >= 0)
+			{
+			tempOptions.timePickerMinutes = true;
+			}
+		if (format.indexOf('ss') >= 0 || format.indexOf('s') >= 0)
+			{
+			tempOptions.timePickerSeconds = true;
+			}
+		//}
 		this.options = $.extend(this.options, tempOptions);
 		},
 
@@ -1109,7 +1111,7 @@ MKWidgets.Date = Class({
 				if (calendar[row][col].format('YYYY-MM-DD') == this.options.startDate.format('YYYY-MM-DD'))
 					{
 					classes.push('active');
-					if(this.options.dateRange == undefined)
+					if (this.options.dateRange == undefined)
 						{
 						classes.push('start-date');
 						}
@@ -1119,7 +1121,7 @@ MKWidgets.Date = Class({
 				if (this.options.endDate != null && calendar[row][col].format('YYYY-MM-DD') == this.options.endDate.format('YYYY-MM-DD'))
 					{
 					classes.push('active');
-					if(this.options.dateRange == undefined)
+					if (this.options.dateRange == undefined)
 						{
 						classes.push('end-date');
 						}
@@ -1231,7 +1233,7 @@ MKWidgets.Date = Class({
 
 			if (i_in_24 == selected.hour() && !disabled)
 				{
-				hoursData.push({text: i, value: i, selected: true});
+				hoursData.push({text: this.zeroPad(i, 2), value: i, selected: true});
 				}
 			else if (disabled)
 				{
@@ -1239,7 +1241,7 @@ MKWidgets.Date = Class({
 				}
 			else
 				{
-				hoursData.push({text: i, value: i, selected: false});
+				hoursData.push({text: this.zeroPad(i, 2), value: i, selected: false});
 				}
 
 			}
@@ -1268,7 +1270,7 @@ MKWidgets.Date = Class({
 
 				if (selected.minute() == i && !disabled)
 					{
-					minutesData.push({text: i, value: i, selected: true});
+					minutesData.push({text: this.zeroPad(i, 2), value: i, selected: true});
 					}
 				else if (disabled)
 					{
@@ -1276,7 +1278,7 @@ MKWidgets.Date = Class({
 					}
 				else
 					{
-					minutesData.push({text: i, value: i, selected: false});
+					minutesData.push({text: this.zeroPad(i, 2), value: i, selected: false});
 					}
 				}
 			}
@@ -1307,7 +1309,7 @@ MKWidgets.Date = Class({
 
 				if (selected.second() == i && !disabled)
 					{
-					secondData.push({text: i, value: i, selected: true});
+					secondData.push({text: this.zeroPad(i, 2), value: i, selected: true});
 					}
 				else if (disabled)
 					{
@@ -1315,7 +1317,7 @@ MKWidgets.Date = Class({
 					}
 				else
 					{
-					secondData.push({text: i, value: i, selected: false});
+					secondData.push({text: this.zeroPad(i, 2), value: i, selected: false});
 					}
 				}
 			}
@@ -1438,6 +1440,12 @@ MKWidgets.Date = Class({
 			}
 		},
 
+	zeroPad: function (num, places)
+		{
+		var zero = places - num.toString().length + 1;
+		return Array(+(zero > 0 && zero)).join("0") + num;
+		},
+
 	updateFormInputs: function ()
 		{
 
@@ -1474,10 +1482,11 @@ MKWidgets.Date = Class({
 			}
 
 		// Create a click proxy that is private to this instance of datepicker, for unbinding
-		this._outsideClickProxy = $.proxy(function (e)
-		{
-		this.outsideClick(e);
-		}, this);
+		this._outsideClickProxy = $.proxy(
+			function (e)
+			{
+			this.outsideClick(e);
+			}, this);
 
 		this.oldStartDate = this.options.startDate.clone();
 		this.oldEndDate = this.options.endDate.clone();
@@ -1687,7 +1696,7 @@ MKWidgets.Date = Class({
 				var cal = $(el).parents('.calendar');
 				var dt = cal.hasClass('left') ? leftCalendar.calendar[row][col] : rightCalendar.calendar[row][col];
 
-				if(date > startDate)
+				if (date > startDate)
 					{
 					if (dt.isAfter(startDate) && dt.isBefore(date))
 						{

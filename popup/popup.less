@@ -1,7 +1,7 @@
 .tusur-csp-popup(@widgetPath);
 
 .tusur-csp-popup(@widgetPath) {
-  @path-img : "@{widgetPath}/mk-widgets/crud-form/img/";
+  @path-img : "@{widgetPath}/mk-widgets/popup/img";
 
   @color-tab: #e7e7e7;
   @color-steps-container: #fdfdfd;
@@ -18,6 +18,19 @@
     top: 0;
     left: 0;
 
+	.background-skin {
+	  display: block;
+	  z-index: 100;
+	  content: ' ';
+	  background-image: url("@{path-img}/bg.svg");
+	  opacity: 0;
+	  position: absolute;
+	  width: 100%;
+	  height: 100%;
+
+	  transition: opacity 200ms linear;
+	}
+
     .tusur-csp-show-table-popup-container {
       position: absolute;
       z-index: 101;
@@ -28,13 +41,19 @@
       left: 0;
 
       .tusur-csp-show-table-popup-inside-container {
-        width: 100%;
-        height: 100%;
+        //width: 100%;
+        //height: 100%;
         position: relative;
+		&.tooltip {
+		  width: 0;
+		  //height: 0;
+		}
+
 
         .tusur-csp-popup-tabs-container {
           border-top-left-radius: 0px;
-          height: 100%;
+
+
           .tusur-csp-popup-tabs {
             margin-bottom: -15px;
             margin-left: 15px;
@@ -57,6 +76,8 @@
 
         .tusur-csp-show-table-popup-inside-dynamic-container {
           position: relative;
+		  display: inline-block;
+
         }
 
         .tusur-csp-show-table-popup-inside-static-container {
@@ -150,9 +171,9 @@
     }
   }
 
-  .tusur-csp-hide-popup-background-color {
-    background: rgba(0, 0, 0, 0.6);
-  }
+  //.tusur-csp-hide-popup-background-color {
+  //  background: rgba(0, 0, 0, 0.6);
+  //}
 
   .tusur-csp-table-popup-container {
     height: 0px;
@@ -182,5 +203,73 @@
   .tusur-csp-popup-steps-popup {
     border-radius: 3px;
     overflow: hidden;
+  }
+
+
+  .mkw-confirm-popup {
+	background: #FDFDFD;
+	border-radius: 4px;
+
+	.header {
+	  width: 100%;
+	  text-align: center;
+	  padding: 10px 0;
+	}
+
+	.body {
+	  background: #DFDFDF;
+	  width: ~'calc(100% - 40px)';
+	  padding: 20px;
+	  text-align: center;
+	}
+
+	.footer {
+	  width: ~'calc(100% - 20px)';
+	  padding: 10px 10px;
+
+	  button {
+		display: inline-block;
+	  }
+
+	  .cancel {
+
+	  }
+	  .confirm {
+		float: right;
+	  }
+	}
+  }
+
+  .mkw-info-popup {
+	background: #FDFDFD;
+	border-radius: 4px;
+
+	.header {
+	  width: 100%;
+	  text-align: center;
+	  padding: 10px 0;
+	}
+
+	.body {
+	  background: #DFDFDF;
+	  width: ~'calc(100% - 40px)';
+	  padding: 20px;
+	  text-align: center;
+	}
+
+	.footer {
+	  width: ~'calc(100% - 20px)';
+	  padding: 10px 10px;
+	  text-align: right;
+
+	  button {
+		display: inline-block;
+	  }
+
+	  .ok {
+
+	  }
+
+	}
   }
 }
