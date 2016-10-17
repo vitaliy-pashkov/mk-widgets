@@ -299,8 +299,8 @@ MKWidgets.Address = Class({
 		{
 		//warring! another context! this = select
 		var level = this.options.level + 1,
-			type = this.selectedOption[this.options.dictConfig.dictDisplayIndexType],
-			kladr = this.selectedOption[this.options.dictConfig.dictIdIndex];
+			type = this.selectedOption.data[this.options.dictConfig.dictDisplayIndexType],
+			kladr = this.selectedOption.data[this.options.dictConfig.dictIdIndex];
 		this.options.parent.updateDict(level, kladr, type);
 		this.options.parent.valueChangedSignal();
 		},
@@ -338,8 +338,8 @@ MKWidgets.Address = Class({
 					if (select.object.selectedOption != null)
 						{
 						this.value[select.id] = {
-							value: select.object.selectedOption[this.options.dictConfig.dictIdIndex],
-							displayValue: select.object.selectedOption[this.options.dictConfig.dictDisplayIndex],
+							value: select.object.selectedOption.data[this.options.dictConfig.dictIdIndex],
+							displayValue: select.object.selectedOption.data[this.options.dictConfig.dictDisplayIndex],
 						};
 						}
 					}
