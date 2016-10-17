@@ -139,6 +139,10 @@ MKWidgets.CrudMaster = Class({
 					{
 					pattern[field.index] = [];
 					}
+				if (field.type == 'cron')
+					{
+					pattern[field.index] = '* * * * * *';
+					}
 				}
 			}
 
@@ -405,6 +409,7 @@ MKWidgets.CrudMasterNS.RenderInterface = Class({
 			steps: this.widget.steps,
 			sizeRestrictions: true,
 			cascade: true,
+			customClass: 'tusur-csp-master-popup',
 			//sizeRestrictionsScrollBar: true,
 		});
 		this.widget.stepsPopup.openPopup();

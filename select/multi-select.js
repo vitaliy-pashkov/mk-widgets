@@ -456,6 +456,12 @@ MKWidgets.MultiSelectNS.SelectListInterface = Class({
 		{
 		this.widget.toggleOption(option);
 		},
+
+	optionClickSlot: function (event)
+		{
+		var option = $(event.target).data('option');
+		this.setSelectedOption(option);
+		},
 });
 
 

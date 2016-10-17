@@ -180,6 +180,10 @@ MKWidgets.CrudForm = Class({
 				{
 				pattern[field.index] = [];
 				}
+			if (field.type == 'cron')
+				{
+				pattern[field.index] = '* * * * * *';
+				}
 			}
 		for (var j in this.options.parents)
 			{

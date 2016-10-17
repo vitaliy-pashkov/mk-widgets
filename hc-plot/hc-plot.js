@@ -93,7 +93,7 @@ MKWidgets.HcPlot = Class({
 		{
 		//warning: another context! this = jqxhr, this.series = series
 
-		if(data.points.length == 0)
+		if(data.points.length == 0 && this.widget.plotConfig.series.length == 1)
 			{
 			this.widget.element.addClass("plot-dummy").text("Нет данных за указанный период.");
 			return;

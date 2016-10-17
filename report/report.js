@@ -411,7 +411,7 @@ MKWidgets.ReportNS.ReportInterface = Class({
 		this.tableConfig = this.widget.options.tableConfig;
 		this.tableConfig.dataParams = this.paramsFormData.toJSON();
 		this.tableConfig.dataParams.processor = 'table';
-		this.domTable.css('max-height', (parseInt(this.widget.renderInterface.presentStep.body.css('max-height'))  ));
+		this.domTable.css('max-height', (parseInt(this.widget.renderInterface.presentStep.body.css('max-height'))  )-15);
 
 		this.tableWidget = new MKWidgets.CrudTable(this.domTable, this.tableConfig);
 		this.tableWidget.on('table_ready', this.tableReadySlot, this);
@@ -448,7 +448,7 @@ MKWidgets.ReportNS.RenderInterface = Class({
 		this.steps = this.setupSteps();
 
 		this.widget.stepsPopup = new MKWidgets.PopupNS.StepsPopup($("<div/>"), {
-			width: '50%',
+			//width: '50%',
 			linkVertical: 'top', //top, center, bottom
 			linkHorizontal: 'center', //left, center, right
 			linkingPoint: 'topCenter', //center, topLeft, topRight, bottomLeft, bottomRight

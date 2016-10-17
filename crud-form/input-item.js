@@ -404,9 +404,9 @@ MKWidgets.CrudFormNS.InputItemNS.Password = Class({
 			{
 			this.errorCode = 'maxLen';
 			}
-		if(this.options.validation.equalIndex != undefined)
+		if (this.options.validation.equalIndex != undefined)
 			{
-			if(this.value != this.options.formData[this.options.validation.equalIndex])
+			if (this.value != this.options.formData[this.options.validation.equalIndex])
 				{
 				this.errorCode = 'notEqual';
 				}
@@ -957,15 +957,15 @@ MKWidgets.CrudFormNS.InputItemNS.MultiSelect = Class({
 			}
 
 		var dictMap = {};
-		for (var i = 0; i <  this.selectWidget.dict.length; i++)
+		for (var i = 0; i < this.selectWidget.dict.length; i++)
 			{
-			dictMap[ this.selectWidget.dict[i][this.dictConfig.dictIdIndex] ] = this.selectWidget.dict[i];
+			dictMap[this.selectWidget.dict[i][this.dictConfig.dictIdIndex]] = this.selectWidget.dict[i];
 			}
 
-		for(var id in formMap)
+		for (var id in formMap)
 			{
 			var targetObj = dictMap [id];
-			for(var key in formMap[id])
+			for (var key in formMap[id])
 				{
 				targetObj[key] = formMap[id][key];
 				}
@@ -1259,7 +1259,7 @@ MKWidgets.CrudFormNS.InputItemNS.Cron = Class({
 		this.popup = new MKWidgets.PopupNS.Tooltip(this.domTitle, {
 			dynamicElement: this.domCron,
 			positionElement: this.domInputItem,
-			//parentWidth: true,
+			parentWidth: true,
 			returnElementToDom: true,
 			indent: 10,
 			linkVertical: 'top', //top, center, bottom
@@ -1781,7 +1781,7 @@ MKWidgets.CrudFormNS.InputItemNS.Array = Class({
 
 	createButtonClickSlot: function ()
 		{
-		this.representArray.push({});
+		this.representArray.unshift({});
 		this.trigger('array-changed');
 		},
 
@@ -1957,7 +1957,7 @@ MKWidgets.CrudFormNS.InputItemNS.ArrayRepresents = Class({
 
 	recreate: function (array)
 		{
-		for (var i = 0; i < array.length; i++)
+		for (var i = array.length - 1; i >= 0; i--)
 			{
 			var model = new this.Model(array[i], this, i);
 			this.push(model);
@@ -2340,9 +2340,9 @@ MKWidgets.CrudFormNS.InputItemNS.CheckboxGroup = Class({
 		this.afterCreateField();
 		},
 
-	initDoneSlot: function()
+	initDoneSlot: function ()
 		{
-		if(this.cbg.dict.length == 0)
+		if (this.cbg.dict.length == 0)
 			{
 			this.element.hide();
 			}
@@ -2410,15 +2410,15 @@ MKWidgets.CrudFormNS.InputItemNS.Table = Class({
 	createField: function ()
 		{
 		this.element.addClass('form-columns-100');
-		this.element.css('max-height', ($(window).height() - 300)+'px');
-		this.table = new MKWidgets.CrudTable(this.element, $.extend( {
+		this.element.css('max-height', ($(window).height() - 300) + 'px');
+		this.table = new MKWidgets.CrudTable(this.element, $.extend({
 			data: this.options.formData[this.options.index],
 		}, this.options.tableConfig));
 
 		this.table.on('table-changed', this.saveSlot, this);
 		},
 
-	saveSlot: function()
+	saveSlot: function ()
 		{
 		this.options.formData.jset(this.options.index, this.table.rows.toJSON());
 		this.trigger('value-changed');

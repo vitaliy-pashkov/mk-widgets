@@ -11,7 +11,8 @@ MKWidgets.PopupNS.StepsPopup = Class({
 			class: '',
 			title: '',
 			enable: true,
-			steps: {}
+			steps: {},
+			customClass: '',
 		});
 		this.setOptions(options);
 		//this.createDom(this.element);
@@ -36,7 +37,7 @@ MKWidgets.PopupNS.StepsPopup = Class({
 			.append(this.domStepTitle)
 			.append(this.domBodies)
 			.append(this.domFooter)
-			.attr('class', 'tusur-csp-popup-steps-container tusur-csp-popup-steps-popup')
+			.attr('class', 'tusur-csp-popup-steps-container tusur-csp-popup-steps-popup '+this.options.customClass)
 		;
 		this.createFooter();
 		this.steps = new MKWidgets.PopupNS.StepPopupArray(this);
