@@ -159,7 +159,7 @@ MKWidgets.Date = Class({
 
 		if (this.options.timePicker && this.options.timePickerIncrement)
 			{
-			this.options.startDate.minute(Math.round(this.options.startDate.minute() / this.options.timePickerIncrement) * this.options.timePickerIncrement);
+			//this.options.startDate.minute(Math.round(this.options.startDate.minute() / this.options.timePickerIncrement) * this.options.timePickerIncrement);
 			}
 
 		if (this.options.minDate && this.options.startDate.isBefore(this.options.minDate))
@@ -206,7 +206,7 @@ MKWidgets.Date = Class({
 
 		if (this.options.timePicker && this.options.timePickerIncrement)
 			{
-			this.options.endDate.minute(Math.round(this.options.endDate.minute() / this.options.timePickerIncrement) * this.options.timePickerIncrement);
+			//this.options.endDate.minute(Math.round(this.options.endDate.minute() / this.options.timePickerIncrement) * this.options.timePickerIncrement);
 			}
 
 		//if (this.options.endDate.isBefore(this.options.startDate))

@@ -13,7 +13,7 @@ MKWidgets.Report = Class({
 			paramsFieldsModel: null,
 			table: true,
 			plot: true,
-			export: true,
+			//export: true,
 		});
 		this.setOptions(options);
 
@@ -164,7 +164,7 @@ MKWidgets.ReportNS.ReportInterface = Class({
 		{
 		this.enabled = true;
 		this.widget.on('params-ready', this.registrateReportWidgets, this);
-		this.onDebounce('export-ready', this.exportReadySlot, 100);
+
 		},
 	turnOff: function ()
 		{
@@ -190,6 +190,7 @@ MKWidgets.ReportNS.ReportInterface = Class({
 		if (this.widget.options.export)
 			{
 			this.initExport();
+			this.onDebounce('export-ready', this.exportReadySlot, 100);
 			}
 		},
 
@@ -412,6 +413,8 @@ MKWidgets.ReportNS.ReportInterface = Class({
 		this.tableConfig.dataParams = this.paramsFormData.toJSON();
 		this.tableConfig.dataParams.processor = 'table';
 		this.domTable.css('max-height', (parseInt(this.widget.renderInterface.presentStep.body.css('max-height'))  )-15);
+		this.tableConfig = Entity.assignObject(this.tableConfig, this.tableConfig, this.paramsFormData);
+
 
 		this.tableWidget = new MKWidgets.CrudTable(this.domTable, this.tableConfig);
 		this.tableWidget.on('table_ready', this.tableReadySlot, this);
@@ -499,10 +502,10 @@ MKWidgets.ReportNS.RenderInterface = Class({
 				title: 'График',
 				body: $('<div/>').addClass('tusur-csp-report-plot')
 			},
-			export: {
-				title: 'Экспорт',
-				body: $('<div/>').addClass('tusur-csp-report-export')
-			}
+			//export: {
+			//	title: 'Экспорт',
+			//	body: $('<div/>').addClass('tusur-csp-report-export')
+			//}
 		};
 
 

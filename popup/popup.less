@@ -122,48 +122,68 @@
           }
 
           .tusur-csp-popup-step-footer {
-            height: 50px;
-            padding: 8px 0;
-            width: 100%;
+			width: ~'calc(100% - 20px)';
+			padding: 10px 10px;
             display: block;
             background: @color-steps-container;
-            input {
-              width: 130px;
-              height: 35px;
-              margin: 7px 15px;
-              color: @color-steps-container;
 
-              background: @color-step-footer-button;
-              font-size: 15px;
-              padding: 2px 0 0 3px;
-			  cursor: pointer;
-            }
+			button {
+			  display: inline-block;
+			}
 
-            .tusur-csp-popup-steps-footer-next-button {
-              background: @color-step-footer-button-next;
-              background-image: url("@{path-img}/button_next.svg");
-              background-size: auto 12px;
-              background-repeat: no-repeat;
-              background-position: 14px 12px;
-              float: right;
-              margin-left: 0;
-            }
-            .tusur-csp-popup-steps-footer-next-button.disable {
-              background: @color-step-footer-button-next-disable;
-            }
-            .tusur-csp-popup-steps-footer-prev-button {
-              background-image: url("@{path-img}/button_prev.svg");
-              background-size: auto 12px;
-              background-repeat: no-repeat;
-              background-position: 14px 12px;
-              float: right;
-            }
-            .tusur-csp-popup-steps-footer-cancel-button {
-              background-image: url("@{path-img}/button_cancel.svg");
-              background-size: auto 12px;
-              background-repeat: no-repeat;
-              background-position: 14px 12px;
-            }
+
+			.next {
+			  float: right;
+
+			  &.disable {
+				background: @color-step-footer-button-next-disable;
+				color: #5e5e5e;
+			  }
+			}
+
+			.prev {
+			  float: right;
+			  margin-right: 20px;
+			}
+
+
+            //input {
+            //  width: 130px;
+            //  height: 35px;
+            //  margin: 7px 15px;
+            //  color: @color-steps-container;
+			//
+            //  background: @color-step-footer-button;
+            //  font-size: 15px;
+            //  padding: 2px 0 0 3px;
+			 // cursor: pointer;
+            //}
+			//
+            //.tusur-csp-popup-steps-footer-next-button {
+            //  background: @color-step-footer-button-next;
+            //  background-image: url("@{path-img}/button_next.svg");
+            //  background-size: auto 12px;
+            //  background-repeat: no-repeat;
+            //  background-position: 14px 12px;
+            //  float: right;
+            //  margin-left: 0;
+            //}
+            //.tusur-csp-popup-steps-footer-next-button.disable {
+            //  background: @color-step-footer-button-next-disable;
+            //}
+            //.tusur-csp-popup-steps-footer-prev-button {
+            //  background-image: url("@{path-img}/button_prev.svg");
+            //  background-size: auto 12px;
+            //  background-repeat: no-repeat;
+            //  background-position: 14px 12px;
+            //  float: right;
+            //}
+            //.tusur-csp-popup-steps-footer-cancel-button {
+            //  background-image: url("@{path-img}/button_cancel.svg");
+            //  background-size: auto 12px;
+            //  background-repeat: no-repeat;
+            //  background-position: 14px 12px;
+            //}
           }
         }
 

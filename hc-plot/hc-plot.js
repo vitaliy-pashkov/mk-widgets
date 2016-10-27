@@ -65,23 +65,29 @@ MKWidgets.HcPlot = Class({
 		{
 		if (this.options.dataSource == "remote")
 			{
-
 			for(var i in this.plotConfig.series)
 				{
-				$.ajax(
+				if(this.plotConfig.series[i].data != undefined && this.plotConfig.series[i].type!='errorbar')
 					{
-						url: this.plotConfig.series[i].data,
-						data: this.options.dataParams,
-						type: "GET",
-						cache: false,
-						contentType: "application/json",
-						widget : this,
-						seriesIndex: i,
-						success: this.setData,
-						error: this.serverError,
-					});
+					$.ajax(
+						{
+							url: this.plotConfig.series[i].data,
+							data: this.options.dataParams,
+							type: "GET",
+							cache: false,
+							contentType: "application/json",
+							widget : this,
+							seriesIndex: i,
+							success: this.setData,
+							error: this.serverError,
+						});
+					}
+				else
+					{
+					this.plotConfig.series[i].dataReady = true;
+					this.trigger("data-ready");
+					}
 				}
-
 			}
 		if (this.options.dataSource == "local")
 			{
@@ -103,6 +109,11 @@ MKWidgets.HcPlot = Class({
 
 		this.widget.plotConfig.series[this.seriesIndex].data = data.points;
 		this.widget.plotConfig.series[this.seriesIndex].name = data.name;
+
+		if(data.errors != undefined)
+			{
+			this.widget.plotConfig.series[parseInt(this.seriesIndex)+1].data = data.errors;
+			}
 
 		if(Array.isArray(this.widget.plotConfig.yAxis) )
 			{
@@ -140,6 +151,11 @@ MKWidgets.HcPlot = Class({
 				var minMax = this.widget.plotConfig.xAxis[xAxisIndex]['min-max'].split(' - ',2);
 				var min = moment(minMax[0], this.widget.options.dtFormat).valueOf() + 25200000; //+7 h
 				var max = moment(minMax[1], this.widget.options.dtFormat).valueOf() + 25200000; //+7 h
+				if(minMax[1] == undefined)
+					{
+					var max = min + 25200000 * 3; //+7 h
+					}
+
 				this.widget.plotConfig.xAxis[xAxisIndex].min = min;
 				this.widget.plotConfig.xAxis[xAxisIndex].max = max;
 				}
@@ -151,6 +167,11 @@ MKWidgets.HcPlot = Class({
 				var minMax = this.widget.plotConfig.xAxis['min-max'].split(' - ',2);
 				var min = moment(minMax[0], this.widget.options.dtFormat).valueOf() + 25200000; //+7 h
 				var max = moment(minMax[1], this.widget.options.dtFormat).valueOf() + 25200000; //+7 h
+				if(minMax[1] == undefined)
+					{
+					var max = min + 25200000 * 3; //+7 h
+					}
+
 				this.widget.plotConfig.xAxis.min = min;
 				this.widget.plotConfig.xAxis.max = max;
 				}

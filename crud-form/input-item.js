@@ -39,7 +39,7 @@ MKWidgets.CrudFormNS.InputItem = Class({
 
 		createDom: function ()
 			{
-			this.domLabel = $('<label/>').addClass('tusur-csp-form-label').text(this.options.title);
+			this.domLabel = $('<label/>').addClass('tusur-csp-form-label').html(this.options.title);
 			this.domInputItem = $('<div/>').addClass('tusur-csp-form-input-item');
 
 			this.element.append(this.domLabel);
@@ -166,6 +166,10 @@ MKWidgets.CrudFormNS.InputItem = Class({
 				{
 				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Hidden(elementSelector, options);
 				}
+			if (options.type == "button")
+				{
+				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Button(elementSelector, options);
+				}
 			if (options.type == "varchar")
 				{
 				inputItem = new MKWidgets.CrudFormNS.InputItemNS.Varchar(elementSelector, options);
@@ -291,6 +295,50 @@ MKWidgets.CrudFormNS.InputItemNS.Hidden = Class({
 
 	save: function ()
 		{
+		},
+});
+
+MKWidgets.CrudFormNS.InputItemNS.Button = Class({
+	extends: MKWidgets.CrudFormNS.InputItem,
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.CrudFormNS.InputItem.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			callback: null,
+		});
+		this.setOptions(options);
+		},
+
+	init: function ()
+		{
+		this.errors = {};
+		},
+
+	createField: function ()
+		{
+		this.domButton = $('<button />')
+			.addClass('input-item-button')
+			.text(this.options.text);
+
+		this.domInputItem.empty().append(this.domButton);
+		this.domButton.on('click', $.proxy(this.clickSlot, this));
+
+		this.afterCreateField();
+		},
+
+	clickSlot: function()
+		{
+		if(this.options.callback != undefined)
+			{
+			this.options.callback(this.options.formData, this);
+			}
+		},
+
+	validate: function (silent)
+		{
+		this.errorCode = null;
+		return this.itemValidate(silent);
 		},
 });
 
@@ -1645,6 +1693,7 @@ MKWidgets.CrudFormNS.InputItemNS.Radio = Class({
 		{
 		var value = $(event.target).val();
 		this.value = value;
+		this.options.formData.jset(this.options.index, value);
 		},
 
 	validate: function (silent)
@@ -1702,11 +1751,13 @@ MKWidgets.CrudFormNS.InputItemNS.Checkbox = Class({
 		{
 		this.oldValue = this.value;
 
+		this.randomId = this.randomId();
+
 		this.domContainer = $('<div/>').addClass('checkbox-container');
-		this.domCheckbox = $('<input id="mkw-checkbox-' + this.options.index + '-' + this.options.formData[this.options.formWidget.options.idIndex] + '" type="checkbox"/>');
+		this.domCheckbox = $('<input id="mkw-checkbox-' + this.randomId + '" type="checkbox"/>');
 		this.domCheckbox.addClass('mkw-checkbox-input');
 
-		this.domLabel = $('<label for="mkw-checkbox-' + this.options.index + '-' + this.options.formData[this.options.formWidget.options.idIndex] + '" />');
+		this.domLabel = $('<label for="mkw-checkbox-' + this.randomId + '" />');
 		this.domLabel.text(this.options.title);
 		this.domLabel.addClass('mkw-checkbox-label');
 
@@ -1960,7 +2011,10 @@ MKWidgets.CrudFormNS.InputItemNS.ArrayRepresents = Class({
 		for (var i = array.length - 1; i >= 0; i--)
 			{
 			var model = new this.Model(array[i], this, i);
-			this.push(model);
+			if(array[i]['#delete'] != true )
+				{
+				this.push(model);
+				}
 			}
 		},
 
@@ -2234,6 +2288,7 @@ MKWidgets.CrudFormNS.InputItemNS.DependForm = Class({
 		this.crudForm.on('form-data-change',
 			function ()
 			{
+			//this.formData.jset(this.crudForm.fields.toJSON());
 			this.trigger('value-changed');
 			}, this);
 		},

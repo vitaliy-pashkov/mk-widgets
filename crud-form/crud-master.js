@@ -14,7 +14,8 @@ MKWidgets.CrudMaster = Class({
 			action: "create", //create, read, update, delete
 			steps: [],
 			deleteText: 'Подтвердите удаление',
-			deleteSuccessText: 'Объект успешно удалён'
+			deleteSuccessText: 'Объект успешно удалён',
+			saveSuccessText: 'Данные успешно сохранены',
 		});
 		this.setOptions(options);
 
@@ -197,7 +198,14 @@ MKWidgets.CrudMasterNS.SaveInterface = Class({
 			this.activeCrudForm.off('form-data-change', this.silentValidate, this);
 			}
 
-		this.activeCrudForm = this.widget.stepsPopup.activeStep.step.crudForm;
+		if(this.widget.stepsPopup.activeStep.step.crudForm == undefined)
+			{
+			this.activeCrudForm = this.widget.stepsPopup.activeStep.step.crudForms[ this.widget.formData[ this.widget.stepsPopup.activeStep.step.conditionIndex ]].crudForm;
+			}
+		else
+			{
+			this.activeCrudForm = this.widget.stepsPopup.activeStep.step.crudForm;
+			}
 
 		this.activeCrudForm.on('form-data-change', this.silentValidate,true , this);
 		},
@@ -237,7 +245,7 @@ MKWidgets.CrudMasterNS.SaveInterface = Class({
 
 	validateActiveStep: function ()
 		{
-		var activeStepNumber = this.widget.stepsPopup.activeStep.number;
+		var activeStepNumber = this.widget.stepsPopup.activeStep.step.number;
 		var activeCrudForm = null;
 		this.widget.steps.forEach(
 			function (step)
@@ -257,6 +265,12 @@ MKWidgets.CrudMasterNS.SaveInterface = Class({
 	saveFields: function ()
 		{
 		console.log(this.widget.formData.toJSON());
+
+		this.waitPopup = new MKWidgets.PopupNS.WaitPopup($('<div/>').text('Сохранение данных. Пожалуйста подождите.'), {
+			title: 'Выполнение запроса'
+		});
+		this.waitPopup.popup.openPopup();
+
 		$.ajax({
 			url: this.widget.options.saveUrl,
 			data: {row: JSON.stringify(this.widget.formData.toJSON())},
@@ -272,32 +286,36 @@ MKWidgets.CrudMasterNS.SaveInterface = Class({
 	saveSuccess: function (responce, status, request)
 		{
 		//warning: another context! this = jqxhr, this.interface = interface, this.row = current_edit_row
+		this.interface.waitPopup.popup.closePopup();
 		if (responce.status == 'OK')
 			{
 			this.formData = responce.row;
-
 			this.interface.widget.stepsPopup.closePopup();
-			this.domSuccess = $("<div/>").html('Данные успешно сохранены!')
-				.css('background', '#FDFDFD')
-				.css('padding', '30px');
-			this.successPopup = new MKWidgets.Popup(this.domSuccess, {
-				width: '350px',
-				linkVertical: 'center', //top, center, bottom
-				linkHorizontal: 'center', //left, center, right
-				linkingPoint: 'center',
+
+			var infoPopup = new MKWidgets.PopupNS.InfoPopup($('<div/>').text(this.interface.widget.options.saveSuccessText), {
+				title: 'Операция завершена успешно'
 			});
-			this.successPopup.openPopup();
+			infoPopup.popup.openPopup();
+
 			this.interface.widget.trigger('master-success-save', this.formData);
 			}
 		else
 			{
-			this.interface.editSaveError(responce.error);
+			var infoPopup = new MKWidgets.PopupNS.InfoPopup($('<div/>').text(responce.error), {
+				title: 'Ошибка при выполнении запроса'
+			});
+			infoPopup.popup.openPopup();
+			this.interface.widget.trigger('master-success-fail', this.formData);
 			}
 		},
 
-	saveError: function (responce)
+	saveError: function (error)
 		{
-		alert(JSON.stringify(responce));
+		this.interface.waitPopup.popup.closePopup();
+		var infoPopup = new MKWidgets.PopupNS.InfoPopup($('<div/>').text(JSON.stringify(error)), {
+			title: 'Ошибка при выполнении запроса'
+		});
+		infoPopup.popup.openPopup();
 		},
 
 });
@@ -394,9 +412,10 @@ MKWidgets.CrudMasterNS.RenderInterface = Class({
 
 	create: function ()
 		{
-		this.widget.steps = this.widget.options.steps;
-		for (var i in this.widget.steps)
+		this.widget.steps = [];
+		for (var i in this.widget.options.steps)
 			{
+			this.widget.steps[i] = new MK.Object(this.widget.options.steps[i]);
 			this.setupStep(this.widget.steps[i], i);
 			}
 
@@ -449,15 +468,17 @@ MKWidgets.CrudMasterNS.RenderInterface = Class({
 				});
 				}
 
+			step.formData = this.widget.formData;
+
 			this.on('widget.formData@change:' + step.conditionIndex,
 				function (event)
 				{
-				if(step.crudForms[this.widget.formData[step.conditionIndex]] != undefined)
+				if(this.crudForms[this.formData[this.conditionIndex]] != undefined)
 					{
-					step.body = step.crudForms[this.widget.formData[step.conditionIndex]].body;
-					step.crudForm = step.crudForms[this.widget.formData[step.conditionIndex]].crudForm;
+					this.body = this.crudForms[this.formData[this.conditionIndex]].body;
+					this.crudForm = this.crudForms[this.formData[this.conditionIndex]].crudForm;
 					}
-				}, true, this);
+				}, true, step);
 			}
 
 		else if (step.fieldsModel != undefined)

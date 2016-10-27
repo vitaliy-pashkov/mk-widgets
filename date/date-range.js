@@ -163,18 +163,22 @@ MKWidgets.DateRange = Class({
 					}
 				if (name == "вчера")
 					{
+					var begin = moment(now);
+					begin.subtract(1, 'days');
 					range = [
-						moment([now.year(), now.month(), now.date() - 1, 0, 0, 0, 0]),
-						moment([now.year(), now.month(), now.date() - 1, 23, 59, 59, 999]),
+						moment([begin.year(), begin.month(), begin.date(), 0, 0, 0, 0]),
+						moment([now.year(), now.month(), now.date(), 0, 0, 0, 0]),
 					];
 					}
 				if (name == "неделя")
 					{
 					var begin = moment(now);
 					begin.subtract(6, 'days');
+					var end = moment(now);
+					end.add(1, 'days');
 					range = [
 						moment([begin.year(), begin.month(), begin.date(), 0, 0, 0, 0]),
-						moment([now.year(), now.month(), now.date(), 23, 59, 59, 999]),
+						moment([end.year(), end.month(), end.date(), 0, 0, 0, 0]),
 					];
 					}
 				if (name == "30 дней")
@@ -188,9 +192,11 @@ MKWidgets.DateRange = Class({
 					}
 				if (name == "месяц")
 					{
+					var end = moment(now);
+					end.add(1, 'days');
 					range = [
 						moment([now.year(), now.month(), 1, 0, 0, 0, 0]),
-						moment([now.year(), now.month(), now.date(), 23, 59, 59, 999]),
+						moment([end.year(), end.month(), end.date(), 0, 0, 0, 0]),
 					];
 					}
 				if (name == "год")

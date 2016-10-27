@@ -614,6 +614,9 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 
 				this.states.jset(this.tree.cookieBaseNodes[this.states.hashId]);
 
+				this.states.searchState = "display";
+				this.states.filterState = "display";
+
 				if (this.states.selectState == "select" && this.tree.options.saveSelectStates)
 					{
 					//this.tree.selectNode(this)

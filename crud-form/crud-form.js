@@ -28,6 +28,7 @@ MKWidgets.CrudForm = Class({
 			deletable: true,
 			addable: true,
 
+			reinitOnSave: true,
 
 			saveOnChange: false,
 			saveButton: false,
@@ -42,11 +43,23 @@ MKWidgets.CrudForm = Class({
 
 			statuses: {
 				saveSuccess: {
+					title: 'Операция заверена успешно',
 					text: 'Данные сохранены успешно',
 					class: 'success'
 				},
-				saveError: {
-					text: 'Ошибка при сохранении данных',
+				saveProcessError: {
+					title: 'Операция заверена c ошибкой',
+					text: 'Ошибка при обработке данных',
+					class: 'error'
+				},
+				saveServerError: {
+					title: 'Операция заверена c ошибкой',
+					text: 'Ошибка при выполнении запроса',
+					class: 'error'
+				},
+				saveNetworkError: {
+					title: 'Операция не была выполнена',
+					text: 'Ошибка связи с сервером',
 					class: 'error'
 				},
 			},
@@ -323,29 +336,35 @@ MKWidgets.CrudFormNS.SaveInterface = Class({
 		if (responce.status == 'OK')
 			{
 			//alert('Данные сохранены успешно');
-			this.interface.widget.formData = new MK.Object(responce.row);
-			this.fields.reInit();
+
+			if(this.interface.widget.options.reinitOnSave)
+				{
+				this.interface.widget.formData = new MK.Object(responce.row);
+				this.fields.reInit();
+				}
 
 			this.interface.widget.setStatus('saveSuccess');
-
 			this.interface.widget.trigger('save-success');
 			}
 		else
 			{
-			this.interface.editSaveError(responce);
+			this.interface.widget.setStatus('saveProcessError');
+			this.interface.widget.trigger('save-process-error');
 			}
 		},
 
-	saveError: function (responce)
+	saveError: function (jqXhr, error)
 		{
-		this.interface.widget.setStatus('saveError');
-		//alert(JSON.stringify(responce));
-		},
-
-	editSaveError: function (responce)
-		{
-		this.interface.widget.setStatus('saveError');
-		//alert(JSON.stringify(responce));
+		if(error.status == 'timeout')
+			{
+			this.interface.widget.setStatus('saveNetworkError');
+			this.interface.widget.trigger('save-network-error');
+			}
+		else
+			{
+			this.interface.widget.setStatus('saveServerError');
+			this.interface.widget.trigger('save-server-error');
+			}
 		},
 });
 

@@ -17,7 +17,7 @@ MKWidgets.PopupCrudForm = Class({
 				cancel: "Отменить",
 				save: "Сохранить"
 			},
-			saveSuccessText: 'Данные успешно сохранены!',
+			waitText: 'Сохранение данных. Пожалуйста подождите.'
 		});
 		this.setOptions(options);
 
@@ -93,6 +93,9 @@ MKWidgets.PopupCrudFormNS.ControlInterface = Class({
         this.domInputCancel.on('click', $.proxy(this.canсelSlot, this));
 
 		this.widget.on('save-success', this.saveSuccessSlot, this);
+		this.widget.on('save-process-error', this.saveProcessErrorSlot, this);
+		this.widget.on('save-network-error', this.saveServerErrorSlot, this);
+		this.widget.on('save-server-error', this.saveNetworkErrorSlot, this);
         },
 
     turnOn: function ()
@@ -101,27 +104,70 @@ MKWidgets.PopupCrudFormNS.ControlInterface = Class({
 
     saveSlot: function()
         {
+		this.waitPopup = new MKWidgets.PopupNS.WaitPopup($('<div/>').text(this.widget.options.waitText), {
+			title: 'Выполнение запроса'
+		});
+		this.waitPopup.popup.openPopup();
+
         this.widget.trigger('save-button-click');
         },
 
 	saveSuccessSlot: function()
 		{
 		this.widget.popup.closePopup();
-		this.domSuccess = $("<div/>").html(this.widget.options.saveSuccessText)
-			.css('background', '#FDFDFD')
-			.css('padding', '30px');
-		this.successPopup = new MKWidgets.Popup(this.domSuccess, {
-			width: '250px',
-			linkVertical: 'center', //top, center, bottom
-			linkHorizontal: 'center', //left, center, right
-			linkingPoint: 'center',
+		this.widget.destroy();
+
+		this.waitPopup.popup.closePopup();
+
+		this.statusPopup = new MKWidgets.PopupNS.InfoPopup($('<div/>').text(this.widget.options.statuses.saveSuccess.text), {
+			title: this.widget.options.statuses.saveSuccess.title
 		});
-		this.successPopup.openPopup();
+		this.statusPopup.popup.openPopup();
+		},
+
+	saveProcessErrorSlot: function()
+		{
+		this.widget.popup.closePopup();
+		this.widget.destroy();
+
+		this.waitPopup.popup.closePopup();
+
+		this.statusPopup = new MKWidgets.PopupNS.InfoPopup($('<div/>').text(this.widget.options.statuses.saveProcessError.text), {
+			title: this.widget.options.statuses.saveProcessError.title
+		});
+		this.statusPopup.popup.openPopup();
+		},
+
+	saveServerErrorSlot: function()
+		{
+		this.widget.popup.closePopup();
+		this.widget.destroy();
+
+		this.waitPopup.popup.closePopup();
+
+		this.statusPopup = new MKWidgets.PopupNS.InfoPopup($('<div/>').text(this.widget.options.statuses.saveServerError.text), {
+			title: this.widget.options.statuses.saveServerError.title
+		});
+		this.statusPopup.popup.openPopup();
+		},
+
+	saveNetworkErrorSlot: function()
+		{
+		this.widget.popup.closePopup();
+		this.widget.destroy();
+
+		this.waitPopup.popup.closePopup();
+
+		this.statusPopup = new MKWidgets.PopupNS.InfoPopup($('<div/>').text(this.widget.options.statuses.saveNetworkError.text), {
+			title: this.widget.options.statuses.saveNetworkError.title
+		});
+		this.statusPopup.popup.openPopup();
 		},
 
     canсelSlot: function()
         {
         this.widget.popup.closePopup();
+		this.widget.destroy();
         },
 
 });

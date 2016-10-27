@@ -37,7 +37,7 @@ MKWidgets.PopupNS.StepsPopup = Class({
 			.append(this.domStepTitle)
 			.append(this.domBodies)
 			.append(this.domFooter)
-			.attr('class', 'tusur-csp-popup-steps-container tusur-csp-popup-steps-popup '+this.options.customClass)
+			.attr('class', 'tusur-csp-popup-steps-container tusur-csp-popup-steps-popup ' + this.options.customClass)
 		;
 		this.createFooter();
 		this.steps = new MKWidgets.PopupNS.StepPopupArray(this);
@@ -54,22 +54,38 @@ MKWidgets.PopupNS.StepsPopup = Class({
 
 	createFooter: function ()
 		{
-		this.domInputNext = $("<input>").attr('type', 'button')
-			.addClass('tusur-csp-popup-steps-footer-next-button')
-			.val('Далее')
-			//.prop('disabled', false)
+		//this.domInputNext = $("<input>").attr('type', 'button')
+		//	.addClass('tusur-csp-popup-steps-footer-next-button')
+		//	.val('Далее')
+		//	.on('click', $.proxy(this.nextButtonClickSlot, this))
+		//;
+		//this.domInputPrev = $("<input>").attr('type', 'button')
+		//	.addClass('tusur-csp-popup-steps-footer-prev-button')
+		//	.val('Назад')
+		//	.on('click', $.proxy(this.previousStepSlot, this))
+		//;
+		//this.domInputCancel = $("<input>").attr('type', 'button')
+		//	.addClass('tusur-csp-popup-steps-footer-cancel-button')
+		//	.val('Отменить')
+		//	.on('click', $.proxy(this.closePopup, this));
+		//;
+
+		this.domInputNext = $("<button/>")
+			.addClass('next')
+			.text('Далее')
 			.on('click', $.proxy(this.nextButtonClickSlot, this))
 		;
-		this.domInputPrev = $("<input>").attr('type', 'button')
-			.addClass('tusur-csp-popup-steps-footer-prev-button')
-			.val('Назад')
+		this.domInputPrev = $("<button/>")
+			.addClass('prev')
+			.text('Назад')
 			.on('click', $.proxy(this.previousStepSlot, this))
 		;
-		this.domInputCancel = $("<input>").attr('type', 'button')
-			.addClass('tusur-csp-popup-steps-footer-cancel-button')
-			.val('Отменить')
+		this.domInputCancel = $("<button>")
+			.addClass('cancel')
+			.text('Отменить')
 			.on('click', $.proxy(this.closePopup, this));
 		;
+
 		this.domFooter.append(this.domInputCancel)
 			.append(this.domInputNext)
 			.append(this.domInputPrev)
@@ -91,21 +107,21 @@ MKWidgets.PopupNS.StepsPopup = Class({
 
 	buttonContoller: function ()
 		{
-		if (this.activeStep.number == 1)
+		if (this.activeStep.step.number == 1)
 			{
-			this.domInputPrev.hide();
+			this.domInputPrev.css('visibility', 'hidden');
 			}
 		else
 			{
-			this.domInputPrev.show();
+			this.domInputPrev.css('visibility', 'visible');
 			}
-		if (this.options.steps.length == this.activeStep.number)
+		if (this.options.steps.length == this.activeStep.step.number)
 			{
-			this.domInputNext.val('Завершить');
+			this.domInputNext.text('Завершить');
 			}
 		else
 			{
-			this.domInputNext.val('Далее');
+			this.domInputNext.text('Далее');
 			}
 		},
 
@@ -116,11 +132,11 @@ MKWidgets.PopupNS.StepsPopup = Class({
 
 	nextButtonClickSlot: function ()
 		{
-		if (this.activeStep.number < this.options.steps.length)
+		if (this.activeStep.step.number < this.options.steps.length)
 			{
 			this.trigger('try-next-step');
 			}
-		else if (this.activeStep.number == this.options.steps.length)
+		else if (this.activeStep.step.number == this.options.steps.length)
 			{
 			this.trigger('try-done');
 			}
@@ -129,7 +145,7 @@ MKWidgets.PopupNS.StepsPopup = Class({
 
 	nextStepSlot: function ()
 		{
-		var nextStep = this.findStep(this.activeStep.number + 1);
+		var nextStep = this.findStep(this.activeStep.step.number + 1);
 		if (nextStep != null)
 			{
 			this.switchStep(nextStep);
@@ -142,12 +158,12 @@ MKWidgets.PopupNS.StepsPopup = Class({
 
 	previousStepSlot: function ()
 		{
-		if (this.activeStep.number == 1)
+		if (this.activeStep.step.number == 1)
 			{
 			this.trigger('step-is-first');
 			return;
 			}
-		var prevStep = this.findStep(this.activeStep.number - 1);
+		var prevStep = this.findStep(this.activeStep.step.number - 1);
 		if (prevStep != null)
 			{
 			this.switchStep(prevStep);
@@ -172,7 +188,7 @@ MKWidgets.PopupNS.StepsPopup = Class({
 		var foundStep = null;
 		this.steps.each(function (step)
 		{
-		if (step.number == number)
+		if (step.step.number == number)
 			{
 			foundStep = step;
 			}
@@ -192,9 +208,9 @@ MKWidgets.PopupNS.StepsPopup = Class({
 		app.trigger('mkw_resize');
 
 		this.activeStep.setMaxSizes();
-		this.options.sizeRestrictionsScrollBar = this.activeStep.body;
+		this.options.sizeRestrictionsScrollBar = this.activeStep.step.body;
 		//this.
-		this.domStepTitle.html(this.activeStep.title);
+		this.domStepTitle.html(this.activeStep.step.title);
 
 		}
 });
@@ -206,7 +222,7 @@ MKWidgets.PopupNS.StepPopupObject = Class({
 	constructor: function (step, parent)
 		{
 		this.parent = parent;
-		this.jset(step);
+		//this.jset(step);
 		this.active = false;
 		this.step = step;
 
@@ -217,15 +233,15 @@ MKWidgets.PopupNS.StepPopupObject = Class({
 
 	render: function ()
 		{
-		if (this.body instanceof jQuery)
+		if (this.step.body instanceof jQuery)
 			{
-			$(this.sandbox).append(this.body);
+			$(this.sandbox).append(this.step.body);
 			}
-		else if (typeof this.body == 'string')
+		else if (typeof this.step.body == 'string')
 			{
 			this.bindNode('body', ':sandbox', MK.binders.html());
 			}
-		this.numberStep = 'Шаг ' + this.number;
+		this.numberStep = 'Шаг ' + this.step.number;
 		this.domStep = $('<li/>').addClass('tusur-csp-popup-step');
 		this.parent.domSteps.append(this.domStep);
 		this.bindNode('numberStep', this.domStep, MK.binders.html())
@@ -236,14 +252,15 @@ MKWidgets.PopupNS.StepPopupObject = Class({
 		;
 
 		this.domStep.on('click', $.proxy(this.stepClickSlot, this));
-		this.on("change:display", function ()
-		{
-		this.parent.parent.trigger('set-position');
-		if (this.display == true)
+		this.on("change:display",
+			function ()
 			{
-			this.body.trigger('custom_resize');
-			}
-		}, this);
+			this.parent.parent.trigger('set-position');
+			if (this.display == true)
+				{
+				this.step.body.trigger('custom_resize');
+				}
+			}, this);
 
 		this.on('step@change:body', this.redrawBody, this);
 		},
@@ -257,13 +274,13 @@ MKWidgets.PopupNS.StepPopupObject = Class({
 	setMaxSizes: function ()
 		{
 		var popupSizes = this.parent.parent.getPopupMaxSizes();
-		var deltaHeight = this.parent.parent.domInsideContainer.outerHeight(true) - this.body.outerHeight(),
-			deltaWidth = this.parent.parent.domInsideContainer.outerWidth(true) - this.body.outerWidth(),
+		var deltaHeight = this.parent.parent.domInsideContainer.outerHeight(true) - this.step.body.outerHeight(),
+			deltaWidth = this.parent.parent.domInsideContainer.outerWidth(true) - this.step.body.outerWidth(),
 			height = popupSizes.height - deltaHeight,
 			width = popupSizes.width - deltaWidth;
 
-		this.body.css('max-height', height);
-		this.body.css('max-width', width);
+		this.step.body.css('max-height', height);
+		this.step.body.css('max-width', width);
 		},
 
 	redrawBody: function ()
@@ -289,7 +306,16 @@ MKWidgets.PopupNS.StepPopupArray = Class({
 		{
 		this.parent = parent;
 		this.domSteps = parent.domSteps;
-		this.bindNode('sandbox', parent.domBodies)
-			.recreate(parent.options.steps);
+		this.bindNode('sandbox', parent.domBodies);
+		this.recreate(parent.options.steps);
+		},
+
+	recreate: function(stepsConfig)
+		{
+		for(var i=0; i< stepsConfig.length; i++)
+			{
+			var step = new MKWidgets.PopupNS.StepPopupObject(stepsConfig[i], this, i );
+			this.push(step);
+			}
 		}
 });
