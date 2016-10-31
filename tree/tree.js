@@ -114,7 +114,7 @@ MKWidgets.Tree = Class({
 
 		this.root = new MKWidgets.TreeNS.TreeNodeObject(rootData, null, this, 0, this.domTreeContainer, null);
 
-		$(window).resize($.proxy(this.treeRefresh, this));
+		$(window).on('resize',$.proxy(this.treeRefresh, this));
 		this.on('mkw-resize', this.treeRefresh, true, this);
 		this.on('mkw-resize-silent', this.treeRefreshSilent, true, this);
 
@@ -171,8 +171,8 @@ MKWidgets.Tree = Class({
 
 			var deltaHeight = this.element.outerHeight(true) - this.domTreeContainer.outerHeight();
 			this.element.css('height', this.elementHeight);
-			var containerHeight = (parseInt(this.element.css('height')) - deltaHeight);
-			this.domTreeContainer.height(containerHeight);//css('height', containerHeight + "px");
+			var containerHeight = (this.elementHeight - deltaHeight);
+			this.domTreeContainer.height(containerHeight);
 
 			if (realContainerHeight > containerHeight)
 				{
