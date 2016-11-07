@@ -71,6 +71,9 @@ MKWidgets.ReportViewNS.WidgetsInterface = Class({
 
 	initWidgets: function ()
 		{
+		this.plotReady = false;
+		this.tableReady = false;
+
 		if(! this.widget.parametrs.trigger)
 			{
 			return;
@@ -120,13 +123,20 @@ MKWidgets.ReportViewNS.WidgetsInterface = Class({
 	plotReadySlot: function()
 		{
 		this.plotReady = true;
-		this.trigger('export-ready');
+		if(this.tableReady == true)
+			{
+			this.widget.trigger('widgets-ready');
+			}
+
 		},
 
 	tableReadySlot: function()
 		{
 		this.tableReady = true;
-		this.trigger('export-ready');
+		if(this.plotReady == true)
+			{
+			this.widget.trigger('widgets-ready');
+			}
 		},
 
 });

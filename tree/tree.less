@@ -39,7 +39,7 @@
 	}
 
 	.crudtree-node {
-	  font-size: 14px;
+	  //font-size: 14px;
 	  position: relative;
 
 	  .crudtree-depend-line {
@@ -61,7 +61,10 @@
 		display: inline-block;
 		line-height: 0;
 		border-radius: 4px 4px 4px 4px;
-		min-width: 184px;
+		//min-width: 184px;
+
+	  	width: ~'calc(100% - 16px)';
+
 		margin-left: 11px;
 		z-index: 3;
 		.crudtree-node-text {
@@ -136,13 +139,13 @@
 
 	  > .crudtree-node-body {
 		.crudtree-node-text {
-		  //font-size: 16px;				//big zero
 		  //padding: 16px 20px 17px 30px;	//big zero
 		  background-position: 5px center;
 		  background-size: 15px 15px;
 		  white-space: nowrap;
-		  max-width: 205px;
-		  min-width: 205px;
+		  //max-width: 205px;
+		  //min-width: 205px;
+		  width: ~'calc(100% - 75px)';
 		}
 		.crudtree-node-manage-ico {
 		  //margin-top: 18px;				//big zero

@@ -78,7 +78,6 @@
 	border-radius: 3px;
 
 	.custom-select-list-scroll {
-	  //height: 100%;
 	  padding: 10px 0;
 
 	  .custom-select-list {
@@ -106,6 +105,61 @@
 
 		  &.hover.selected {
 			background-color: #9DC6E6;
+		  }
+
+		}
+
+		&.tree {
+		  min-width: 280px;
+		  .tree-search-container {
+			display: none;
+		  }
+		  .crudtree-tree-container {
+			margin: 0px;
+			.scroll-bar.vertical {
+			  right: -10px;
+			}
+		  }
+		}
+
+		&.multi {
+		  .custom-select-option {
+			position: relative;
+			padding: 10px 10px 10px 35px;
+
+			&:before {
+			  content: '';
+			  position: absolute;
+			  top: 10px;
+			  left: 10px;
+			  width: 14px;
+			  height: 14px;
+			  background: #DFDFDF no-repeat;
+			  border-radius: 3px;
+			}
+
+			&.hover:before {
+			  background-color: #FFFFFF;
+			}
+
+			&.selected:before {
+			  .ico-checkbox();
+			  background-image: url('data:image/svg+xml;charset=utf-8,@{ico}');
+			  background-color: #FFFFFF;
+			}
+		  }
+
+		  .custom-select-option.select-all {
+			&:hover {
+			  background-color: @color-option-hover;
+			  //color: @color-option-hover-text;
+			}
+			&.selected:hover {
+			  background-color: #9DC6E6;
+			}
+			&:hover:before {
+			  background-color: #FFFFFF;
+			}
 		  }
 
 		}
@@ -147,58 +201,5 @@
 
 
 
-  .custom-select-list.tree {
-	min-width: 280px;
-	.tree-search-container {
-	  display: none;
-	}
-	.crudtree-tree-container {
-	  margin: 0px;
-	  .scroll-bar.vertical {
-		right: -10px;
-	  }
-	}
-  }
 
-  .custom-select-list.multi {
-	.custom-select-option {
-	  position: relative;
-	  padding: 10px 10px 10px 35px;
-
-	  &:before {
-		content: '';
-		position: absolute;
-		top: 10px;
-		left: 10px;
-		width: 14px;
-		height: 14px;
-		background: #DFDFDF no-repeat;
-		border-radius: 3px;
-	  }
-
-	  &.hover:before {
-		background-color: #FFFFFF;
-	  }
-
-	  &.selected:before {
-		.ico-checkbox();
-		background-image: url('data:image/svg+xml;charset=utf-8,@{ico}');
-		background-color: #FFFFFF;
-	  }
-	}
-
-	.custom-select-option.select-all {
-	  &:hover {
-		background-color: @color-option-hover;
-		//color: @color-option-hover-text;
-	  }
-	  &.selected:hover {
-		background-color: #9DC6E6;
-	  }
-	  &:hover:before {
-		background-color: #FFFFFF;
-	  }
-	}
-
-  }
 }
