@@ -30,6 +30,8 @@ MKWidgets.DependTreeSelect = Class({
 		this.getDict();
 		this.optionsList = new MKWidgets.TreeSelectNS.SelectTree(this.dict, this);
 
+		this.binding();
+
 		if (this.options.renderOnInit == true)
 			{
 			this.render();
@@ -66,7 +68,7 @@ MKWidgets.DependTreeSelect = Class({
 		{
 		this.updateDependValues();
 		this.dict = window.app.getDict(this.dictConfig);
-		this.setSelectedOptionById(null);
+		this.unsetSelectedOption();
 		this.optionsList.tree.unselectNode();
 		this.updateOptions();
 		},

@@ -21,6 +21,7 @@ MKWidgets.CrudTable = Class({
 			readable: false, // {index: 'read'}
 
 			addByMaster: null, //{represent: 'represent/name/', title: ''}
+			pattern: {},
 		});
 		this.setOptions(options);
 
@@ -28,9 +29,9 @@ MKWidgets.CrudTable = Class({
 		this.initInterfacesSlot();
 		},
 
-	initInterfacesSlot: function()
+	initInterfacesSlot: function ()
 		{
-		if(this.initDone == true && this.tableReady == true && this.crudTableInterfacesInit != true)
+		if (this.initDone == true && this.tableReady == true && this.crudTableInterfacesInit != true)
 			{
 			this.crudTableCreateInterfaces();
 			}
@@ -46,6 +47,8 @@ MKWidgets.CrudTable = Class({
 		this.deleteInterface = new MKWidgets.CrudTableNS.DeleteInterface(this, this.options.deletable);
 
 		this.readInterface = new MKWidgets.CrudTableNS.ReadInterface(this, this.options.readable);
+
+		this.pasteInterface = new MKWidgets.CrudTableNS.PasteInterface(this, this.options.editable);
 
 		this.crudTableInterfacesInit = true;
 		// поменял местами add и delete интерфейсы!!!
@@ -176,7 +179,7 @@ MKWidgets.CrudTableNS.DeleteInterface = Class({
 		{
 		if (rows.length > 0)
 			{
-			if(this.widget.options.dataSource == 'remote')
+			if (this.widget.options.dataSource == 'remote')
 				{
 				$.ajax({
 					url: this.widget.options.deleteUrl,
@@ -191,7 +194,7 @@ MKWidgets.CrudTableNS.DeleteInterface = Class({
 				}
 			else
 				{
-				this.deleteRowsDom( rows );
+				this.deleteRowsDom(rows);
 				}
 
 			}
@@ -206,7 +209,7 @@ MKWidgets.CrudTableNS.DeleteInterface = Class({
 		//warning: another context! this = jqxhr, this.interface = interface, this.rows = deleted_rows
 		if (responce.status == 'OK')
 			{
-			this.interface.deleteRowsDom( this.rows );
+			this.interface.deleteRowsDom(this.rows);
 			}
 		else
 			{
@@ -214,7 +217,7 @@ MKWidgets.CrudTableNS.DeleteInterface = Class({
 			}
 		},
 
-	deleteRowsDom: function(rows)
+	deleteRowsDom: function (rows)
 		{
 		this.widget.rows.deleteRows(rows);
 
@@ -301,10 +304,11 @@ MKWidgets.CrudTableNS.SelectInterface = Class({
 
 	clearAll: function ()
 		{
+		var row;
 		while (row = this.selectRows.pop())
 			{
-			this.unsetRow(row);
 			}
+		this.trigger('table-rows-selection-changed');
 		},
 
 	toogleRow: function (row)
@@ -339,6 +343,130 @@ MKWidgets.CrudTableNS.SelectInterface = Class({
 		},
 });
 
+MKWidgets.CrudTableNS.PasteInterface = Class({
+	extends: WidgetInterface,
+	widget: null,
+	enable: false,
+
+	constructor: function (widget, enable)
+		{
+		WidgetInterface.prototype.constructor.apply(this, [widget, enable]);
+		},
+
+	create: function ()
+		{
+		WidgetInterface.prototype.create.apply(this);
+		},
+
+	turnOn: function ()
+		{
+		this.widget.domBody[0].addEventListener("paste", $.proxy(this.pasteSlot, this), true);
+		//this.widget.element.on('paste', $.proxy(this.pasteSlot, this));
+		},
+	turnOff: function ()
+		{
+		this.widget.domBody[0].removeEventListener("paste", $.proxy(this.pasteSlot, this), true);
+		},
+
+	pasteSlot: function (event)
+		{
+		if (this.widget.viewInterface.tableActive && this.widget.viewInterface.viewCell != undefined && this.widget.editInterface.editCell == undefined && event.processed == undefined)
+			{
+			var text = event.clipboardData.getData('Text');
+			var table = this.parseTableText(text);
+			if (table == null)
+				{
+				return;
+				}
+
+			//var currentCell = this.widget.viewInterface.viewCell;
+			var nextCell, i, j, k;
+			for (i = 0; i < table.length; i++)
+				{
+
+				k = 0;
+				for (j = 0; j < table[i].length; j++)
+					{
+					var inputItem = this.widget.editInterface.createInputItem(this.widget.viewInterface.viewCell);
+					inputItem.setValue(table[i][j]);
+
+					k++;
+
+					nextCell = this.widget.viewInterface.getCellByDirectionStrictly('right');
+					if (nextCell == undefined)
+						{
+						break;
+						}
+					this.widget.viewInterface.setCell(nextCell);
+					}
+				this.widget.editInterface.saveRow(this.widget.viewInterface.viewCell.parent);
+
+				if (i < table.length - 1)
+					{
+					for (j = 0; j < k; j++)
+						{
+						nextCell = this.widget.viewInterface.getCellByDirectionStrictly('left');
+						this.widget.viewInterface.setCell(nextCell);
+						}
+					nextCell = this.widget.viewInterface.getCellByDirectionStrictly('down');
+					if (nextCell == undefined)
+						{
+						this.addRow(this.addGetNewLine());
+						nextCell = this.widget.viewInterface.getCellByDirectionStrictly('down');
+						}
+					this.widget.viewInterface.setCell(nextCell);
+					}
+				}
+
+			console.log(table);
+			event.processed = true;
+			}
+		},
+
+	parseTableText: function (text)
+		{
+		text = text.replace(/\r/g, '');
+
+		var table = [];
+		var lines_raw = text.split(/\n/g);
+
+		var countColumns = null;
+		for (var i in lines_raw)
+			{
+			var line = [];
+			if (lines_raw[i].length > 0)
+				{
+				var cells = lines_raw[i].split(/\t/g);
+
+				for (var j = 0; j < cells.length; j++)
+					{
+					if (cells[j] == "")
+						{
+						cells[j] = '-';
+						}
+					}
+
+				if (countColumns == null)
+					{
+					countColumns = cells.length;
+					}
+				else
+					{
+					if (countColumns != cells.length)
+						{
+						return null;
+						}
+					}
+
+
+				table.push(cells);
+				}
+			}
+		return table;
+		},
+
+});
+
 MKWidgets.CrudTableNS.AddInterface = Class({
 	extends: WidgetInterface,
 	widget: null,
@@ -370,10 +498,10 @@ MKWidgets.CrudTableNS.AddInterface = Class({
 
 	clickSlot: function ()
 		{
-		if(this.widget.options.addByMaster != undefined)
+		if (this.widget.options.addByMaster != undefined)
 			{
 			var represent = this.widget.options.addByMaster.represent;
-			app.registrateWidgetByRepresent(represent, 'master-'+represent, {}, {
+			app.registrateWidgetByRepresent(represent, 'master-' + represent, {}, {
 				action: 'create',
 				title: this.widget.options.addByMaster.masterTitle,
 			}, $.proxy(this.afterMasterInit, this));
@@ -385,20 +513,21 @@ MKWidgets.CrudTableNS.AddInterface = Class({
 
 		},
 
-	afterMasterInit: function(master)
+	afterMasterInit: function (master)
 		{
 		this.master = master;
 		this.master.on('master-success-save', this.masterSaveSlot, this);
 		},
 
-	masterSaveSlot: function(rowData)
+	masterSaveSlot: function (rowData)
 		{
 		this.addRow(rowData);
 		},
 
 	addRow: function (rowData)
 		{
-		this.widget.rows.push(new MKWidgets.TableNS.Row(rowData));
+		//this.widget.rows.push(new MKWidgets.TableNS.Row(rowData));
+		this.widget.rows.push(rowData);
 
 		this.widget.trigger('reset-interfaces');
 		this.widget.trigger('table-display-change');
@@ -417,7 +546,7 @@ MKWidgets.CrudTableNS.AddInterface = Class({
 
 	addCreateRowDataPattern: function ()
 		{
-		var pattern = {};
+		var pattern = $.extend({},this.widget.options.pattern);
 		for (var i in this.widget.options.columnsModel)
 			{
 			var column = this.widget.options.columnsModel[i];
@@ -587,7 +716,7 @@ MKWidgets.CrudTableNS.EditInterface = Class({
 		{
 		if (this.validateRow(row))
 			{
-			if(this.widget.options.dataSource == 'remote')
+			if (this.widget.options.dataSource == 'remote')
 				{
 				$.ajax({
 					url: this.widget.options.saveUrl,
@@ -630,6 +759,7 @@ MKWidgets.CrudTableNS.EditInterface = Class({
 				cell.error = false;
 				}
 			}, this);
+
 		return rowValid;
 		},
 
@@ -639,7 +769,24 @@ MKWidgets.CrudTableNS.EditInterface = Class({
 		if (responce.status == 'OK')
 			{
 			this.row.recreateRow(responce.row);
+
 			this.interface.widget.trigger('reset-interfaces');
+
+			if (this.interface.editCell != undefined)
+				{
+				var editRowIndex = this.interface.editCell.parent.indexInArray;
+				var editCellIndex = this.interface.editCell.indexInArray;
+
+				this.interface.setCell(this.interface.widget.rows[editRowIndex][editCellIndex]);
+				}
+			else if (this.interface.widget.viewInterface.viewCell != undefined)
+				{
+				var viewRowIndex = this.interface.widget.viewInterface.viewCell.parent.indexInArray;
+				var viewCellIndex = this.interface.widget.viewInterface.viewCell.indexInArray;
+				this.interface.widget.viewInterface.setCell(this.interface.widget.rows[viewRowIndex][viewCellIndex]);
+				}
+
+
 			this.interface.widget.trigger('table-display-changed');
 
 			this.interface.widget.log("success", "Данные успешно сохранены");
@@ -702,23 +849,24 @@ MKWidgets.CrudTableNS.ViewInterface = Class({
 
 	turnOn: function ()
 		{
+
 		if (this.widget.rows.length > 0)
 			{
 			this.enabled = true;
-			this.bindNode('tableActive', this.widget.element, this.tableActiveBinder);
+			this.bindNode('tableActive', this.widget.domBody, this.tableActiveBinder);
 			this.bindNode('viewCell', this.widget.domBody.find('.tusur-csp-table-cell'), this.cellViewBinder);
 			this.on('change:tableActive', this.tableActiveChangeSlot, this);
 			$(document).on('keydown', $.proxy(this.keypressSlot, this));
 			}
-		this.setCell(undefined);
-		this.setRow(undefined);
+		//this.setCell(undefined);
+		//this.setRow(undefined);
 		},
 	turnOff: function ()
 		{
 		if (this.enabled)
 			{
 			this.enabled = false;
-			this.unbindNode('tableActive', this.widget.element, this.tableActiveBinder);
+			this.unbindNode('tableActive', this.widget.domBody, this.tableActiveBinder);
 			this.unbindNode('viewCell', this.widget.domBody.find('.tusur-csp-table-cell'), this.cellViewBinder);
 			$(document).off('keydown', $.proxy(this.keypressSlot, this));
 			}
@@ -748,7 +896,8 @@ MKWidgets.CrudTableNS.ViewInterface = Class({
 			}
 		else
 			{
-			this.viewCell = undefined
+			this.viewCell = undefined;
+			this.setRow(undefined);
 			}
 		},
 	setRow: function (row)
@@ -827,6 +976,42 @@ MKWidgets.CrudTableNS.ViewInterface = Class({
 					cell = $(row.sandbox).find('.tusur-csp-table-cell:visible:last').data("cell");
 					}
 				}
+			}
+		if (direction == "down")
+			{
+			var row = $(this.viewRow.sandbox).next(':visible').data("row");
+			var index = this.viewRow.indexOf(this.viewCell);
+			if (row != undefined)
+				{
+				cell = row [index];
+				}
+			}
+		if (direction == "up")
+			{
+			var row = $(this.viewRow.sandbox).prev(':visible').data("row");
+			var index = this.viewRow.indexOf(this.viewCell);
+			if (row != undefined)
+				{
+				cell = row [index];
+				}
+			}
+		if (direction == "current")
+			{
+			cell = this.viewCell;
+			}
+		return cell;
+		},
+
+	getCellByDirectionStrictly: function (direction)
+		{
+		var cell = null;
+		if (direction == "right")
+			{
+			cell = $(this.viewCell.sandbox).next(':visible').data("cell");
+			}
+		if (direction == "left")
+			{
+			cell = $(this.viewCell.sandbox).prev(':visible').data("cell");
 			}
 		if (direction == "down")
 			{

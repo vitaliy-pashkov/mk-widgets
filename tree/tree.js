@@ -20,7 +20,8 @@ MKWidgets.Tree = Class({
 				value: 'value',
 				type: 'type',
 				selectable: 'selectable',
-				childs: 'childs'
+				childs: 'childs',
+				loadHtml: {}
 			},
 
 			searchable: true,
@@ -35,6 +36,12 @@ MKWidgets.Tree = Class({
 			NoFiltersTreeOpen: false,
 			loadHtml: false,
 			saveSelectStates: true,
+
+			groping: {
+				size: 20,
+				splitPattern: " ",
+			},
+
 		});
 		this.setOptions(options);
 
@@ -69,6 +76,7 @@ MKWidgets.Tree = Class({
 	setData: function setData(data)
 		{
 		this.data = data;
+
 		this.trigger('tree_data_ready');
 		},
 
@@ -114,7 +122,7 @@ MKWidgets.Tree = Class({
 
 		this.root = new MKWidgets.TreeNS.TreeNodeObject(rootData, null, this, 0, this.domTreeContainer, null);
 
-		$(window).on('resize',$.proxy(this.treeRefresh, this));
+		$(window).on('resize', $.proxy(this.treeRefresh, this));
 		this.on('mkw-resize', this.treeRefresh, true, this);
 		this.on('mkw-resize-silent', this.treeRefreshSilent, true, this);
 
@@ -321,10 +329,11 @@ MKWidgets.Tree = Class({
 		{
 		if (this.options.loadHtml)
 			{
+			var loadHtml = $.extend({},this.options.loadHtml, this.options.indexes.loadHtml[node.nodeData[node.indexes.type]] );
 			var params = {};
-			for (i in this.options.loadHtml.params)
+			for (var i in loadHtml.params)
 				{
-				params[this.options.loadHtml.params[i]] = node.nodeData[this.options.loadHtml.params[i]];
+				params[loadHtml.params[i]] = node.nodeData[loadHtml.params[i]];
 				}
 
 			if (this.domLoaderBG == undefined)
@@ -338,21 +347,21 @@ MKWidgets.Tree = Class({
 
 			$.ajax({
 				method: "GET",
-				url: this.options.loadHtml.url,
+				url: loadHtml.url,
 				data: params,
 				dataType: "html",
 				cache: false,
 				that: this,
+				loadHtml: loadHtml,
 				nodeData: node.nodeData,
 				success: function (html, textStatus)
 					{
 					if (this.that.currentNodeData == JSON.stringify(this.nodeData))
 						{
-						$(this.that.options.loadHtml.target).html(html);
-						this.that.options.loadHtml.onReady(this.nodeData);
+						$(this.loadHtml.target).html(html);
+						this.loadHtml.onReady(this.nodeData);
 						this.that.domLoaderBG = null;
 						}
-
 					},
 				error: function (data)
 					{
@@ -427,7 +436,7 @@ MKWidgets.TreeNS.NavigateInterface = Class({
 		this.navData = {};
 		this.navData['type'] = this.widget.selectedNode.nodeData[this.widget.options.indexes.type];
 		var idIndex = this.widget.options.indexes.id;
-		if(typeof idIndex == 'object')
+		if (typeof idIndex == 'object')
 			{
 			idIndex = idIndex[this.navData['type']];
 			}
@@ -452,6 +461,7 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		manageState: "normal",		//zero, normal, last, lastZero
 		searchState: "display",		//display, display_by_parent, display_by_child, hide
 		filterState: "display",
+		groupState: "display",		//display, hide
 		hashId: undefined,
 	},
 
@@ -463,9 +473,9 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		//this.tree = parentArray.tree;
 		this.tree = tree;
 		this.indexes = $.extend({}, tree.options.indexes);
-		if(typeof this.indexes.id == 'object')
+		if (typeof this.indexes.id == 'object')
 			{
-			this.indexes.id = this.indexes.id[ data[this.indexes.type] ];
+			this.indexes.id = this.indexes.id[data[this.indexes.type]];
 			}
 
 		this.level = level;
@@ -558,6 +568,8 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 					}
 
 				this.childs = new MKWidgets.TreeNS.TreeNodeArray(this.nodeData[this.indexes.childs], this, this.tree, this.domChilds, this.level + 1);
+
+				this.createGroups();
 				}
 			}
 		},
@@ -668,7 +680,7 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		this.tree.treeRefresh();
 		},
 
-	mouseEnterSlot: function()
+	mouseEnterSlot: function ()
 		{
 		if (this.states.openState == "close")
 			{
@@ -679,7 +691,7 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		this.tree.treeRefresh();
 		},
 
-	mouseLeaveSlot: function()
+	mouseLeaveSlot: function ()
 		{
 		if (this.states.openState == "open" && this.openByHover == true)
 			{
@@ -689,7 +701,6 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		this.tree.trigger('mkw-inside-resize');
 		this.tree.treeRefresh();
 		},
-
 
 
 	refreshDom: function ()
@@ -1058,6 +1069,24 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		return node;
 		},
 
+	findNodeByValue: function (value)
+		{
+		if (this.nodeData[this.indexes.value] == value)
+			{
+			return this;
+			}
+		var node = null;
+		for (var i = 0; i < this.childs.length; i++)
+			{
+			node = this.childs[i].findNodeByValue(value);
+			if (node != null)
+				{
+				break;
+				}
+			}
+		return node;
+		},
+
 	findNodeByData: function (data)
 		{
 		if (data != undefined)
@@ -1091,6 +1120,39 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 		return hash;
 		},
 
+	createGroups: function ()
+		{
+		if (this.tree.options.groping != undefined)
+			{
+			if (this.childs.length > this.tree.options.groping.size * 1.5)
+				{
+
+				//this.findGroups();
+				//
+				//
+				//for(var i=0;i<this.childs.length; i++)
+				//	{
+				//	this.childs.states.groupState = 'hide';
+				//	}
+
+
+				}
+			}
+		},
+
+	findGroups: function ()
+		{
+
+		var maps = [];
+
+		for (var i = 0; i < this.childs.length; i++)
+			{
+			var valueParts = this.childs.nodeData[this.indexes.value].split(this.tree.options.groping.splitPattern);
+
+
+			}
+		}
+
 });
 
 MKWidgets.TreeNS.TreeNodeArray = Class({
@@ -1103,10 +1165,10 @@ MKWidgets.TreeNS.TreeNodeArray = Class({
 		this.tree = tree;
 		this.level = level;
 		this.bindNode('sandbox', domSandbox);
-		this.createChilds1(data);
+		this.createChilds(data);
 		},
 
-	createChilds1: function (data)
+	createChilds: function (data)
 		{
 		for (var i in data)
 			{
@@ -1115,3 +1177,160 @@ MKWidgets.TreeNS.TreeNodeArray = Class({
 			}
 		},
 });
+
+/*
+function naturalSort(a, b)
+	{
+	"use strict";
+	var re = /(-?[0-9.]+)/g,
+		sre = /(^[ ]*|[ ]*$)/g,
+		ore = /^0/,
+		i = function (s)
+			{
+			return naturalSort.insensitive && ('' + s).toLowerCase() || '' + s;
+			},
+// convert all to strings strip whitespace
+		x = i(a).replace(sre, '') || '',
+		y = i(b).replace(sre, '') || '',
+// chunk/tokenize
+		xN = x.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
+		yN = y.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
+		oFxNcL, oFyNcL;
+// natural sorting through split numeric strings and default strings
+	var numS = Math.max(xN.length, yN.length);
+	var index = 0;
+	for (var cLoc = 0; cLoc < numS; cLoc++)
+		{
+// find floats not starting with '0', string or 0 if not defined (Clint Priest)
+		oFxNcL = !(xN[cLoc] || '').match(ore) && parseFloat(xN[cLoc]) || xN[cLoc] || 0;
+		oFyNcL = !(yN[cLoc] || '').match(ore) && parseFloat(yN[cLoc]) || yN[cLoc] || 0;
+// handle numeric vs string comparison - number < string - (Kyle Adams)
+		if (isNaN(oFxNcL) !== isNaN(oFyNcL))
+			{
+			return (isNaN(oFxNcL)) ? 1 : -1;
+			}
+// rely on string comparison if different types - i.e. '02' < 2 != '02' < '2'
+		else if (typeof oFxNcL !== typeof oFyNcL)
+			{
+			oFxNcL += '';
+			oFyNcL += '';
+			}
+		if (oFxNcL < oFyNcL)
+			{
+			return -1;
+			}
+		if (oFxNcL > oFyNcL)
+			{
+			return 1;
+			}
+		}
+	return 0;
+	};
+
+function findFirstDiffPos(a, b)
+	{
+	var i = 0;
+	if (a === b)
+		{
+		return -1;
+		}
+	while (a[i] === b[i])
+		{
+		i++;
+		}
+	return i;
+	}
+
+function naturalCompare(a, b)
+	{
+	"use strict";
+	var re=/(-?[0-9.]+)/g,
+		sre = /(^[ ]*|[ ]*$)/g,
+		ore = /^0/,
+		i = function (s)
+			{
+			return ('' + s).toLowerCase();
+			},
+// convert all to strings strip whitespace
+		x = i(a).replace(sre, '') || '',
+		y = i(b).replace(sre, '') || '',
+// chunk/tokenize
+		xN = x.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
+		yN = y.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
+		oFxNcL, oFyNcL;
+// natural sorting through split numeric strings and default strings
+	var numS = Math.max(xN.length, yN.length);
+	var index = 0;
+	for (var cLoc = 0; cLoc < numS; cLoc++)
+		{
+// find floats not starting with '0', string or 0 if not defined (Clint Priest)
+		oFxNcL = !(xN[cLoc] || '').match(ore) && parseFloat(xN[cLoc]) || xN[cLoc] || 0;
+		oFyNcL = !(yN[cLoc] || '').match(ore) && parseFloat(yN[cLoc]) || yN[cLoc] || 0;
+// handle numeric vs string comparison - number < string - (Kyle Adams)
+		if (isNaN(oFxNcL) !== isNaN(oFyNcL))
+			{
+			return index;
+			}
+// rely on string comparison if different types - i.e. '02' < 2 != '02' < '2'
+		else if (typeof oFxNcL !== typeof oFyNcL)
+			{
+			oFxNcL += '';
+			oFyNcL += '';
+			}
+
+		if(oFxNcL != oFyNcL)
+			{
+			if(typeof oFxNcL === 'string')
+				{
+				var difPos = findFirstDiffPos(oFxNcL , oFyNcL);
+				return {index: index + findFirstDiffPos(oFxNcL , oFyNcL), value: Math.abs(oFxNcL[difPos].charCodeAt(0) - oFyNcL[difPos].charCodeAt(0))};
+				}
+			else
+				{
+				return {index: index, value: Math.abs(oFxNcL - oFyNcL)};
+				}
+			}
+
+		if(typeof oFxNcL === 'string')
+			{
+			index+=oFxNcL.length;
+			}
+		else
+			{
+			index+=10;
+			}
+		}
+	return {index: Inf, value: 0};
+	};
+
+var arr = [
+	'abcde1',
+	'abcde2',
+	'abcde3',
+	'abcde10',
+	'abcde11',
+	'abcde12',
+	'abf1',
+	'abf2',
+	'abf3',
+	'abf10',
+	'abf11',
+	'abf12',
+	'abfab1',
+	'abgab2',
+	'abgab1000',
+];
+
+//var b = arr.sort(naturalSort);
+//alert(JSON.stringify(b));
+var average = {index: null, value: null};
+var deltas = [];
+
+for(var i=1;i<arr.length; i++)
+	{
+	var delta = JSON.stringify( naturalCompare(arr[i-1], arr[i]) );
+	deltas.push(delta);
+	}
+console.log(deltas);
+
+*/

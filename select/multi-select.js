@@ -33,6 +33,8 @@ MKWidgets.MultiSelect = Class({
 		this.calcRealLength();
 		this.on('options-changed', this.calcRealLength, this);
 
+		this.binding();
+
 		if (this.options.renderOnInit == true)
 			{
 			this.render();
@@ -58,6 +60,7 @@ MKWidgets.MultiSelect = Class({
 			}
 		this.listInterface = new MKWidgets.MultiSelectNS.SelectListInterface(this, true);
 		this.allInterface = new MKWidgets.MultiSelectNS.SelectAllInterface(this, this.options.selectAll);
+		this.addableInterface = new MKWidgets.SelectNS.AddInterface(this, this.options.addable);
 
 		this.calcRealLength();
 		},
@@ -452,15 +455,15 @@ MKWidgets.MultiSelectNS.SelectListInterface = Class({
 		MKWidgets.SelectNS.SelectListInterface.prototype.create.apply(this);
 		},
 
-	setSelectedOption: function (option)
-		{
-		this.widget.toggleOption(option);
-		},
+	//setSelectedOption: function (option)
+	//	{
+	//	this.widget.toggleOption(option);
+	//	},
 
 	optionClickSlot: function (event)
 		{
 		var option = $(event.target).data('option');
-		this.setSelectedOption(option);
+		this.widget.toggleOption(option);
 		},
 });
 

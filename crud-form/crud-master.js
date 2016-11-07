@@ -47,6 +47,7 @@ MKWidgets.CrudMaster = Class({
 
 	getDicts: function getDicts()
 		{
+		this.options.dictsUrl = Entity.applyContextValue(this.options.dictsUrl, this.formData);
 		if (this.options.dictsUrl != null)
 			{
 			$.ajax(
@@ -147,6 +148,8 @@ MKWidgets.CrudMaster = Class({
 				}
 			}
 
+		pattern = $.extend(pattern,this.options.pattern);
+
 
 		for (var j in this.options.parents)
 			{
@@ -156,6 +159,8 @@ MKWidgets.CrudMaster = Class({
 
 		pattern[this.options.idIndex] = -1;
 		this.formData = new MK.Object(pattern);
+
+		console.log(this.formData);
 		//this.addRowDataPattern = JSON.stringify(pattern);
 		}
 });

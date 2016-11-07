@@ -198,10 +198,19 @@ var Application = Class(
 			return null;
 			},
 
-		getDictByName: function (name)
+		getDictByName: function (name, dictConfig)
 			{
 			if (this.dicts != undefined)
 				{
+
+				if(dictConfig!= undefined)
+					{
+					if(dictConfig.cache == false && dictConfig.dictUrl != undefined)
+						{
+						return this.getDictByUrl(dictConfig);
+						}
+					}
+
 				return this.dicts[name];
 				}
 			return null;
@@ -212,7 +221,7 @@ var Application = Class(
 			var dict = null;
 			if (this.dicts != undefined)
 				{
-				dict = this.getDictByName(dictConfig.dictName);
+				dict = this.getDictByName(dictConfig.dictName, dictConfig);
 				}
 			if (dict == null )
 				{

@@ -73,60 +73,79 @@
 	}
   }
 
-  .custom-select-list-scroll {
+  .custom-select-list-container{
 	background-color: @color-option;
 	border-radius: 3px;
-	height: 100%;
-	padding: 10px 0;
 
-	.custom-select-list {
-	  padding: 0 10px;
+	.custom-select-list-scroll {
+	  //height: 100%;
+	  padding: 10px 0;
 
-	  .custom-select-option {
-		margin: 0;
-		padding: 10px;
-		border-radius: 3px;
-		overflow: hidden;
-		text-overflow: ellipsis;
-		cursor: pointer;
-		white-space: nowrap;
-
-		&.hover {
-		  background-color: @color-option-hover;
-		  //color: @color-option-hover-text;
-		}
-
-		&.selected {
-		  background-color: #74A2D4;
-		  color: #f7f7f7;
-		  //border-color: @input-focus-bg;
-		}
-
-		&.hover.selected {
-		  background-color: #9DC6E6;
-		}
-
-	  }
-	}
-
-	.scroll-bar.vertical {
-	  color: #F3F3F3;
-	}
-
-	&.scroll-on {
 	  .custom-select-list {
+		padding: 0 10px;
+
 		.custom-select-option {
-		  margin-right: 9px;
+		  margin: 0;
+		  padding: 10px;
+		  border-radius: 3px;
+		  overflow: hidden;
+		  text-overflow: ellipsis;
+		  cursor: pointer;
+		  white-space: nowrap;
+
+		  &.hover {
+			background-color: @color-option-hover;
+			//color: @color-option-hover-text;
+		  }
+
+		  &.selected {
+			background-color: #74A2D4;
+			color: #f7f7f7;
+			//border-color: @input-focus-bg;
+		  }
+
+		  &.hover.selected {
+			background-color: #9DC6E6;
+		  }
+
 		}
+	  }
+
+	  .scroll-bar.vertical {
+		color: #F3F3F3;
+	  }
+
+	  &.scroll-on {
+		.custom-select-list {
+		  .custom-select-option {
+			margin-right: 9px;
+		  }
+		}
+	  }
+
+	  .custom-select-dummy {
+		padding: 10px;
+		text-align: center;
+		color: @input-text-ph;
 	  }
 	}
 
-	.custom-select-dummy {
-	  padding: 10px;
-	  text-align: center;
-	  color: @input-text-ph;
+	button.add {
+	  width: ~'calc(100% - 20px)';
+	  border-radius: 0 0 4px 4px;
+	  background: #f3f3f3;
+	  color: #017fd8;
+	  border-top: 1px solid #DFDFDF;
+	  margin: 0 10px;
+	  text-decoration: underline;
+
+	  &:hover {
+		text-decoration: none;
+	  }
 	}
   }
+
+
 
   .custom-select-list.tree {
 	min-width: 280px;

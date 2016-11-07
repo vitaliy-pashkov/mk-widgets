@@ -703,48 +703,9 @@ MKWidgets.CrudFormNS.InputItemNS.Select = Class({
 			this.dictConfig.linkProp = [];
 			}
 
-		//this.getDict();
-
 		this.errors = {
 			noValue: "Не выбрано значение",
 		};
-
-		if (this.options.addable != undefined)
-			{
-			if (this.dictConfig.addableIdIndex == undefined)
-				{
-				this.dictConfig.addableIdIndex = this.dictConfig.dictIdIndex;
-				}
-
-			this.domCreateButton = $('<div/>').addClass('create-button');
-			this.domLabel.append(this.domCreateButton);
-
-			this.domCreateButton.on('click', $.proxy(this.createButtonClickSlot, this));
-			}
-		},
-
-	createButtonClickSlot: function ()
-		{
-		var represent = this.options.addable.represent;
-		this.options.addable.options.action = 'create';
-		if (this.options.addable.parametrs == undefined)
-			{
-			this.options.addable.parametrs = {};
-			}
-		app.registrateWidgetByRepresent(represent, 'input-item-select-master-' + represent, this.options.addable.parametrs, this.options.addable.options,
-			$.proxy(function (widget)
-			{
-			widget.on('master-success-save', this.createSuccessSlot, this);
-			}, this));
-		},
-
-	createSuccessSlot: function (addedFormData)
-		{
-		this.selectWidget.renewDict();
-
-		var selectedId = addedFormData[this.dictConfig.addableIdIndex];
-
-		this.selectWidget.setSelectedOptionById(selectedId);
 		},
 
 	findItemById: function (id)
@@ -754,21 +715,10 @@ MKWidgets.CrudFormNS.InputItemNS.Select = Class({
 			return this.selectWidget.selectedOption.data;
 			}
 		return null;
-		//this.dict = this.selectWidget.dict;
-		//for (var i in this.dict)
-		//	{
-		//	var dictItem = this.dict[i];
-		//	if (dictItem[this.dictConfig.dictIdIndex] == id)
-		//		{
-		//		return dictItem;
-		//		}
-		//	}
-		//return null;
 		},
 
 	createField: function ()
 		{
-		//this.generateSelectData();
 		if (this.displayValue != null)
 			{
 			this.oldDisplayValue = this.displayValue;
@@ -786,7 +736,8 @@ MKWidgets.CrudFormNS.InputItemNS.Select = Class({
 			popupOptions: {
 				background: true,
 				//parentWidth: false,
-			}
+			},
+			addable: this.options.addable,
 		});
 
 		this.linkProps('value', 'selectWidget.value');
@@ -921,7 +872,8 @@ MKWidgets.CrudFormNS.InputItemNS.DependsSelect = Class({
 			value: this.options.formData[this.dictConfig.formIdIndex],
 			popupOptions: {
 				background: true,
-			}
+			},
+			addable: this.options.addable,
 		});
 
 		this.linkProps('value', 'selectWidget.value');
@@ -1038,7 +990,8 @@ MKWidgets.CrudFormNS.InputItemNS.MultiSelect = Class({
 			values: this.options.formData[this.dictConfig.formIdIndex],
 			popupOptions: {
 				background: true,
-			}
+			},
+			addable: this.options.addable,
 		});
 
 		this.selectWidget.on('options-changed', this.valuesChanged, this);
@@ -1152,7 +1105,8 @@ MKWidgets.CrudFormNS.InputItemNS.TreeSelect = Class({
 		this.selectWidget = new MKWidgets.TreeSelect(this.domInputItem, {
 			dictConfig: this.dictConfig,
 			treeConfig: this.options.treeConfig,
-			value: this.options.formData[this.dictConfig.formIdIndex]
+			value: this.options.formData[this.dictConfig.formIdIndex],
+			addable: this.options.addable,
 		});
 
 		this.linkProps('value', 'selectWidget.value');
@@ -1226,7 +1180,8 @@ MKWidgets.CrudFormNS.InputItemNS.DependTreeSelect = Class({
 			dictConfig: this.dictConfig,
 			treeConfig: this.options.treeConfig,
 			value: this.options.formData[this.dictConfig.formIdIndex],
-			context: this.options.formData
+			context: this.options.formData,
+			addable: this.options.addable,
 		});
 
 		this.linkProps('value', 'selectWidget.value');
@@ -1593,6 +1548,10 @@ MKWidgets.CrudFormNS.InputItemNS.Address = Class({
 			{
 			}
 
+		if(this.value != undefined)
+			{
+			this.options.addressOptions.addressId = this.value;
+			}
 
 		this.addressWidget = new MKWidgets.Address(this.domInputItem, this.options.addressOptions);
 		this.addressWidget.on('value-changed', this.linearizeAddressValue, this);

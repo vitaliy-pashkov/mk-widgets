@@ -29,6 +29,8 @@ MKWidgets.Select = Class({
 			activeDisplayValue: 'Выберите значение', //
 			defaultNoValues: 'Нет значений',
 
+			addable: null, //{text:"", represent: "", pattern: {}, options: {}},
+
 			popupOptions: {
 				dynamicElement: $(),
 				background: true,
@@ -56,6 +58,8 @@ MKWidgets.Select = Class({
 		{
 		this.getDict();
 		this.optionsList = new MKWidgets.SelectNS.SelectArray(this.dict, this);
+
+		this.binding();
 
 		if (this.options.renderOnInit == true)
 			{
@@ -103,7 +107,7 @@ MKWidgets.Select = Class({
 			dict.push(dictRow);
 			if ($(value).attr('selected') == 'selected')
 				{
-				this.options.value = dictRow.id ;
+				this.options.value = dictRow.id;
 				}
 			}, this));
 		this.options.dict = dict;
@@ -136,6 +140,8 @@ MKWidgets.Select = Class({
 	renewDict: function ()
 		{
 		this.dict = window.app.getDict(this.dictConfig);
+		this.optionsList.recreate(this.dict);
+		this.trigger('options-view-update');
 		},
 
 	createDom: function ()
@@ -151,34 +157,19 @@ MKWidgets.Select = Class({
 		this.domOptionsList = $("<div>").addClass('custom-select-list');
 		this.domDummy = $('<div/>').addClass('custom-select-dummy').text(this.options.defaultNoValues).hide();
 
-
-		this.on('change:selectedOption',
-			function ()
-			{
-			if (this.selectedOption != null)
-				{
-				if (this.selectedOption.data[this.dictConfig.dictIdIndex] != null)
-					{
-					this.value = this.selectedOption.data[this.dictConfig.dictIdIndex];
-					this.displayValue = this.selectedOption.data[this.dictConfig.dictDisplayIndex];
-					this.trigger('option-changed');
-					}
-				}
-			}, this)
-
 		this.optionsList.render(this.domOptionsList);
 
+		this.domOptionsScroll = $("<div>").addClass("custom-select-list-scroll");
+		this.domOptionsScroll.append(this.domOptionsList);
+		this.domOptionsScroll.append(this.domDummy);
 
-		this.domOptionsScroll = $("<div>").addClass("custom-select-list-scroll")
-			.append(this.domOptionsList)
-			.append(this.domDummy);
+		this.domListContainer = $("<div>").addClass("custom-select-list-container");
+		this.domListContainer.append(this.domOptionsScroll);
 
-		this.domSelect
-			.append(this.domHeaderBlock)
-			.append(this.domOptionsScroll)
-		;
+		this.domSelect.append(this.domHeaderBlock);
+		this.domSelect.append(this.domListContainer); //this.domOptionsScroll
 
-		this.options.popupOptions.dynamicElement = $(this.domOptionsScroll);
+		this.options.popupOptions.dynamicElement = this.domListContainer; //$(this.domOptionsScroll);
 
 		this.element.append(this.domSelect);
 
@@ -189,8 +180,6 @@ MKWidgets.Select = Class({
 			this.domOptionsScroll.addClass(this.options.customClass);
 			this.domHeaderBlock.addClass(this.options.customClass);
 			}
-
-		this.binding();
 		},
 
 	turnOff: function ()
@@ -219,7 +208,21 @@ MKWidgets.Select = Class({
 
 	binding: function ()
 		{
-		this.popup.on('popup-close',
+		this.on('change:selectedOption',
+			function ()
+			{
+			if (this.selectedOption != null)
+				{
+				if (this.selectedOption.data[this.dictConfig.dictIdIndex] != null)
+					{
+					this.value = this.selectedOption.data[this.dictConfig.dictIdIndex];
+					this.displayValue = this.selectedOption.data[this.dictConfig.dictDisplayIndex];
+					this.trigger('option-changed');
+					}
+				}
+			}, this)
+
+		this.on('popup@popup-close',
 			function ()
 			{
 			this.showList = false;
@@ -256,25 +259,68 @@ MKWidgets.Select = Class({
 			}, this);
 		},
 
+	setSelectedOptionByValue: function (value)
+		{
+		var flag = false;
+		this.optionsList.forEach(
+			$.proxy(function (option)
+			{
+			if (option.data[this.options.dictConfig.dictDisplayIndex] == value)
+				{
+				this.setSelectedOption(option);
+				flag = true;
+				return false;
+				}
+			}, this));
+		if (flag == false)
+			{
+			this.unsetSelectedOption();
+			}
+		},
+
 	setSelectedOptionById: function (selectedOptionId)
 		{
 		if (selectedOptionId != null)
 			{
 			this.optionsList.forEach(
-				function (option)
+				$.proxy(function (option)
 				{
-				if (option[this.options.dictConfig.dictIdIndex] == selectedOptionId)
+				if (option.data[this.options.dictConfig.dictIdIndex] == selectedOptionId)
 					{
-					this.selectedOption = option;
+					this.setSelectedOption(option);
 					return false;
 					}
-				}, this);
+				}, this));
 			}
 		else
 			{
-			this.selectedOption = null;
+			this.unsetSelectedOption();
 			}
 
+		},
+
+	setSelectedOption: function (newSelectedOption)
+		{
+		if (newSelectedOption == undefined)
+			{
+			return;
+			}
+
+		if (this.selectedOption != undefined)
+			{
+			this.selectedOption.selected = false;
+			}
+		newSelectedOption.selected = true;
+		this.selectedOption = newSelectedOption;
+		},
+
+	unsetSelectedOption: function()
+		{
+		if (this.selectedOption != undefined)
+			{
+			this.selectedOption.selected = false;
+			}
+		this.selectedOption = null;
 		},
 
 	setTitle: function (title)
@@ -311,6 +357,7 @@ MKWidgets.Select = Class({
 			{
 			this.headerInterface = new MKWidgets.SelectNS.SelectHeaderInterface(this, true);
 			}
+		this.addableInterface = new MKWidgets.SelectNS.AddInterface(this, this.options.addable);
 		this.listInterface = new MKWidgets.SelectNS.SelectListInterface(this, true);
 		},
 
@@ -319,6 +366,67 @@ MKWidgets.Select = Class({
 		this.popup.deletePopUp();
 		},
 });
+
+MKWidgets.SelectNS.AddInterface = Class({
+	extends: WidgetInterface,
+	widget: null,
+	enable: false,
+
+	constructor: function (widget, enable)
+		{
+		WidgetInterface.prototype.constructor.apply(this, [widget, enable]);
+		},
+
+	create: function ()
+		{
+		if(this.widget.options.addable.text == undefined)
+			{
+			this.widget.options.addable.text = 'Добавить';
+			}
+
+		this.addButton = $('<button/>').addClass('add').text(this.widget.options.addable.text);
+		this.addButtonContainer = $('<div/>');
+		this.addButtonContainer.append(this.addButton);
+
+		this.widget.domListContainer.append(this.addButtonContainer);
+
+		WidgetInterface.prototype.create.apply(this);
+		},
+
+	turnOn: function ()
+		{
+		this.enabled = true;
+
+		this.addButton.on('click', $.proxy(this.addClickSlot, this));
+		},
+
+	addClickSlot: function ()
+		{
+		var represent = this.widget.options.addable.represent;
+		this.widget.options.addable.options.action = 'create';
+		if (this.widget.options.addable.parametrs == undefined)
+			{
+			this.widget.options.addable.parametrs = {};
+			}
+		app.registrateWidgetByRepresent(represent, 'select-master-' + represent, this.widget.options.addable.parametrs, this.widget.options.addable.options,
+			$.proxy(function (widget)
+			{
+			widget.on('master-success-save', this.createSuccessSlot, this);
+			}, this));
+		},
+
+	createSuccessSlot: function (addedFormData)
+		{
+		this.widget.dictConfig.cache = false;
+		this.widget.renewDict();
+
+		var selectedId = addedFormData[this.widget.dictConfig.dictIdIndex];
+
+		this.widget.setSelectedOptionById(selectedId);
+		},
+
+});
+
 
 MKWidgets.SelectNS.SelectHeaderInterface = Class({
 	extends: WidgetInterface,
@@ -390,7 +498,7 @@ MKWidgets.SelectNS.SelectHeaderInterface = Class({
 		this.widget.showList = !this.widget.showList;
 		},
 
-	getDisplayValue: function()
+	getDisplayValue: function ()
 		{
 		return this.widget.selectedOption.data[this.widget.options.dictConfig.dictDisplayIndex];
 		}
@@ -485,11 +593,11 @@ MKWidgets.SelectNS.SelectInputInterface = Class({
 				lastVisible = this.widget.optionsList[i];
 				}
 			}
-		if(this.widget.listInterface != undefined)
+		if (this.widget.listInterface != undefined)
 			{
 			if (countVisible == 1)
 				{
-				this.widget.listInterface.setSelectedOption(lastVisible);
+				this.widget.setSelectedOption(lastVisible);
 				}
 			if (countVisible == 0)
 				{
@@ -593,19 +701,10 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 	optionClickSlot: function (event)
 		{
 		var option = $(event.target).data('option');
-		this.setSelectedOption(option);
+		this.widget.setSelectedOption(option);
 		this.widget.showList = false;
 		},
 
-	setSelectedOption: function (newSelectedOption)
-		{
-		if (this.widget.selectedOption != undefined)
-			{
-			this.widget.selectedOption.selected = false;
-			}
-		newSelectedOption.selected = true;
-		this.widget.selectedOption = newSelectedOption;
-		},
 
 	listHeight: function ()
 		{
@@ -624,13 +723,13 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 			{
 			this.widget.domOptionsScroll.css('max-height', optionsMaxSize)
 				.css('height', optionsMaxSize);
-			this.widget.domOptionsScroll.parent().css('height', optionsMaxSize);
+			//this.widget.domOptionsScroll.parent().css('height', optionsMaxSize);
 			}
 		else
 			{
 			this.widget.domOptionsScroll.css('max-height', listMaxSize)
 				.css('height', listMaxSize);
-			this.widget.domOptionsScroll.parent().css('height', listMaxSize);
+			//this.widget.domOptionsScroll.parent().css('height', listMaxSize);
 			}
 
 		this.listScroll.customScrollbar("resize", true);
@@ -652,7 +751,7 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 		this.widget.hoverOption = newHoverOption;
 		},
 
-	mouseOutSlot: function()
+	mouseOutSlot: function ()
 		{
 		if (this.widget.hoverOption != undefined)
 			{
@@ -660,7 +759,6 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 			this.widget.hoverOption = null;
 			}
 		},
-
 
 
 	keyPressSlot: function (event)
@@ -687,7 +785,7 @@ MKWidgets.SelectNS.SelectListInterface = Class({
 				{
 				event.preventDefault();
 				event.stopPropagation();
-				this.setSelectedOption(this.widget.hoverOption);
+				this.widget.setSelectedOption(this.widget.hoverOption);
 
 				}
 			else if (event.keyCode == 27)   //esc

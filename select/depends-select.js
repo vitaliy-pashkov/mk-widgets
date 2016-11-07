@@ -40,6 +40,8 @@ MKWidgets.DependsSelect = Class({
 		this.getDict();
 		this.optionsList = new MKWidgets.SelectNS.SelectArray(this.dict, this);
 
+		this.binding();
+
 		if (this.options.renderOnInit == true)
 			{
 			this.render();
@@ -93,7 +95,7 @@ MKWidgets.DependsSelect = Class({
 		{
 		this.updateDependValues();
 		this.dict = window.app.getDict(this.dictConfig);
-		this.setSelectedOptionById(null);
+		this.unsetSelectedOption();
 		this.updateOptions();
 		},
 
@@ -116,6 +118,12 @@ MKWidgets.DependsSelect = Class({
 						pushFlag = false;
 						}
 					}
+
+				if(dictRow[ this.dictConfig.dictIdIndex ] == '-' && this.dictConfig.allowNull == true)
+					{
+					pushFlag = true;
+					}
+
 				if (pushFlag == true)
 					{
 					newOptions.push(dictRow);
@@ -215,7 +223,7 @@ MKWidgets.DependsSelectNS.ParentDict = Class({
 	updatesOptionsSlot: function ()
 		{
 		this.dict = this.options.parent.getDict(this.options.level);
-		this.setSelectedOptionById(null);
+		this.unsetSelectedOption();
 		this.updateDependValues();
 		this.updateOptions();
 		},

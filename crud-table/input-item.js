@@ -89,6 +89,10 @@ MKWidgets.CrudTableNS.InputItem = Class({
 			return this.itemValidate();
 			},
 
+		setValue: function (value)
+			{
+			},
+
 		itemValidate: function ()
 			{
 			if (this.errorCode == null)
@@ -230,11 +234,16 @@ MKWidgets.CrudTableNS.InputItemNS.Varchar = Class({
 		this.element.empty().html(this.value);
 		},
 
-	finaly: function ()
+	setValue: function (value)
 		{
-		this.domInput.remove();
-		this.domInput = null;
-		}
+		this.value = value;
+		},
+
+	//finaly: function ()
+	//	{
+	//	this.domInput.remove();
+	//	this.domInput = null;
+	//	}
 });
 
 MKWidgets.CrudTableNS.InputItemNS.Float = Class({
@@ -384,7 +393,9 @@ MKWidgets.CrudTableNS.InputItemNS.Select = Class({
 				background: true,
 				parentWidth: true
 			},
-			inputField: true
+			inputField: true,
+			context: this.options.formData,
+			addable: this.options.addable,
 		});
 
 		this.errors = {
@@ -446,7 +457,7 @@ MKWidgets.CrudTableNS.InputItemNS.Select = Class({
 
 		this.selectedItem = this.selectWidget.selectedOption;
 
-		if (this.selectedItem == null)
+		if (this.selectedItem == null && this.dictConfig.allowNull !== true)
 			{
 			this.errorCode = 'noValue';
 			this.displayValue = '-';
@@ -467,7 +478,12 @@ MKWidgets.CrudTableNS.InputItemNS.Select = Class({
 	finaly: function ()
 		{
 		this.selectWidget.deleteSelect();
-		}
+		},
+
+	setValue: function (value)
+		{
+		this.selectWidget.setSelectedOptionByValue(value);
+		},
 
 });
 
@@ -478,8 +494,7 @@ MKWidgets.CrudTableNS.InputItemNS.DependsSelect = Class({
 	constructor: function (elementSelector, options)
 		{
 		MKWidgets.CrudTableNS.InputItemNS.Select.prototype.constructor.apply(this, [elementSelector, options]);
-		this.setOptions({
-		});
+		this.setOptions({});
 		this.setOptions(options);
 		},
 
@@ -501,7 +516,9 @@ MKWidgets.CrudTableNS.InputItemNS.DependsSelect = Class({
 				parentWidth: true,
 				positionElement: this.element
 			},
-			inputField: true
+			inputField: true,
+			context: this.options.formData,
+			addable: this.options.addable,
 		});
 
 		this.errors = {
@@ -517,20 +534,23 @@ MKWidgets.CrudTableNS.InputItemNS.DependsSelect = Class({
 		this.selectedItem = this.selectWidget.selectedOption;
 		if (this.selectedItem != null)
 			{
-			for (var i in this.options.dictConfig.depend)
+			if(! (this.selectedItem.data[ this.dictConfig.dictIdIndex ] == '-' && this.dictConfig.allowNull == true))
 				{
-				var objectIndex = this.options.dictConfig.depend[i].objectIdIndex,
-					dictIndex = this.options.dictConfig.depend[i].dictIdIndex,
-					formDependId = this.options.formData[objectIndex],
-					dictDependId = this.selectedItem.data[dictIndex];
-
-				if (dictDependId != formDependId)
+				for (var i in this.options.dictConfig.depend)
 					{
-					this.errorCode = 'noInParent';
+					var objectIndex = this.options.dictConfig.depend[i].objectIdIndex,
+						dictIndex = this.options.dictConfig.depend[i].dictIdIndex,
+						formDependId = this.options.formData[objectIndex],
+						dictDependId = this.selectedItem.data[dictIndex];
+
+					if (dictDependId != formDependId)
+						{
+						this.errorCode = 'notInParent';
+						}
 					}
 				}
 			}
-		else
+		else if(this.dictConfig.allowNull !== true)
 			{
 			this.errorCode = 'noValue';
 			this.displayValue = '-';
@@ -570,6 +590,8 @@ MKWidgets.CrudTableNS.InputItemNS.TreeSelect = Class({
 				parentWidth: true,
 				positionElement: this.element
 			},
+			context: this.options.formData,
+			addable: this.options.addable,
 		});
 
 		this.errors = {
@@ -617,6 +639,8 @@ MKWidgets.CrudTableNS.InputItemNS.DependTreeSelect = Class({
 				parentWidth: true,
 				positionElement: this.element
 			},
+			context: this.options.formData,
+			addable: this.options.addable,
 		});
 
 
@@ -679,7 +703,7 @@ MKWidgets.CrudTableNS.InputItemNS.Date = Class({
 
 		var dates = this.parseDates();
 
-		this.datePicker = new MKWidgets.DateRangePicker(this.domInput, $.extend({
+		this.datePicker = new MKWidgets.Date(this.domInput, $.extend({
 			parentElement: this.element,
 			parentWidth: true,
 			startDate: this.oldValue,
@@ -720,7 +744,12 @@ MKWidgets.CrudTableNS.InputItemNS.Date = Class({
 	save: function ()
 		{
 		this.element.empty().html(this.value);
-		}
+		},
+
+	setValue: function (value)
+		{
+		this.value = value;
+		},
 });
 
 MKWidgets.CrudTableNS.InputItemNS.Cron = Class({
@@ -841,7 +870,12 @@ MKWidgets.CrudTableNS.InputItemNS.Cron = Class({
 	save: function ()
 		{
 		this.element.empty().html(this.value);
-		}
+		},
+
+	setValue: function (value)
+		{
+		this.value = value;
+		},
 });
 
 MKWidgets.CrudTableNS.InputItemNS.Address = Class({
@@ -944,5 +978,10 @@ MKWidgets.CrudTableNS.InputItemNS.Address = Class({
 	isValueChanged: function ()
 		{
 		return true;
+		},
+
+	setValue: function (value)
+		{
+		alert("not work for address field! kick developer's ass for that!");
 		},
 });

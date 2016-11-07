@@ -21,7 +21,7 @@ MKWidgets.Table = Class({
 
 			selectableRows: false,
 			filters: {},
-			filterable: false,
+			filterable: true,
 			export: true,
 			settings: false,
 			logsTypes: {
@@ -787,7 +787,7 @@ MKWidgets.TableNS.DrawInterface = Class({
 		this.createScrollbar();
 		//this.returnElementWidth();
 
-		this.widget.element.trigger('rendering-over');
+		this.widget.trigger('rendering-over');
 		},
 
 	detectSizingType: function ()
@@ -922,7 +922,13 @@ MKWidgets.TableNS.DrawInterface = Class({
 			}
 		else if (this.heightCalcType == 'byMaxHeight')
 			{
-			this.domScrollNodeHeight = parseInt(this.widget.element.css('max-height')) - widgetWitoutBodyHeight - elementMarginHeight;
+			var maxHeight = parseInt(this.widget.element.css('max-height'));
+			if(this.widget.element.css('max-height').endsWith('%'))
+				{
+				maxHeight = this.widget.element.parent().height() * maxHeight * 0.01;
+				}
+
+			this.domScrollNodeHeight = maxHeight - widgetWitoutBodyHeight;// - elementMarginHeight;
 			}
 		else if (this.heightCalcType == 'byScreenHeight')
 			{
@@ -1677,10 +1683,11 @@ MKWidgets.TableNS.Row = Class({
 	read: true,
 	displayFilter: true,
 	displaySearch: true,
-	constructor: function (rowData, parent, index)
+	constructor: function (rowData, parent, indexInArray)
 		{
 		this.parent = parent;
 		this.rowData = new MK.Object(rowData);
+		this.indexInArray = indexInArray;
 		this.once('render', this.renderCells);
 		},
 

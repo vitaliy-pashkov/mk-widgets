@@ -21,6 +21,8 @@ MKWidgets.TreeSelect = Class({
 		this.getDict();
 		this.optionsList = new MKWidgets.TreeSelectNS.SelectTree(this.dict, this);
 
+		this.binding();
+
 		if (this.options.renderOnInit == true)
 			{
 			this.render();
@@ -38,6 +40,13 @@ MKWidgets.TreeSelect = Class({
 			this.headerInterface = new MKWidgets.SelectNS.SelectHeaderInterface(this, true);
 			}
 		this.listInterface = new MKWidgets.TreeSelectNS.TreeInterface(this, true);
+		this.addableInterface = new MKWidgets.SelectNS.AddInterface(this, this.options.addable);
+		},
+
+	setSelectedOptionByValue: function (value)
+		{
+		var node = this.optionsList.tree.root.findNodeByValue(value);
+		this.listInterface.selectNodeSlot(node);
 		},
 
 });
@@ -115,7 +124,7 @@ MKWidgets.TreeSelectNS.TreeInterface = Class({
 	selectNodeSlot: function (node)
 		{
 		var option = new MKWidgets.SelectNS.SelectModel(node.nodeData, this.widget.optionsList);
-		this.setSelectedOption(option);
+		this.widget.setSelectedOption(option);
 		this.widget.showList = false;
 		},
 

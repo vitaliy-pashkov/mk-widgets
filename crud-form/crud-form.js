@@ -198,6 +198,9 @@ MKWidgets.CrudForm = Class({
 				pattern[field.index] = '* * * * * *';
 				}
 			}
+
+		pattern = $.extend(pattern,this.options.pattern);
+
 		for (var j in this.options.parents)
 			{
 			var parent = this.options.parents[j];

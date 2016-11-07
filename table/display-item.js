@@ -10,7 +10,7 @@ MKWidgets.TableNS.DisplayItem = Class({
 			{
 			MKWidget.prototype.constructor.apply(this, [elementSelector, options]);
 			this.setOptions({
-				type: "",
+				displayType: "",
 				enable: true,
 				domContainer: '',
 				popupOn: true
@@ -67,19 +67,19 @@ MKWidgets.TableNS.DisplayItem = Class({
 		factory: function (elementSelector, options)
 			{
 			var inputItem = null;
-			if (options.columnModel.type == "text")
+			if (options.columnModel.displayType == "text")
 				{
 				inputItem = new MKWidgets.TableNS.DisplayItemNS.Text(elementSelector, options);
 				}
-			else if (options.columnModel.type == "pattern")
+			else if (options.columnModel.displayType == "pattern")
 				{
 				inputItem = new MKWidgets.TableNS.DisplayItemNS.Pattern(elementSelector, options);
 				}
-			else if (options.columnModel.type == "details")
+			else if (options.columnModel.displayType == "details")
 				{
 				inputItem = new MKWidgets.TableNS.DisplayItemNS.Details(elementSelector, options);
 				}
-			else if (options.columnModel.type == "master")
+			else if (options.columnModel.displayType == "master")
 				{
 				inputItem = new MKWidgets.TableNS.DisplayItemNS.Master(elementSelector, options);
 				}
