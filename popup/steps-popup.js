@@ -24,17 +24,25 @@ MKWidgets.PopupNS.StepsPopup = Class({
 		{
 		MKWidgets.Popup.prototype.createDom.apply(this);
 
-		this.domTitle = $("<div/>").addClass('tusur-csp-popup-title').html(this.options.title);
-		this.domSteps = $("<ul/>").addClass('tusur-csp-popup-steps');
-		this.domStepTitle = $("<ul/>").addClass('tusur-csp-popup-step-title');
+		this.domTitle = $("<div/>").addClass('tusur-csp-popup-title'); //.html(this.options.title)
+
+		this.domTitleText = $("<span/>").addClass('title-text').text(this.options.title);
+		this.domTitleStepText = $("<span/>").addClass('step-text');
+
+		this.domTitle.append(this.domTitleText);
+		this.domTitle.append(this.domTitleStepText);
+
+
+		//this.domSteps = $("<ul/>").addClass('tusur-csp-popup-steps');
+		//this.domStepTitle = $("<ul/>").addClass('tusur-csp-popup-step-title');
 		this.domBodies = $("<div/>").addClass('tusur-csp-popup-steps-bodies');
 
 
 		this.domFooter = $('<div/>').addClass('tusur-csp-popup-step-footer');
 		this.element
 			.append(this.domTitle)
-			.append(this.domSteps)
-			.append(this.domStepTitle)
+			//.append(this.domSteps)
+			//.append(this.domStepTitle)
 			.append(this.domBodies)
 			.append(this.domFooter)
 			.attr('class', 'tusur-csp-popup-steps-container tusur-csp-popup-steps-popup ' + this.options.customClass)
@@ -77,19 +85,20 @@ MKWidgets.PopupNS.StepsPopup = Class({
 		;
 		this.domInputPrev = $("<button/>")
 			.addClass('prev')
+			.addClass('second')
 			.text('Назад')
 			.on('click', $.proxy(this.previousStepSlot, this))
 		;
-		this.domInputCancel = $("<button>")
-			.addClass('cancel')
-			.text('Отменить')
-			.on('click', $.proxy(this.closePopup, this));
-		;
+		//this.domInputCancel = $("<button>")
+		//	.addClass('cancel')
+		//	.text('Отменить')
+		//	.on('click', $.proxy(this.closePopup, this));
+		//;
 
-		this.domFooter.append(this.domInputCancel)
-			.append(this.domInputNext)
-			.append(this.domInputPrev)
-		;
+		//this.domFooter.append(this.domInputCancel);
+		this.domFooter.append(this.domInputNext);
+		this.domFooter.append(this.domInputPrev);
+
 
 		},
 
@@ -210,7 +219,9 @@ MKWidgets.PopupNS.StepsPopup = Class({
 		this.activeStep.setMaxSizes();
 		this.options.sizeRestrictionsScrollBar = this.activeStep.step.body;
 		//this.
-		this.domStepTitle.html(this.activeStep.step.title);
+		//this.domStepTitle.html(this.activeStep.step.title);
+
+		this.domTitleStepText.text( 'Шаг '+this.activeStep.step.number+': '+this.activeStep.step.title.toLowerCase() );
 
 		}
 });
@@ -241,17 +252,16 @@ MKWidgets.PopupNS.StepPopupObject = Class({
 			{
 			this.bindNode('body', ':sandbox', MK.binders.html());
 			}
-		this.numberStep = 'Шаг ' + this.step.number;
-		this.domStep = $('<li/>').addClass('tusur-csp-popup-step');
-		this.parent.domSteps.append(this.domStep);
-		this.bindNode('numberStep', this.domStep, MK.binders.html())
-			.bindNode('display', this.domStep, MK.binders.display())
-			.bindNode('display', ':sandbox', MK.binders.display())
-			.bindNode('display', this.domStep, MK.binders.className('active'))
-			.bindNode('display', this.domStep, MK.binders.className('tusur-csp-popup-step-active'))
-		;
+		//this.numberStep = 'Шаг ' + this.step.number;
+		//this.domStep = $('<li/>').addClass('tusur-csp-popup-step');
+		//this.parent.domSteps.append(this.domStep);
+		//this.bindNode('numberStep', this.domStep, MK.binders.html());
+		//this.bindNode('display', this.domStep, MK.binders.display());
+		this.bindNode('display', ':sandbox', MK.binders.display());
+		//this.bindNode('display', this.domStep, MK.binders.className('active'));
+		//this.bindNode('display', this.domStep, MK.binders.className('tusur-csp-popup-step-active'));
 
-		this.domStep.on('click', $.proxy(this.stepClickSlot, this));
+		//this.domStep.on('click', $.proxy(this.stepClickSlot, this));
 		this.on("change:display",
 			function ()
 			{

@@ -49,14 +49,14 @@
 			  margin: 0 0 0 10px;
 			}
 			.tusur-csp-table-search-input {
-			  width: 90px;
+			  width: 160px;
 			  margin-left: 10px;
 			  display: inline-block;
 			  float: right;
 			  background-image: url("@{path-img}/search_icon.svg");
-			  background-size: 15px 15px;
+			  background-size: 1em;
 			  background-repeat: no-repeat;
-			  background-position: 96% 8px;
+			  background-position: 96% center;
 			}
 			.tusur-csp-table-export-input {
 			  background-image: url("@{path-img}/export_icon.svg");
@@ -65,8 +65,8 @@
 			  background: #ef7a7a;
 			  background-image: url("@{path-img}/delete_icon.svg");
 			  background-repeat: no-repeat;
-			  background-size: 15px 15px;
-			  background-position: 14px 10px;
+			  background-size: 1em;
+			  background-position: 0.9em center;
 			}
 			.tusur-csp-table-delete-input.disable {
 			  background: #d8d8d8;
@@ -75,17 +75,17 @@
 			  background: #5e5e5e;
 			  background-image: url("@{path-img}/settings_icon.svg");
 			  background-repeat: no-repeat;
-			  background-size: 15px 15px;
-			  background-position: 14px 10px;
+			  background-size: 1em;
+			  background-position: 0.9em center;
 			}
 			.tusur-csp-table-add-input {
 			  background-image: url("@{path-img}/add_icon.svg");
 			}
 			button {
 			  background-repeat: no-repeat;
-			  background-size: 15px 15px;
-			  background-position: 14px 10px;
-			  text-align: left;
+			  background-size: 1em;
+			  background-position: 0.9em center;
+			  text-align: center;
 			  padding-left: 37px;
 			}
 		  }
@@ -104,6 +104,12 @@
 			word-wrap: break-word;
 			line-height: 1.5;
 
+			&:hover {
+			  .tusur-csp-table-mk-details-img {
+				background-image: url("@{path-img}/detailsItemIconHover.svg");
+			  }
+			}
+
 			.tusur-csp-table-mk-details-img {
 			  background: url("@{path-img}/detailsItemIcon.svg");
 			  background-repeat: no-repeat;
@@ -111,6 +117,7 @@
 			  background-size: 17px 17px;
 			  height: 100%;
 			  width: 100%;
+			  cursor: pointer;
 			}
 
 			a {
@@ -491,19 +498,19 @@
   }
 
   .tusur-csp-tab-popup-table-element .tusur-csp-table-container {
-	border-top-left-radius: 0;
+	//border-top-left-radius: 0;
   }
 
   .tusur-csp-table-element.light {
 
 	.tusur-csp-show-table-log-container {
-	  display: none
+	  display: none !important;
 	}
 	.tusur-csp-table-control-panel {
-	  display: none
+	  display: none  !important;
 	}
 	.tusur-csp-table-row-header {
-	  display: none;
+	  display: none  !important;
 	}
 
 	.tusur-csp-table-container {

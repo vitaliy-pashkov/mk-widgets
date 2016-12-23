@@ -5,7 +5,7 @@
 
   @color-tab: #e7e7e7;
   @color-steps-container: #fdfdfd;
-  @color-steps-bodies: #DFDFDF;
+  @color-steps-bodies: #fdfdfd;
   @color-step-footer-button: #939393;
   @color-step-footer-button-next: #0280d7;
   @color-step-footer-button-next-disable: #d8d8d8;
@@ -51,12 +51,12 @@
 
 
         .tusur-csp-popup-tabs-container {
-          border-top-left-radius: 0px;
+          //border-top-left-radius: 0px;
 
 
           .tusur-csp-popup-tabs {
-            margin-bottom: -15px;
-            margin-left: 15px;
+            margin-bottom: -16px;
+            margin-left: 30px;
             .tusur-csp-popup-tab {
               height: 24px;
               margin-right: 15px;
@@ -67,6 +67,7 @@
               border-top-left-radius: 4px;
               display: inline-block;
             }
+
 
             .tusur-csp-popup-tab.tusur-csp-popup-tab-active {
               background: @color-steps-container;
@@ -102,6 +103,9 @@
             width: 100%;
             padding: 5px 0 20px 0;
             background: @color-steps-bodies;
+			border: #DEDEDE solid 1px;
+			border-left: 0px;
+			border-right: 0px;
           }
 
           .tusur-csp-popup-step-title {
@@ -114,16 +118,23 @@
           }
 
           .tusur-csp-popup-title {
-            margin: 0 15px;
-            width: ~"calc(100% - 30px)";
-            text-align: center;
-            padding: 10px 0;
+			margin: 0 15px;
+			width: ~'calc(100% - 30px)';
+			padding: 19px 0;
             border-bottom: 1px solid @color-steps-bodies;
+
+			.title-text {
+			  font-weight: bold;
+			}
+			.step-text {
+			  float: right;
+			}
           }
 
           .tusur-csp-popup-step-footer {
-			width: ~'calc(100% - 20px)';
-			padding: 10px 10px;
+			height: 32px;
+			width: ~'calc(100% - 30px)';
+			padding: 15px;
             display: block;
             background: @color-steps-container;
 

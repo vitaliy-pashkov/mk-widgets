@@ -1659,12 +1659,16 @@ MKWidgets.TableNS.Cell = Class({
 		this.value = this.parent.rowData[this.displayIndex];
 		//this.linkProps('value', [this.parent.rowData, this.index]);
 
-		this.bindNode('value', ':sandbox', {
-			setValue: function (value)
-				{
-				$(this).html(value + '&nbsp;');
-				}
-		});
+		if(this.displayItem == undefined)
+			{
+			this.bindNode('value', ':sandbox', {
+				setValue: function (value)
+					{
+					$(this).html(value + '&nbsp;');
+					}
+			});
+			}
+
 		this.bindNode('index', ':sandbox', MK.binders.attr('data-tusur-csp-table-column'))
 		this.bindNode('view', ':sandbox', MK.binders.className('view-state'))
 		this.bindNode('edit', ':sandbox', MK.binders.className('edit-state'))

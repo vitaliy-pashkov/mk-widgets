@@ -452,9 +452,9 @@ MKWidgets.ReportNS.RenderInterface = Class({
 
 		this.widget.stepsPopup = new MKWidgets.PopupNS.StepsPopup($("<div/>"), {
 			//width: '50%',
-			linkVertical: 'top', //top, center, bottom
+			linkVertical: 'center', //top, center, bottom
 			linkHorizontal: 'center', //left, center, right
-			linkingPoint: 'topCenter', //center, topLeft, topRight, bottomLeft, bottomRight
+			linkingPoint: 'center', //center, topLeft, topRight, bottomLeft, bottomRight
 			positionCorrections: {top: 50, left: 0},
 			title: this.widget.options.title,
 			steps: this.steps,

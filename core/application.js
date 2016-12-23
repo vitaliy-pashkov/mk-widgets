@@ -32,6 +32,19 @@ var Application = Class(
 
 			$(document).ready($.proxy(this.documentReadySlot, this));
 			$(window).resize($.proxy(this.windowResizeSlot, this));
+
+			$('body').on('click', 'a',
+				function (event)
+				{
+				console.log(event);
+
+				if(window.location.pathname == event.target.pathname && event.target.hash != window.location.hash && event.target.hash != '')
+					{
+					window.location.href = event.target.href;
+					window.location.reload();
+					}
+
+				});
 			},
 
 		openPageByUrl: function ()
@@ -74,6 +87,7 @@ var Application = Class(
 		windowResizeSlot: function ()
 			{
 			},
+
 
 		//widgets functionality
 
@@ -203,9 +217,9 @@ var Application = Class(
 			if (this.dicts != undefined)
 				{
 
-				if(dictConfig!= undefined)
+				if (dictConfig != undefined)
 					{
-					if(dictConfig.cache == false && dictConfig.dictUrl != undefined)
+					if (dictConfig.cache == false && dictConfig.dictUrl != undefined)
 						{
 						return this.getDictByUrl(dictConfig);
 						}
@@ -223,7 +237,7 @@ var Application = Class(
 				{
 				dict = this.getDictByName(dictConfig.dictName, dictConfig);
 				}
-			if (dict == null )
+			if (dict == null)
 				{
 				dict = this.getDictByUrl(dictConfig);
 				}
@@ -252,8 +266,6 @@ var Application = Class(
 				}
 
 
-
-
 			var url = dictConfig.dictUrl;
 			if (dictConfig.dictUrlData != null)
 				{
@@ -276,10 +288,10 @@ var Application = Class(
 					}
 				}
 
-			if(dictConfig.cache != false)
+			if (dictConfig.cache != false)
 				{
 				var cacheDict = this.getDictByName(url);
-				if( cacheDict != null)
+				if (cacheDict != null)
 					{
 					return cacheDict;
 					}
@@ -753,7 +765,7 @@ var MKWidget = Class({
 		destroy: function ()
 			{
 
-			if(this.navigateInterface != undefined)
+			if (this.navigateInterface != undefined)
 				{
 				this.navigateInterface.removeNavData();
 				}

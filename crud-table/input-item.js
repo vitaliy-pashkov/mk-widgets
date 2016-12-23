@@ -639,7 +639,6 @@ MKWidgets.CrudTableNS.InputItemNS.DependTreeSelect = Class({
 				parentWidth: true,
 				positionElement: this.element
 			},
-			context: this.options.formData,
 			addable: this.options.addable,
 		});
 

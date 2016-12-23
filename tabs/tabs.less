@@ -8,18 +8,18 @@
 	height: 100%;
 
 	.tabs {
-	  height: @tabs-height;
-	  overflow-y: auto;
+	  //height: @tabs-height;
+	  //overflow-y: auto;
 
 	  li {
-		.middle-text();
-		height: @tabs-height - 16px;
+		font-size: larger;
+		//height: @tabs-height - 16px;
 		display: block;
 		float: left;
 		min-width: 102px;
 		text-align: center;
-		padding: 10px 15px 6px 15px;
-		margin-right: 14px;
+		padding: 0.5em 1em 0.5em 1em ;
+		margin-right: 1em;
 		background-color: @color-li;
 		cursor: pointer;
 		border-radius: 3px 3px 0 0;
@@ -56,12 +56,17 @@
 	}
   }
 
+  .tusur-csp-tab-body{
+	display: none;
+  }
+
   .tusur-csp-tabs-container {
 	height: 100%;
 
 	.tusur-csp-tabs {
-	  height: @tabs-height;
-	  overflow-y: auto;
+	  //height: @tabs-height;
+
+	  //overflow-y: auto;
 
 
 	  li:hover {
@@ -85,6 +90,8 @@
 	  border-radius: 0 3px 3px 3px;
 	  overflow: hidden;
 
+
+
 	  .tab-body {
 		background-color: #FDFDFD;
 
@@ -102,10 +109,10 @@
 
 		width: ~'calc(100% - 130px)';
 		padding: 0 30px 0 100px !important;;
-		height: 35px;
+		//height: 35px;
 
 		li.tusur-csp-tab {
-		  height: @tabs-height - 16px;
+		  //height: @tabs-height - 16px;
 		  display: block;
 		  float: left;
 		  width: 132px;
@@ -176,7 +183,9 @@
 	  height: 100%;
 	}
 	.tusur-csp-tab-body{
+	  display: none;
 	  //height: 100%;
+
 	}
   }
 

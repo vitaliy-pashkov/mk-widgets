@@ -163,7 +163,7 @@ MKWidgets.TabsNS.TabObject = Class({
 			this.domTabBody = this.tabArray.domBodies.find('.tab-body[data-tab-name=' + this.tab.name + ']');
 			}
 
-		this.bindNode('display', this.domTabBody, MK.binders.display()); //  wtf?!!!
+		//this.bindNode('display', this.domTabBody, MK.binders.display()); //  wtf?!!!
 		this.bindNode('display', this.domTab, MK.binders.className('active'));
 
 		this.domTab.on('click', $.proxy(this.tabClickSlot, this));

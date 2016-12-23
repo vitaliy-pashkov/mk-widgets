@@ -329,7 +329,7 @@ MKWidgets.Tree = Class({
 		{
 		if (this.options.loadHtml)
 			{
-			var loadHtml = $.extend({},this.options.loadHtml, this.options.indexes.loadHtml[node.nodeData[node.indexes.type]] );
+			var loadHtml = $.extend({}, this.options.loadHtml, this.options.indexes.loadHtml[node.nodeData[node.indexes.type]]);
 			var params = {};
 			for (var i in loadHtml.params)
 				{
@@ -338,7 +338,7 @@ MKWidgets.Tree = Class({
 
 			if (this.domLoaderBG == undefined)
 				{
-				this.domLoaderBG = $('<div> <img src="/widgets/mk-widgets/tree/img/loader.gif" /> </div>')
+				this.domLoaderBG = $('<div> <img src="/widgets/mk-widgets/tree/img/loader.svg" /></div>')
 					.addClass('tusur-csp-tree-loader-bg');
 				$(this.options.loadHtml.target).prepend(this.domLoaderBG);
 				}
@@ -731,7 +731,7 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 
 		if (this.domNodeBodyText.css('background-image') == 'none')
 			{
-			this.domNodeBodyText.addClass('without-ico');
+			this.domNodeBody.addClass('without-ico');
 			}
 
 		this.tree.cookieBaseNodes[this.states.hashId] = this.states;
@@ -800,22 +800,22 @@ MKWidgets.TreeNS.TreeNodeObject = Class({
 			}
 		if (this.states.manageState == "zero")
 			{
-			this.domNode.addClass("crudtree-node-zero");
+			this.domNode.addClass("zero");
 			//this.domManageIco.hide();
 			this.domDependLine.hide();
 			}
 		if (this.states.manageState == "last")
 			{
-			this.domNode.addClass("crudtree-node-last");
-			this.domManageIco.hide();
+			this.domNode.addClass("last");
+			this.domManageIco.addClass('hide');
 			this.domDependLine.show();
 			}
 		if (this.states.manageState == "lastZero")
 			{
-			this.domNode.addClass("crudtree-node-zero")
-				.addClass("crudtree-node-last");
+			this.domNode.addClass("zero")
+				.addClass("last");
 			this.domDependLine.hide();
-			this.domManageIco.hide();
+			this.domManageIco.addClass('hide');
 			}
 		},
 
@@ -1179,158 +1179,158 @@ MKWidgets.TreeNS.TreeNodeArray = Class({
 });
 
 /*
-function naturalSort(a, b)
-	{
-	"use strict";
-	var re = /(-?[0-9.]+)/g,
-		sre = /(^[ ]*|[ ]*$)/g,
-		ore = /^0/,
-		i = function (s)
-			{
-			return naturalSort.insensitive && ('' + s).toLowerCase() || '' + s;
-			},
-// convert all to strings strip whitespace
-		x = i(a).replace(sre, '') || '',
-		y = i(b).replace(sre, '') || '',
-// chunk/tokenize
-		xN = x.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
-		yN = y.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
-		oFxNcL, oFyNcL;
-// natural sorting through split numeric strings and default strings
-	var numS = Math.max(xN.length, yN.length);
-	var index = 0;
-	for (var cLoc = 0; cLoc < numS; cLoc++)
-		{
-// find floats not starting with '0', string or 0 if not defined (Clint Priest)
-		oFxNcL = !(xN[cLoc] || '').match(ore) && parseFloat(xN[cLoc]) || xN[cLoc] || 0;
-		oFyNcL = !(yN[cLoc] || '').match(ore) && parseFloat(yN[cLoc]) || yN[cLoc] || 0;
-// handle numeric vs string comparison - number < string - (Kyle Adams)
-		if (isNaN(oFxNcL) !== isNaN(oFyNcL))
-			{
-			return (isNaN(oFxNcL)) ? 1 : -1;
-			}
-// rely on string comparison if different types - i.e. '02' < 2 != '02' < '2'
-		else if (typeof oFxNcL !== typeof oFyNcL)
-			{
-			oFxNcL += '';
-			oFyNcL += '';
-			}
-		if (oFxNcL < oFyNcL)
-			{
-			return -1;
-			}
-		if (oFxNcL > oFyNcL)
-			{
-			return 1;
-			}
-		}
-	return 0;
-	};
+ function naturalSort(a, b)
+ {
+ "use strict";
+ var re = /(-?[0-9.]+)/g,
+ sre = /(^[ ]*|[ ]*$)/g,
+ ore = /^0/,
+ i = function (s)
+ {
+ return naturalSort.insensitive && ('' + s).toLowerCase() || '' + s;
+ },
+ // convert all to strings strip whitespace
+ x = i(a).replace(sre, '') || '',
+ y = i(b).replace(sre, '') || '',
+ // chunk/tokenize
+ xN = x.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
+ yN = y.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
+ oFxNcL, oFyNcL;
+ // natural sorting through split numeric strings and default strings
+ var numS = Math.max(xN.length, yN.length);
+ var index = 0;
+ for (var cLoc = 0; cLoc < numS; cLoc++)
+ {
+ // find floats not starting with '0', string or 0 if not defined (Clint Priest)
+ oFxNcL = !(xN[cLoc] || '').match(ore) && parseFloat(xN[cLoc]) || xN[cLoc] || 0;
+ oFyNcL = !(yN[cLoc] || '').match(ore) && parseFloat(yN[cLoc]) || yN[cLoc] || 0;
+ // handle numeric vs string comparison - number < string - (Kyle Adams)
+ if (isNaN(oFxNcL) !== isNaN(oFyNcL))
+ {
+ return (isNaN(oFxNcL)) ? 1 : -1;
+ }
+ // rely on string comparison if different types - i.e. '02' < 2 != '02' < '2'
+ else if (typeof oFxNcL !== typeof oFyNcL)
+ {
+ oFxNcL += '';
+ oFyNcL += '';
+ }
+ if (oFxNcL < oFyNcL)
+ {
+ return -1;
+ }
+ if (oFxNcL > oFyNcL)
+ {
+ return 1;
+ }
+ }
+ return 0;
+ };
 
-function findFirstDiffPos(a, b)
-	{
-	var i = 0;
-	if (a === b)
-		{
-		return -1;
-		}
-	while (a[i] === b[i])
-		{
-		i++;
-		}
-	return i;
-	}
+ function findFirstDiffPos(a, b)
+ {
+ var i = 0;
+ if (a === b)
+ {
+ return -1;
+ }
+ while (a[i] === b[i])
+ {
+ i++;
+ }
+ return i;
+ }
 
-function naturalCompare(a, b)
-	{
-	"use strict";
-	var re=/(-?[0-9.]+)/g,
-		sre = /(^[ ]*|[ ]*$)/g,
-		ore = /^0/,
-		i = function (s)
-			{
-			return ('' + s).toLowerCase();
-			},
-// convert all to strings strip whitespace
-		x = i(a).replace(sre, '') || '',
-		y = i(b).replace(sre, '') || '',
-// chunk/tokenize
-		xN = x.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
-		yN = y.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
-		oFxNcL, oFyNcL;
-// natural sorting through split numeric strings and default strings
-	var numS = Math.max(xN.length, yN.length);
-	var index = 0;
-	for (var cLoc = 0; cLoc < numS; cLoc++)
-		{
-// find floats not starting with '0', string or 0 if not defined (Clint Priest)
-		oFxNcL = !(xN[cLoc] || '').match(ore) && parseFloat(xN[cLoc]) || xN[cLoc] || 0;
-		oFyNcL = !(yN[cLoc] || '').match(ore) && parseFloat(yN[cLoc]) || yN[cLoc] || 0;
-// handle numeric vs string comparison - number < string - (Kyle Adams)
-		if (isNaN(oFxNcL) !== isNaN(oFyNcL))
-			{
-			return index;
-			}
-// rely on string comparison if different types - i.e. '02' < 2 != '02' < '2'
-		else if (typeof oFxNcL !== typeof oFyNcL)
-			{
-			oFxNcL += '';
-			oFyNcL += '';
-			}
+ function naturalCompare(a, b)
+ {
+ "use strict";
+ var re=/(-?[0-9.]+)/g,
+ sre = /(^[ ]*|[ ]*$)/g,
+ ore = /^0/,
+ i = function (s)
+ {
+ return ('' + s).toLowerCase();
+ },
+ // convert all to strings strip whitespace
+ x = i(a).replace(sre, '') || '',
+ y = i(b).replace(sre, '') || '',
+ // chunk/tokenize
+ xN = x.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
+ yN = y.replace(re, '\0$1\0').replace(/\0$/, '').replace(/^\0/, '').split('\0'),
+ oFxNcL, oFyNcL;
+ // natural sorting through split numeric strings and default strings
+ var numS = Math.max(xN.length, yN.length);
+ var index = 0;
+ for (var cLoc = 0; cLoc < numS; cLoc++)
+ {
+ // find floats not starting with '0', string or 0 if not defined (Clint Priest)
+ oFxNcL = !(xN[cLoc] || '').match(ore) && parseFloat(xN[cLoc]) || xN[cLoc] || 0;
+ oFyNcL = !(yN[cLoc] || '').match(ore) && parseFloat(yN[cLoc]) || yN[cLoc] || 0;
+ // handle numeric vs string comparison - number < string - (Kyle Adams)
+ if (isNaN(oFxNcL) !== isNaN(oFyNcL))
+ {
+ return index;
+ }
+ // rely on string comparison if different types - i.e. '02' < 2 != '02' < '2'
+ else if (typeof oFxNcL !== typeof oFyNcL)
+ {
+ oFxNcL += '';
+ oFyNcL += '';
+ }
 
-		if(oFxNcL != oFyNcL)
-			{
-			if(typeof oFxNcL === 'string')
-				{
-				var difPos = findFirstDiffPos(oFxNcL , oFyNcL);
-				return {index: index + findFirstDiffPos(oFxNcL , oFyNcL), value: Math.abs(oFxNcL[difPos].charCodeAt(0) - oFyNcL[difPos].charCodeAt(0))};
-				}
-			else
-				{
-				return {index: index, value: Math.abs(oFxNcL - oFyNcL)};
-				}
-			}
+ if(oFxNcL != oFyNcL)
+ {
+ if(typeof oFxNcL === 'string')
+ {
+ var difPos = findFirstDiffPos(oFxNcL , oFyNcL);
+ return {index: index + findFirstDiffPos(oFxNcL , oFyNcL), value: Math.abs(oFxNcL[difPos].charCodeAt(0) - oFyNcL[difPos].charCodeAt(0))};
+ }
+ else
+ {
+ return {index: index, value: Math.abs(oFxNcL - oFyNcL)};
+ }
+ }
 
-		if(typeof oFxNcL === 'string')
-			{
-			index+=oFxNcL.length;
-			}
-		else
-			{
-			index+=10;
-			}
-		}
-	return {index: Inf, value: 0};
-	};
+ if(typeof oFxNcL === 'string')
+ {
+ index+=oFxNcL.length;
+ }
+ else
+ {
+ index+=10;
+ }
+ }
+ return {index: Inf, value: 0};
+ };
 
-var arr = [
-	'abcde1',
-	'abcde2',
-	'abcde3',
-	'abcde10',
-	'abcde11',
-	'abcde12',
-	'abf1',
-	'abf2',
-	'abf3',
-	'abf10',
-	'abf11',
-	'abf12',
-	'abfab1',
-	'abgab2',
-	'abgab1000',
-];
+ var arr = [
+ 'abcde1',
+ 'abcde2',
+ 'abcde3',
+ 'abcde10',
+ 'abcde11',
+ 'abcde12',
+ 'abf1',
+ 'abf2',
+ 'abf3',
+ 'abf10',
+ 'abf11',
+ 'abf12',
+ 'abfab1',
+ 'abgab2',
+ 'abgab1000',
+ ];
 
-//var b = arr.sort(naturalSort);
-//alert(JSON.stringify(b));
-var average = {index: null, value: null};
-var deltas = [];
+ //var b = arr.sort(naturalSort);
+ //alert(JSON.stringify(b));
+ var average = {index: null, value: null};
+ var deltas = [];
 
-for(var i=1;i<arr.length; i++)
-	{
-	var delta = JSON.stringify( naturalCompare(arr[i-1], arr[i]) );
-	deltas.push(delta);
-	}
-console.log(deltas);
+ for(var i=1;i<arr.length; i++)
+ {
+ var delta = JSON.stringify( naturalCompare(arr[i-1], arr[i]) );
+ deltas.push(delta);
+ }
+ console.log(deltas);
 
-*/
+ */

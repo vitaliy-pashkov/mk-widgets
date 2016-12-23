@@ -1,4 +1,3 @@
-
 var MKWidgets = MKWidgets || {};
 MKWidgets.TableNS = MKWidgets.TableNS || {};
 MKWidgets.TableNS.DisplayItemNS = MKWidgets.TableNS.DisplayItemNS || {};
@@ -6,6 +5,8 @@ MKWidgets.TableNS.DisplayItemNS = MKWidgets.TableNS.DisplayItemNS || {};
 MKWidgets.TableNS.DisplayItem = Class({
 		extends: MKWidget,
 		createFlag: false,
+		bindValue: true,
+
 		constructor: function (elementSelector, options)
 			{
 			MKWidget.prototype.constructor.apply(this, [elementSelector, options]);
@@ -83,6 +84,10 @@ MKWidgets.TableNS.DisplayItem = Class({
 				{
 				inputItem = new MKWidgets.TableNS.DisplayItemNS.Master(elementSelector, options);
 				}
+			else if (options.columnModel.displayType == "sparkline")
+				{
+				inputItem = new MKWidgets.TableNS.DisplayItemNS.Sparkline(elementSelector, options);
+				}
 			//inputItem.init();
 			return inputItem;
 			}
@@ -119,8 +124,12 @@ MKWidgets.TableNS.DisplayItemNS.Pattern = Class({
 				var regexp = new RegExp("{%" + index + "%}", 'g');
 				pattern = pattern.replace(regexp, this.options.rowData[index]);
 				}
-			this.options.rowData[this.options.columnModel.index] = pattern;
+			//this.options.rowData[this.options.columnModel.index] = pattern;
+
+			this.element.html(pattern);
 			}
+
+
 		},
 
 	create: function ()
@@ -151,8 +160,8 @@ MKWidgets.TableNS.DisplayItemNS.Details = Class({
 
 	preprocess: function ()
 		{
-        var image = $('<div/>').addClass('tusur-csp-table-mk-details-img')
-        this.element.append(image);
+		var image = $('<div/>').addClass('tusur-csp-table-mk-details-img')
+		this.element.append(image);
 		},
 
 	init: function ()
@@ -205,7 +214,7 @@ MKWidgets.TableNS.DisplayItemNS.Details = Class({
 		{
 		var configStr = JSON.stringify(configs);
 		var offset = 0;
-		while (configStr.indexOf('`', offset) > -1 )
+		while (configStr.indexOf('`', offset) > -1)
 			{
 			var begin = configStr.indexOf('`', offset) + 1;
 			var end = configStr.indexOf('`', begin);
@@ -219,7 +228,7 @@ MKWidgets.TableNS.DisplayItemNS.Details = Class({
 					configStr = configStr.replace(regexp, this.options.rowData[index]);
 					}
 				}
-			offset = begin+1;
+			offset = begin + 1;
 			}
 		var newConfigs = JSON.parse(configStr);
 		newConfigs.config.parents = [];
@@ -263,7 +272,7 @@ MKWidgets.TableNS.DisplayItemNS.Master = Class({
 		this.createField();
 		},
 
-	openPopup: function()
+	openPopup: function ()
 		{
 		this.create();
 		},
@@ -271,12 +280,12 @@ MKWidgets.TableNS.DisplayItemNS.Master = Class({
 	createField: function ()
 		{
 		var action = 'update';
-		if(this.options.rowData[ this.options.tableOptions.idIndex ] < 0 )
+		if (this.options.rowData[this.options.tableOptions.idIndex] < 0)
 			{
 			action = 'create';
 			}
 		var represent = this.options.columnModel.represent;
-		app.registrateWidgetByRepresent(represent, 'master-'+represent, {}, {
+		app.registrateWidgetByRepresent(represent, 'master-' + represent, {}, {
 			action: action,
 			title: this.options.columnModel.masterTitle,
 			context: this.options.rowData
@@ -337,4 +346,195 @@ MKWidgets.TableNS.DisplayItemNS.Text = Class({
 		}
 
 });
+
+MKWidgets.TableNS.DisplayItemNS.Sparkline = Class({
+	extends: MKWidgets.TableNS.DisplayItem,
+
+	bindValue: false,
+
+
+	constructor: function (elementSelector, options)
+		{
+		MKWidgets.TableNS.DisplayItem.prototype.constructor.apply(this, [elementSelector, options]);
+		this.setOptions({
+			default: "",
+			popupOn: false,
+		});
+		this.domContainer = this.options.domContainer;
+		this.setOptions(options);
+
+		//this.init();
+		},
+
+	preprocess: function ()
+		{
+		Highcharts.SparkLine = function (a, b, c)
+			{
+			var hasRenderToArg = typeof a === 'string' || a.nodeName,
+				options = arguments[hasRenderToArg ? 1 : 0];
+			var defaultOptions = {
+				exporting: {
+					enabled: false,
+				},
+				chart: {
+					renderTo: (options.chart && options.chart.renderTo) || this,
+					backgroundColor: 'rgba(255,255,255,0)',
+					plotBackgroundColor: 'rgba(255,255,255,0)',
+					borderWidth: 0,
+					type: 'area',
+					margin: [0, 0, 0, 0],
+					width: 400,
+					height: 20,
+					style: {
+						overflow: 'visible'
+					},
+					skipClone: true
+				},
+				title: {
+					text: ''
+				},
+				credits: {
+					enabled: false
+				},
+				xAxis: {
+					type: 'datetime',
+					labels: {
+						enabled: false
+					},
+					title: {
+						text: null
+					},
+					startOnTick: false,
+					endOnTick: false,
+					tickPositions: [],
+					visible: false,
+				},
+				yAxis: {
+					endOnTick: false,
+					startOnTick: false,
+					labels: {
+						enabled: false
+					},
+					title: {
+						text: null
+					},
+					tickPositions: [],
+					visible: false,
+				},
+				legend: {
+					enabled: false
+				},
+				tooltip: {
+					//	backgroundColor: null,
+					//	borderWidth: 0,
+					//	shadow: false,
+					//	useHTML: true,
+					hideDelay: 0,
+					//	shared: true,
+					//	padding: 0,
+					positioner: function (w, h, point)
+						{
+						return {x: point.plotX - w / 2, y: point.plotY - h - 20};
+						}
+				},
+				plotOptions: {
+					series: {
+						animation: false,
+						lineWidth: 0,
+						shadow: false,
+						states: {
+							hover: {
+								lineWidth: 1
+							}
+						},
+						marker: {
+							radius: 2,
+							states: {
+								hover: {
+									radius: 3
+								}
+							}
+						},
+						fillOpacity: 0.25
+					},
+					column: {
+						negativeColor: '#910000',
+						borderColor: 'silver'
+					}
+				}
+			};
+
+			options = Highcharts.merge(defaultOptions, options);
+
+			return hasRenderToArg ?
+				new Highcharts.Chart(a, options, c) :
+				new Highcharts.Chart(options, b);
+			};
+
+		Highcharts.setOptions({
+			lang: {
+				weekdays: ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'],
+				shortMonths: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн', 'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'],
+			},
+			chart: {
+				style: {
+					fontFamily: 'GothamPro',
+				},
+				backgroundColor: "#FDFDFD",
+				plotBackgroundColor: '#FDFDFD'
+			}
+		});
+
+		var data = [];
+		for (var i = 0; i < this.options.rowData[this.options.columnModel.index].length; i++)
+			{
+			var value = parseInt(this.options.rowData[this.options.columnModel.index][i][this.options.columnModel.valueIndex]);
+
+			if(this.options.rowData[this.options.columnModel.index][i][this.options.columnModel.valueIndex] == '-')
+				{
+				value = null;
+				}
+			var dt = moment(this.options.rowData[this.options.columnModel.index][i][this.options.columnModel.dtIndex]);
+
+			data.push([
+				dt.valueOf() + 25200000,
+				value
+			]);
+			}
+		this.element.empty();
+
+		this.element.highcharts('SparkLine', {
+			series: [
+				{
+					data: data,
+					pointStart: 1
+				}
+			],
+			tooltip: {
+			//	headerFormat: '',
+				pointFormat: '{point.y}'
+			},
+			chart: {}
+		});
+		},
+
+	//preprocess: function ()
+	//	{
+	//
+	//	},
+
+	create: function ()
+		{
+		this.createField();
+		},
+
+	createField: function ()
+		{
+		}
+
+
+});
+
+
+
 

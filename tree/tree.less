@@ -11,41 +11,139 @@
 
   .tusur-csp-tree-loader-bg {
 	position: absolute;
-	width: ~'calc(100% - 338px)';
-	height: ~'calc(100% - 26px)';
+	width: ~'calc(100% - 328px)';
+	height: ~'calc(100% - 30px)';
 	background: rgba(100, 100, 100, 0.6);
 	z-index: 10;
 	text-align: center;
 	border-radius: 4px;
+	//color: #f1f1f1;
+	color: #fff;
+	//font-weight: 600;
+	//text-shadow: -1px 0 #636363, 0 1px #636363, 1px 0 #636363, 0 -1px #636363;
 
 	img {
 	  margin-top: 20%;
 	  width: 50px;
 	  height: 50px;
+	  margin-bottom: 10px;
 	}
   }
 
   .crudtree-tree-container {
 
-	margin-top: 10px;
-	max-height: 100% ;
-
-	.crudtree-childs {
-	  margin-left: 22px;
-	  margin-top: 4px;
-	}
-	> .crudtree-childs {
-	  margin-left: 0px;
-	}
-
 	.crudtree-node {
-	  //font-size: 14px;
 	  position: relative;
+
+	  > .crudtree-node-body {
+		margin-left: 0.8em;
+		position: relative;
+		display: inline-block;
+		border-radius: 4px;
+
+		width: ~'calc(100% - 1.5em)';
+		z-index: 3;
+
+		.crudtree-node-manage-ico {
+		  position: absolute;
+		  left: -1.2em;
+		  height: 100%;
+		  width: 1em;
+		  background-repeat: no-repeat;
+		  background-position: 0 center;
+		  background-size: 0.9em;
+		  display: inline-block;
+		  z-index: 2;
+
+		  &.hide {
+			background: none;
+		  }
+		}
+
+		.crudtree-node-indicator {
+		  width: 5px;
+		  height: 5px;
+		  position: absolute;
+		  top: 0.6em;;
+		  left: 1.2em;
+		  border-radius: 10px;
+		  border: 1px solid #dfdfdf;
+		}
+
+		.crudtree-node-text {
+		  display: inline-block;
+		  width: ~'calc(100% - 2em)';
+		  padding: 0.7em 0.5em 0.7em 2.2em;
+
+		  white-space: nowrap;
+		  text-overflow: ellipsis;
+		  overflow: hidden;
+
+		  background-repeat: no-repeat;
+		  background-size: 1.1em;
+		  background-position: 0.5em center;
+
+		}
+
+		&.without-ico {
+		  .crudtree-node-text {
+			padding-left: 0.7em;
+		  }
+		  .crudtree-node-indicator {
+			left: 0.3em;
+			top: 0.65em;
+		  }
+		}
+
+		&.no-childs {
+		  padding-left: 0px;
+		}
+
+		&:hover {
+		  cursor: pointer;
+		}
+		&.active {
+		  .crudtree-node-text {
+			color: @color-active-node-text;
+		  }
+		}
+		&.select {
+		  background: #59a3d7;
+		  .crudtree-node-text {
+			color: #f1f1f1;
+		  }
+		  .crudtree-node-indicator {
+			border-color: #59a3d7;
+		  }
+		}
+		&.child-select {
+		  background: #d2d2d2;
+		  .crudtree-node-text {
+		  }
+		  .crudtree-node-indicator {
+			border-color: #d2d2d2;
+		  }
+		}
+		&.fake-select {
+		  background: #c6c6c6;
+		  .crudtree-node-text {
+		  }
+		  .crudtree-node-indicator {
+			border-color: #c6c6c6;
+		  }
+		}
+
+	  }
+
+	  .crudtree-childs {
+		margin-left: 1.5em;
+		margin-top: 4px;
+	  }
 
 	  .crudtree-depend-line {
 		position: absolute;
-		width: 10px;
-		// left: 12px;
+		//left: 0.4em;
+		width: 0.8em;
 		border-left: 1px solid @color-depend-line-border;
 		border-bottom: 1px solid @color-depend-line-border;
 		z-index: 1;
@@ -57,151 +155,54 @@
 		border-left-color: @color-depend-line-border-active;
 	  }
 
-	  > .crudtree-node-body {
-		display: inline-block;
-		line-height: 0;
-		border-radius: 4px 4px 4px 4px;
-		//min-width: 184px;
+	  &.zero {
 
-	  	width: ~'calc(100% - 16px)';
-
-		margin-left: 11px;
-		z-index: 3;
-		.crudtree-node-text {
-		  line-height: 1;
-		  background-repeat: no-repeat;
-		  background-size: 15px 15px;
-		  background-position: 9px center;
-		  display: inline-block;
-
-		  padding: 10px 20px 11px 33px;
-
-		  white-space: nowrap;
-		  text-overflow: ellipsis;
-		  overflow: hidden;
-
-		  &.without-ico {
-			padding-left: 10px;
+		> .crudtree-node-body {
+		  margin-left: 0;
+		  padding-left: 1.2em;
+		  .crudtree-node-text {
+			background-position: 0.5em center;
+			background-size: 1em;
+			white-space: nowrap;
+		  }
+		  .crudtree-node-manage-ico {
+			left: 0.4em;
+		  }
+		  .crudtree-node-indicator {
+			left: 2.3em;
 		  }
 		}
-		.crudtree-node-indicator {
-		  width: 5px;
-		  height: 5px;
-		  position: absolute;
-		  top: 8px;
-		  left: 27px;
-		  border-radius: 10px;
-		  border: 1px solid #dfdfdf;
-		}
-	  }
-	  > .crudtree-node-body:hover {
-		cursor: pointer;
-	  }
-	  > .crudtree-node-body.no-childs {
-		padding-left: 0px;
-	  }
-
-	  > .active.crudtree-node-body {
-		.crudtree-node-text {
-		  color: @color-active-node-text;
+		> .crudtree-childs {
+		  margin-left: 1.5em;
 		}
 	  }
 
-	  > .select.crudtree-node-body {
-		background: #59a3d7;
-		.crudtree-node-text {
-		  color: #f1f1f1;
-		}
-		.crudtree-node-indicator {
-		  border-color: #59a3d7;
-		}
-	  }
-	  > .child-select.crudtree-node-body {
-		background: #d2d2d2;
-		.crudtree-node-text {
-		}
-		.crudtree-node-indicator {
-		  border-color: #d2d2d2;
-		}
-	  }
-	  > .fake-select.crudtree-node-body {
-		background: #c6c6c6;
-		.crudtree-node-text {
-		}
-		.crudtree-node-indicator {
-		  border-color: #c6c6c6;
-		}
-	  }
-	}
+	  &.last {
+		> .crudtree-node-body {
+		  margin-left: 0.5em;
 
-	.crudtree-node-zero {
-	  margin-left: -11px;
-
-	  > .crudtree-node-body {
-		.crudtree-node-text {
-		  //padding: 16px 20px 17px 30px;	//big zero
-		  background-position: 5px center;
-		  background-size: 15px 15px;
-		  white-space: nowrap;
-		  //max-width: 205px;
-		  //min-width: 205px;
-		  width: ~'calc(100% - 75px)';
+		  .crudtree-node-text {
+		  }
+		  .crudtree-node-indicator {
+		  }
 		}
-		.crudtree-node-manage-ico {
-		  //margin-top: 18px;				//big zero
-		  margin-left: 5px;
+		> .active.crudtree-node-body {
+		  .crudtree-node-text {
+			color: #F1F1F1;
+		  }
 		}
-		.crudtree-node-indicator {
-		  //top: 16px;						//big zero
-		  left: 45px;
+		.crudtree-depend-line {
+		  width: 0.5em;
 		}
 	  }
 
-	  > .crudtree-childs {
-		margin-left: 33px;
-	  }
-	}
-
-	.crudtree-node-last {
-	  > .crudtree-node-body {
-		margin-left: 6px;
-
-		.crudtree-node-text {
-		  margin-left: -4px;
-		}
-		.crudtree-node-indicator {
-		  left: 21px;
+	  &.last.zero {
+		> .crudtree-node-body {
+		  .crudtree-node-text {
+		  }
 		}
 	  }
-	  > .active.crudtree-node-body {
-		.crudtree-node-text {
-		  color: #F1F1F1;
-		}
-	  }
-	  .crudtree-depend-line {
-		width: 5px;
-	  }
-	}
 
-	.crudtree-node-last.crudtree-node-zero {
-	  > .crudtree-node-body {
-		.crudtree-node-text {
-		  margin-left: 20px;
-		}
-	  }
-	}
-
-	.crudtree-node-manage-ico {
-	  position: relative;
-	  height: 1em;
-	  width: 15px;
-	  vertical-align: top;
-	  margin-top: 12px;
-	  margin-left: -17px;
-	  background-repeat: no-repeat;
-	  background-position: 0 0;
-	  display: inline-block;
-	  z-index: 2;
 	}
 
 	.crudtree-icon(@name) {
@@ -263,7 +264,6 @@
 	.crudtree-icon(client-org);
 	.crudtree-icon(contract);
   }
-
 
   .crudtree-filter-checkbox {
 	vertical-align: top;

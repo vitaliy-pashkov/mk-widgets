@@ -319,6 +319,7 @@ MKWidgets.CrudFormNS.InputItemNS.Button = Class({
 		{
 		this.domButton = $('<button />')
 			.addClass('input-item-button')
+			.addClass('second')
 			.text(this.options.text);
 
 		this.domInputItem.empty().append(this.domButton);
@@ -1911,7 +1912,7 @@ MKWidgets.CrudFormNS.InputItemNS.ArrayRepresent = Class({
 
 		if (this.represents.inputItemArray.options.arrayConfig.deletable)
 			{
-			this.domDeleteButton = $('<div/>').addClass('delete-button');
+			this.domDeleteButton = $('<div/>').addClass('delete-button').text('X');
 			$(this.sandbox).append(this.domDeleteButton);
 			this.domDeleteButton.on('click', $.proxy(this.deleteButtonClickSlot, this));
 			}
@@ -2046,7 +2047,7 @@ MKWidgets.CrudFormNS.InputItemNS.SubForm = Class({
 		this.representConfig.context = this.dependObject;
 		this.representConfig.fieldsModel = this.options.fieldsModel;
 
-		this.crudForm = new MKWidgets.CrudForm(this.element, this.representConfig);
+		this.crudForm = new MKWidgets.CrudForm(this.domTarget, this.representConfig);
 
 		this.crudForm.on('form-data-change',
 			function ()
@@ -2101,7 +2102,28 @@ MKWidgets.CrudFormNS.InputItemNS.SubForm = Class({
 
 	createDom: function ()
 		{
-		this.element.removeClass('tusur-csp-form-field');
+		if(this.options.title != undefined)
+			{
+			this.domLabel = $('<label/>').addClass('tusur-csp-form-label').html(this.options.title);
+			this.domInputItem = $('<div/>').addClass('sub-form-block');
+
+			this.element.append(this.domLabel);
+			this.element.append(this.domInputItem);
+
+			var widthClass = 'form-columns-100';
+			if (this.options.widthClass != undefined)
+				{
+				widthClass = this.options.widthClass;
+				}
+			this.element.addClass(widthClass);
+
+			this.domTarget = this.domInputItem;
+			}
+		else
+			{
+			this.element.removeClass('tusur-csp-form-field');
+			this.domTarget = this.element;
+			}
 		},
 });
 

@@ -218,6 +218,7 @@ MKWidgets.HcPlot = Class({
 				{
 				this.chart.setSize(width, 400, false);
 				}
+
 			}
 		},
 
